@@ -13,11 +13,11 @@ export function DashboardHeader({ title, subtitle }: HeaderProps) {
           {/* JCM Logo */}
           <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center shadow-md overflow-hidden flex-shrink-0">
             <img
-              src="/datadash/logo/jcm-logo.svg"
+              src="/datadash/logo/jcm-logo.png"
               alt="JCM Logo"
               width={80}
               height={80}
-              className="w-16 h-16"
+              className="w-20 h-20 object-cover"
             />
           </div>
           

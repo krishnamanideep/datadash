@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { generateElectionData } from '@/lib/data';
 import { DashboardHeader } from '@/components/DashboardHeader';
-import { AssemblySelector } from '@/components/AssemblySelector';
 import { PollingLocationFilter } from '@/components/PollingLocationFilter';
 import { ElectionSummaryStats } from '@/components/StatCard';
 import { CandidateComparisonChart, ElectionTrendChart, CandidateVotePieChart } from '@/components/Charts';
@@ -77,16 +76,8 @@ export default function Dashboard() {
         subtitle="NEDUNGADU Constituency - Comprehensive Election Analysis"
       />
 
-      {/* Assembly Selector */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        <AssemblySelector
-          selectedAssembly={selectedAssembly}
-          onSelect={setSelectedAssembly}
-        />
-      </div>
-
       {/* Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         <div className="border-b border-gray-200 overflow-x-auto">
           <div className="flex space-x-4 md:space-x-8">
             {Object.entries(TAB_VIEWS).map(([key, value]) => (
