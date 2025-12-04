@@ -82,32 +82,35 @@ export const generateElectionData = (): DashboardData => {
   };
 
   const surveyData: SurveyData = {
-    general_survey: { high_impact: 34.25, low_impact: 10.78, no_opinion: 54.98 },
+    general_survey: { high_impact: 34.23, low_impact: 10.78, no_opinion: 54.99 },
     yesno_survey: { yes: 45.01, no: 54.99 },
-    gender_samples: { F: 38.11, M: 61.89, T: 3.07 },
+    gender_samples: { F: 38.11, M: 61.81, T: 0.07 },
     gender_response: [
-      { gender: 'F', high_impact: 30.69, low_impact: 8.89, no_opinion: 60.43 },
-      { gender: 'M', high_impact: 36.42, low_impact: 11.85, no_opinion: 51.82 },
-      { gender: 'T', high_impact: 14.29, low_impact: 14.29, no_opinion: 85.71 },
+      { gender: 'F', high_impact: 30.68, low_impact: 8.89, no_opinion: 60.43 },
+      { gender: 'M', high_impact: 36.43, low_impact: 11.95, no_opinion: 51.62 },
+      { gender: 'T', high_impact: 14.29, low_impact: 0, no_opinion: 85.71 },
     ],
     caste_age_survey: [
       { caste_age: 'A(18-25)', yes: 30.51, high_impact: 12.21, low_impact: 57.27, no_opinion: 0 },
-      { caste_age: 'B(25-50)', yes: 32.04, high_impact: 8.53, low_impact: 58.29, no_opinion: 0 },
-      { caste_age: 'C(50-65)', yes: 35.48, high_impact: 11.92, low_impact: 53.59, no_opinion: 0 },
-      { caste_age: 'D(65+)', yes: 25.00, high_impact: 10.37, low_impact: 54.02, no_opinion: 0 },
+      { caste_age: 'B(25-35)', yes: 32.64, high_impact: 9.13, low_impact: 58.23, no_opinion: 0 },
+      { caste_age: 'C(35-50)', yes: 35.88, high_impact: 11.15, low_impact: 52.96, no_opinion: 0 },
+      { caste_age: 'D(50-65)', yes: 35.48, high_impact: 11.02, low_impact: 53.50, no_opinion: 0 },
+      { caste_age: 'E(65+)', yes: 35.60, high_impact: 10.37, low_impact: 54.02, no_opinion: 0 },
     ],
     caste_age_yesno_survey: [
-      { caste_age: 'A(18-25)', yes: 47.73, no: 52.27 },
-      { caste_age: 'B(25-50)', yes: 47.77, no: 58.23 },
-      { caste_age: 'C(50-55)', yes: 47.04, no: 52.96 },
-      { caste_age: 'D(60-65)', yes: 46.50, no: 53.50 },
-      { caste_age: 'E(80+)', yes: 45.90, no: 54.09 },
+      { caste_age: 'A(18-25)', yes: 42.73, no: 57.27 },
+      { caste_age: 'B(25-35)', yes: 41.77, no: 58.23 },
+      { caste_age: 'C(35-50)', yes: 47.04, no: 52.96 },
+      { caste_age: 'D(50-65)', yes: 46.50, no: 53.50 },
+      { caste_age: 'E(65+)', yes: 45.98, no: 54.02 },
     ],
     mandaram_overview: [
-      { mandaram: 'Puducherry', yes: 31.88, high_impact: 11.82, low_impact: 57.09, no_opinion: 0 },
+      { mandaram: 'WITHOUT MANDARAM', yes: 31.89, high_impact: 11.02, low_impact: 57.09, no_opinion: 0 },
+      { mandaram: 'WITH MANDARAM', yes: 36.84, high_impact: 10.00, low_impact: 53.17, no_opinion: 0 },
     ],
     mandaram_yesno: [
-      { mandaram: 'Puducherry', yes: 42.51, no: 57.00 },
+      { mandaram: 'WITHOUT MANDARAM', yes: 42.91, no: 57.09 },
+      { mandaram: 'WITH MANDARAM', yes: 46.83, no: 53.17 },
     ],
   };
 
