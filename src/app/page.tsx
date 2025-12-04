@@ -74,7 +74,7 @@ export default function Dashboard() {
       {/* Header with Logo */}
       <DashboardHeader
         title="Election Dashboard"
-        subtitle={`${data.summary.constituency} Constituency - Comprehensive Election Analysis`}
+        subtitle="NEDUNGADU Constituency - Comprehensive Election Analysis"
       />
 
       {/* Assembly Selector */}

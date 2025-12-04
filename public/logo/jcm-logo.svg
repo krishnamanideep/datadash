@@ -1,27 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="200" height="200">
   <!-- Background -->
-  <rect width="200" height="200" fill="#f0f9ff"/>
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f5f5f5;stop-opacity:1" />
+    </linearGradient>
+  </defs>
   
-  <!-- Decorative top border (blue, red, yellow - JCM colors) -->
-  <rect width="200" height="10" fill="#0066cc"/>
-  <rect y="10" width="200" height="8" fill="#dc2626"/>
-  <rect y="18" width="200" height="8" fill="#fbbf24"/>
+  <!-- Decorative background bars (Yellow, Blue, Red - JCM colors) -->
+  <rect x="0" y="40" width="400" height="80" fill="#fbbf24" opacity="0.3"/>
+  <rect x="0" y="140" width="400" height="80" fill="#1e40af" opacity="0.3"/>
+  <rect x="0" y="240" width="400" height="80" fill="#dc2626" opacity="0.3"/>
   
-  <!-- Circle background for hands -->
-  <circle cx="100" cy="100" r="70" fill="#f3f4f6" stroke="#0066cc" stroke-width="2"/>
-  
-  <!-- Praying hands (stylized) -->
+  <!-- Praying hands (prayer gesture) -->
   <!-- Left hand -->
-  <path d="M 85 65 Q 75 80 75 100 Q 75 120 85 135" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="75" cy="140" r="4" fill="#333"/>
+  <path d="M 160 80 Q 140 100 140 140 Q 140 160 160 180" fill="#f5deb3" stroke="#8b7355" stroke-width="2"/>
   
   <!-- Right hand -->
-  <path d="M 115 65 Q 125 80 125 100 Q 125 120 115 135" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="125" cy="140" r="4" fill="#333"/>
+  <path d="M 240 80 Q 260 100 260 140 Q 260 160 240 180" fill="#f5deb3" stroke="#8b7355" stroke-width="2"/>
   
-  <!-- Hands meeting point -->
-  <line x1="85" y1="100" x2="115" y2="100" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+  <!-- Hands meeting/prayer position -->
+  <path d="M 160 120 L 200 130 L 240 120" fill="#f5deb3" stroke="#8b7355" stroke-width="2"/>
   
-  <!-- Text label -->
-  <text x="100" y="165" font-size="14" font-weight="bold" text-anchor="middle" fill="#0066cc">JCM LOGO</text>
+  <!-- Fingers detail -->
+  <line x1="160" y1="80" x2="180" y2="60" stroke="#8b7355" stroke-width="2" stroke-linecap="round"/>
+  <line x1="170" y1="75" x2="185" y2="50" stroke="#8b7355" stroke-width="2" stroke-linecap="round"/>
+  <line x1="240" y1="80" x2="220" y2="60" stroke="#8b7355" stroke-width="2" stroke-linecap="round"/>
+  <line x1="230" y1="75" x2="215" y2="50" stroke="#8b7355" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Wrist bands with Indian colors -->
+  <circle cx="160" cy="190" r="8" fill="#ff9933"/>
+  <circle cx="165" cy="192" r="5" fill="#ffffff"/>
+  <circle cx="170" cy="190" r="8" fill="#138808"/>
+  
+  <circle cx="240" cy="190" r="8" fill="#ff9933"/>
+  <circle cx="235" cy="192" r="5" fill="#ffffff"/>
+  <circle cx="230" cy="190" r="8" fill="#138808"/>
+  
+  <!-- JCM Text -->
+  <text x="200" y="280" font-size="72" font-weight="bold" text-anchor="middle" fill="#dc2626" font-family="Arial, sans-serif">JCM</text>
 </svg>
