@@ -171,17 +171,15 @@ export function SurveyReport({ surveyData }: SurveyReportProps) {
             <thead className="bg-gray-100 border-b-2 border-gray-300">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Category</th>
-                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">Yes %</th>
-                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">High Impact %</th>
-                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">Low Impact %</th>
-                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">No %</th>
+                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">Yes/High Impact %</th>
+                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">Yes/Low Impact %</th>
+                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">No Opinion %</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {surveyData.caste_age_survey.map((item) => (
                 <tr key={item.caste_age} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 font-semibold text-gray-900">{item.caste_age}</td>
-                  <td className="px-6 py-4 text-center text-gray-700">{item.yes.toFixed(2)}%</td>
                   <td className="px-6 py-4 text-center text-green-600 font-semibold">{item.high_impact.toFixed(2)}%</td>
                   <td className="px-6 py-4 text-center text-orange-600 font-semibold">{item.low_impact.toFixed(2)}%</td>
                   <td className="px-6 py-4 text-center text-blue-600 font-semibold">{item.no_opinion.toFixed(2)}%</td>
@@ -200,17 +198,15 @@ export function SurveyReport({ surveyData }: SurveyReportProps) {
             <thead className="bg-gray-100 border-b-2 border-gray-300">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Mandaram</th>
-                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">Yes %</th>
-                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">High Impact %</th>
-                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">Low Impact %</th>
-                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">No %</th>
+                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">Yes/High Impact %</th>
+                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">Yes/Low Impact %</th>
+                <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">No Opinion %</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {surveyData.mandaram_overview.map((item) => (
                 <tr key={item.mandaram} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 font-semibold text-gray-900">{item.mandaram}</td>
-                  <td className="px-6 py-4 text-center text-gray-700">{item.yes.toFixed(2)}%</td>
                   <td className="px-6 py-4 text-center text-green-600 font-semibold">{item.high_impact.toFixed(2)}%</td>
                   <td className="px-6 py-4 text-center text-orange-600 font-semibold">{item.low_impact.toFixed(2)}%</td>
                   <td className="px-6 py-4 text-center text-blue-600 font-semibold">{item.no_opinion.toFixed(2)}%</td>
