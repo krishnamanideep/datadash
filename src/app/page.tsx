@@ -73,7 +73,7 @@ export default function Dashboard() {
       {/* Header with Logo */}
       <DashboardHeader
         title="Election Dashboard"
-        subtitle="NEDUNGADU Constituency - Comprehensive Election Analysis"
+        subtitle=""
       />
 
       {/* Navigation Tabs */}
