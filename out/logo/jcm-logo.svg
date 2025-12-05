@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="80" height="120">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+      <stop offset="33%" style="stop-color:#1e40af;stop-opacity:1" />
+      <stop offset="66%" style="stop-color:#dc2626;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Decorative brush stroke background -->
+  <rect width="300" height="400" fill="url(#bgGrad)"/>
+  
+  <!-- White shirt/body area -->
+  <ellipse cx="150" cy="120" rx="45" ry="55" fill="#ffffff"/>
+  
+  <!-- Head -->
+  <circle cx="150" cy="60" r="35" fill="#d4a574"/>
+  
+  <!-- Hair (black) -->
+  <path d="M 115 45 Q 115 25 150 20 Q 185 25 185 45" fill="#1a1a1a"/>
+  
+  <!-- Face features -->
+  <circle cx="138" cy="55" r="3" fill="#1a1a1a"/>
+  <circle cx="162" cy="55" r="3" fill="#1a1a1a"/>
+  <path d="M 145 70 Q 150 75 155 70" stroke="#1a1a1a" stroke-width="1.5" fill="none"/>
+  
+  <!-- Praying hands -->
+  <!-- Left hand -->
+  <path d="M 130 100 L 125 120 L 128 150 L 135 145 L 138 120 Z" fill="#d4a574" stroke="#8b7355" stroke-width="1"/>
+  
+  <!-- Right hand -->
+  <path d="M 170 100 L 175 120 L 172 150 L 165 145 L 162 120 Z" fill="#d4a574" stroke="#8b7355" stroke-width="1"/>
+  
+  <!-- Hands together in prayer -->
+  <line x1="135" y1="135" x2="165" y2="135" stroke="#d4a574" stroke-width="3" stroke-linecap="round"/>
+  <line x1="140" y1="140" x2="160" y2="140" stroke="#d4a574" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Wrist bands (Indian flag colors) -->
+  <!-- Left wrist -->
+  <rect x="120" y="150" width="18" height="4" fill="#ff9933"/>
+  <rect x="120" y="154" width="18" height="3" fill="#ffffff"/>
+  <rect x="120" y="157" width="18" height="4" fill="#138808"/>
+  
+  <!-- Right wrist -->
+  <rect x="162" y="150" width="18" height="4" fill="#ff9933"/>
+  <rect x="162" y="154" width="18" height="3" fill="#ffffff"/>
+  <rect x="162" y="157" width="18" height="4" fill="#138808"/>
+  
+  <!-- JCM Text (red, bold) -->
+  <text x="150" y="360" font-size="48" font-weight="900" text-anchor="middle" fill="#dc2626" font-family="Arial, sans-serif" letter-spacing="4">JCM</text>
+</svg>
