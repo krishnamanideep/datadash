@@ -45,15 +45,23 @@ export default function MapComponent({ pollingStations }: MapComponentProps) {
             icon={DefaultIcon}
           >
             <Popup>
-              <div className="p-3 w-64">
-                <h3 className="font-bold text-sm mb-1">{station.ps_name}</h3>
-                <p className="text-xs text-gray-600 mb-2">
+              <div className="p-3 w-72">
+                <h3 className="font-bold text-sm mb-2">{station.ps_name}</h3>
+                <p className="text-xs text-gray-600 mb-1">
                   <strong>PS No:</strong> {station.ps_no}
                 </p>
-                <p className="text-xs text-gray-600 mb-2">
+                <p className="text-xs text-gray-600 mb-1">
                   <strong>Locality:</strong> {station.locality}
                 </p>
-                <div className="border-t pt-2 mt-2">
+                <div className="bg-purple-50 p-2 rounded mb-2 mt-2">
+                  <p className="text-xs text-purple-700 mb-1">
+                    <strong>Category:</strong> {station.category || 'N/A'}
+                  </p>
+                  <p className="text-xs text-purple-700">
+                    <strong>Strongest Party:</strong> {station.strongestParty || 'N/A'} ({station.strongestPartyPercentage?.toFixed(2)}%)
+                  </p>
+                </div>
+                <div className="border-t pt-2">
                   <p className="text-xs font-semibold text-blue-600 mb-1">2021 Election Results:</p>
                   {station.election2021 && (
                     <div className="text-xs space-y-1">
