@@ -7,6 +7,9 @@ export interface PollingStation {
   locality: string;
   latitude: number;
   longitude: number;
+  category?: string;
+  strongestParty?: string;
+  strongestPartyPercentage?: number;
   election2011?: ElectionResults;
   election2016?: ElectionResults;
   election2021?: ElectionResults;
