@@ -79,9 +79,6 @@ export const generateElectionData = (): DashboardData => {
 
   const pollingStations: PollingStation[] = rawData.map((item) => {
     const metadata = psMetadata[item.ps_no as keyof typeof psMetadata];
-    if (item.ps_no === '1' || item.ps_no === '2') {
-      console.log(`PS ${item.ps_no} - metadata found:`, metadata);
-    }
     return {
       id: `PS-${item.ps_no}`,
       ac_id: '24',
