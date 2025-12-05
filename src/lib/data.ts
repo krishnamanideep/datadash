@@ -39,19 +39,62 @@ export const generateElectionData = (): DashboardData => {
     { ps_no: '34', ps_name: 'Govt. Middle School', locality: 'MELAKASAKUDY', lat: 10.95595456, lon: 79.79452193, y2011: { AINRC: 59.07, A_MARIMUTHU: 21.50, R_VADIVELU: 16.26, OTHERS: 3.18 }, y2016: { AINRC: 27.86, AIADMK: 8.93, INC: 27.86, ANANDHAN: 13.93, OTHERS: 20.36, NOTA: 1.07 }, y2021: { AINRC: 29.98, INC: 42.63, VIGESWARAN: 17.68, OTHERS: 9.71, NOTA: 1.73 } },
   ];
 
-  const pollingStations: PollingStation[] = rawData.map((item) => ({
-    id: `PS-${item.ps_no}`,
-    ac_id: '24',
-    ac_name: 'NEDUNGADU',
-    ps_no: item.ps_no,
-    ps_name: item.ps_name,
-    locality: item.locality,
-    latitude: item.lat,
-    longitude: item.lon,
-    election2011: { candidates: item.y2011, year: 2011 },
-    election2016: { candidates: item.y2016, year: 2016 },
-    election2021: { candidates: item.y2021, year: 2021 },
-  }));
+  const psMetadata: Record<string, { category: string; strongestParty: string; percentage: number }> = {
+    '1': { category: 'B', strongestParty: 'AINRC', percentage: 43.20 },
+    '2': { category: 'B', strongestParty: 'INC', percentage: 42.18 },
+    '3': { category: 'A', strongestParty: 'AINRC', percentage: 50.35 },
+    '4': { category: 'C', strongestParty: 'INC', percentage: 31.94 },
+    '5': { category: 'B', strongestParty: 'AINRC', percentage: 61.79 },
+    '6': { category: 'A', strongestParty: 'AINRC', percentage: 46.82 },
+    '7': { category: 'A', strongestParty: 'AINRC', percentage: 50.53 },
+    '8': { category: 'B', strongestParty: 'AINRC', percentage: 49.37 },
+    '9': { category: 'C', strongestParty: 'INC', percentage: 38.54 },
+    '10': { category: 'A', strongestParty: 'AINRC', percentage: 43.14 },
+    '11': { category: 'C', strongestParty: 'VIGESWARAN', percentage: 32.07 },
+    '12': { category: 'B', strongestParty: 'AINRC', percentage: 39.76 },
+    '13': { category: 'C', strongestParty: 'INC', percentage: 30.34 },
+    '14': { category: 'A', strongestParty: 'AINRC', percentage: 40.60 },
+    '15': { category: 'B', strongestParty: 'VIGESWARAN', percentage: 32.47 },
+    '16': { category: 'A', strongestParty: 'AINRC', percentage: 40.03 },
+    '17': { category: 'B', strongestParty: 'AINRC', percentage: 47.65 },
+    '18': { category: 'C', strongestParty: 'VIGESWARAN', percentage: 59.55 },
+    '19': { category: 'A', strongestParty: 'VIGESWARAN', percentage: 32.53 },
+    '20': { category: 'B', strongestParty: 'INC', percentage: 38.12 },
+    '21': { category: 'A', strongestParty: 'AINRC', percentage: 37.32 },
+    '22': { category: 'B', strongestParty: 'INC', percentage: 35.60 },
+    '23': { category: 'C', strongestParty: 'INC', percentage: 35.82 },
+    '24': { category: 'A', strongestParty: 'INC', percentage: 40.35 },
+    '25': { category: 'B', strongestParty: 'INC', percentage: 38.62 },
+    '26': { category: 'A', strongestParty: 'AINRC', percentage: 48.53 },
+    '27': { category: 'C', strongestParty: 'INC', percentage: 47.09 },
+    '28': { category: 'B', strongestParty: 'INC', percentage: 42.65 },
+    '29': { category: 'A', strongestParty: 'AINRC', percentage: 47.31 },
+    '30': { category: 'A', strongestParty: 'AINRC', percentage: 51.10 },
+    '31': { category: 'B', strongestParty: 'INC', percentage: 52.64 },
+    '32': { category: 'C', strongestParty: 'INC', percentage: 50.31 },
+    '33': { category: 'B', strongestParty: 'INC', percentage: 36.71 },
+    '34': { category: 'B', strongestParty: 'INC', percentage: 42.63 },
+  };
+
+  const pollingStations: PollingStation[] = rawData.map((item) => {
+    const metadata = psMetadata[item.ps_no];
+    return {
+      id: `PS-${item.ps_no}`,
+      ac_id: '24',
+      ac_name: 'NEDUNGADU',
+      ps_no: item.ps_no,
+      ps_name: item.ps_name,
+      locality: item.locality,
+      latitude: item.lat,
+      longitude: item.lon,
+      category: metadata?.category,
+      strongestParty: metadata?.strongestParty,
+      strongestPartyPercentage: metadata?.percentage,
+      election2011: { candidates: item.y2011, year: 2011 },
+      election2016: { candidates: item.y2016, year: 2016 },
+      election2021: { candidates: item.y2021, year: 2021 },
+    };
+  });
 
   // Calculate candidate performance across all booths
   const candidatePerformance: CandidatePerformance[] = [
