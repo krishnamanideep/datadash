@@ -1,6 +1,44 @@
 import { PollingStation, ElectionResults, CandidatePerformance, RegionalStats, DashboardData, GIData, SurveyData } from '@/types/data';
 
 export const generateElectionData = (): DashboardData => {
+  // Polling station category and strongest party mapping
+  const psMetadata = {
+    '1': { category: 'B', strongestParty: 'AINRC', percentage: 45.06 },
+    '2': { category: 'C', strongestParty: 'AINRC', percentage: 34.46 },
+    '3': { category: 'B', strongestParty: 'AINRC', percentage: 47.42 },
+    '4': { category: 'B', strongestParty: 'AINRC', percentage: 41.29 },
+    '5': { category: 'A', strongestParty: 'AINRC', percentage: 51.69 },
+    '6': { category: 'B', strongestParty: 'AINRC', percentage: 49.69 },
+    '7': { category: 'B', strongestParty: 'AINRC', percentage: 46.30 },
+    '8': { category: 'B', strongestParty: 'AINRC', percentage: 46.54 },
+    '9': { category: 'B', strongestParty: 'AINRC', percentage: 39.64 },
+    '10': { category: 'B', strongestParty: 'AINRC', percentage: 47.71 },
+    '11': { category: 'C', strongestParty: 'AINRC', percentage: 33.83 },
+    '12': { category: 'B', strongestParty: 'AINRC', percentage: 40.84 },
+    '13': { category: 'B', strongestParty: 'AINRC', percentage: 36.62 },
+    '14': { category: 'B', strongestParty: 'AINRC', percentage: 44.35 },
+    '15': { category: 'B', strongestParty: 'AINRC', percentage: 44.59 },
+    '16': { category: 'B', strongestParty: 'AINRC', percentage: 43.03 },
+    '17': { category: 'B', strongestParty: 'AINRC', percentage: 42.39 },
+    '18': { category: 'C', strongestParty: 'AINRC', percentage: 29.78 },
+    '19': { category: 'B', strongestParty: 'AINRC', percentage: 41.79 },
+    '20': { category: 'B', strongestParty: 'AINRC', percentage: 43.16 },
+    '21': { category: 'D', strongestParty: 'AINRC', percentage: 18.66 },
+    '22': { category: 'B', strongestParty: 'AINRC', percentage: 42.23 },
+    '23': { category: 'C', strongestParty: 'AINRC', percentage: 31.06 },
+    '24': { category: 'B', strongestParty: 'AINRC', percentage: 43.08 },
+    '25': { category: 'B', strongestParty: 'AINRC', percentage: 36.79 },
+    '26': { category: 'B', strongestParty: 'AINRC', percentage: 47.85 },
+    '27': { category: 'B', strongestParty: 'AINRC', percentage: 40.14 },
+    '28': { category: 'B', strongestParty: 'AINRC', percentage: 36.14 },
+    '29': { category: 'B', strongestParty: 'AINRC', percentage: 44.93 },
+    '30': { category: 'A', strongestParty: 'AINRC', percentage: 51.58 },
+    '31': { category: 'B', strongestParty: 'AINRC', percentage: 39.09 },
+    '32': { category: 'B', strongestParty: 'INC', percentage: 36.97 },
+    '33': { category: 'B', strongestParty: 'AINRC', percentage: 38.79 },
+    '34': { category: 'B', strongestParty: 'AINRC', percentage: 35.16 },
+  };
+
   // Complete election data from Nedungadu constituency - All 36 booths
   const rawData = [
     { ps_no: '1', ps_name: 'Kamaraj Govt. High School', locality: 'POOVAM', lat: 10.99314132, lon: 79.83043268, y2011: { AINRC: 50.95, A_MARIMUTHU: 27.16, R_VADIVELU: 17.47, OTHERS: 4.42 }, y2016: { AINRC: 44.24, AIADMK: 11.52, INC: 33.13, ANANDHAN: 0.81, OTHERS: 5.66, NOTA: 1.01 }, y2021: { AINRC: 43.20, INC: 31.46, VIGESWARAN: 20.97, OTHERS: 4.37, NOTA: 0.87 } },
@@ -39,19 +77,25 @@ export const generateElectionData = (): DashboardData => {
     { ps_no: '34', ps_name: 'Govt. Middle School', locality: 'MELAKASAKUDY', lat: 10.95595456, lon: 79.79452193, y2011: { AINRC: 59.07, A_MARIMUTHU: 21.50, R_VADIVELU: 16.26, OTHERS: 3.18 }, y2016: { AINRC: 27.86, AIADMK: 8.93, INC: 27.86, ANANDHAN: 13.93, OTHERS: 20.36, NOTA: 1.07 }, y2021: { AINRC: 29.98, INC: 42.63, VIGESWARAN: 17.68, OTHERS: 9.71, NOTA: 1.73 } },
   ];
 
-  const pollingStations: PollingStation[] = rawData.map((item) => ({
-    id: `PS-${item.ps_no}`,
-    ac_id: '24',
-    ac_name: 'NEDUNGADU',
-    ps_no: item.ps_no,
-    ps_name: item.ps_name,
-    locality: item.locality,
-    latitude: item.lat,
-    longitude: item.lon,
-    election2011: { candidates: item.y2011, year: 2011 },
-    election2016: { candidates: item.y2016, year: 2016 },
-    election2021: { candidates: item.y2021, year: 2021 },
-  }));
+  const pollingStations: PollingStation[] = rawData.map((item) => {
+    const metadata = psMetadata[item.ps_no as keyof typeof psMetadata];
+    return {
+      id: `PS-${item.ps_no}`,
+      ac_id: '24',
+      ac_name: 'NEDUNGADU',
+      ps_no: item.ps_no,
+      ps_name: item.ps_name,
+      locality: item.locality,
+      latitude: item.lat,
+      longitude: item.lon,
+      category: metadata?.category,
+      strongestParty: metadata?.strongestParty,
+      strongestPartyPercentage: metadata?.percentage,
+      election2011: { candidates: item.y2011, year: 2011 },
+      election2016: { candidates: item.y2016, year: 2016 },
+      election2021: { candidates: item.y2021, year: 2021 },
+    };
+  });
 
   // Calculate candidate performance across all booths
   const candidatePerformance: CandidatePerformance[] = [
