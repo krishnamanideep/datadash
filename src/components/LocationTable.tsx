@@ -7,6 +7,10 @@ interface LocationTableProps {
 }
 
 export function LocationTable({ pollingStations }: LocationTableProps) {
+  // Force log to verify component renders
+  (typeof window !== 'undefined') && console.log('LOCATION TABLE RENDERED WITH', pollingStations.length, 'STATIONS');
+  (typeof window !== 'undefined') && console.log('FIRST STATION:', pollingStations[0]);
+  
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b border-gray-200">
