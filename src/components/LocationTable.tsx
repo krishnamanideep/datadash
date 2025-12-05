@@ -7,12 +7,6 @@ interface LocationTableProps {
 }
 
 export function LocationTable({ pollingStations }: LocationTableProps) {
-  if (pollingStations.length > 0) {
-    console.log('LocationTable: First station:', pollingStations[0]);
-    console.log('LocationTable: Category value:', pollingStations[0].category);
-    console.log('LocationTable: Party value:', pollingStations[0].strongestParty);
-  }
-  
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b border-gray-200">
