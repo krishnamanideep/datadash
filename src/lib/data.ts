@@ -91,11 +91,11 @@ export const generateElectionData = (): DashboardData => {
       { gender: 'T', high_impact: 14.29, low_impact: 0, no_opinion: 85.71 },
     ],
     caste_age_survey: [
-      { caste_age: 'A(18-25)', yes: 30.51, high_impact: 12.21, low_impact: 57.27, no_opinion: 30.52 },
-      { caste_age: 'B(25-35)', yes: 32.64, high_impact: 9.13, low_impact: 58.23, no_opinion: 32.64 },
-      { caste_age: 'C(35-50)', yes: 35.88, high_impact: 11.15, low_impact: 52.96, no_opinion: 35.89 },
-      { caste_age: 'D(50-65)', yes: 35.48, high_impact: 11.02, low_impact: 53.50, no_opinion: 35.48 },
-      { caste_age: 'E(65+)', yes: 35.60, high_impact: 10.37, low_impact: 54.02, no_opinion: 35.61 },
+      { caste_age: 'A(18-25)', yes: 42.73, high_impact: 18.37, low_impact: 24.36, no_opinion: 57.27 },
+      { caste_age: 'B(25-35)', yes: 41.77, high_impact: 17.96, low_impact: 23.81, no_opinion: 58.23 },
+      { caste_age: 'C(35-50)', yes: 47.04, high_impact: 20.22, low_impact: 26.82, no_opinion: 52.96 },
+      { caste_age: 'D(50-65)', yes: 46.50, high_impact: 20.01, low_impact: 26.49, no_opinion: 53.50 },
+      { caste_age: 'E(65+)', yes: 45.98, high_impact: 19.78, low_impact: 26.20, no_opinion: 54.02 },
     ],
     caste_age_yesno_survey: [
       { caste_age: 'A(18-25)', yes: 42.73, no: 57.27 },
@@ -105,8 +105,8 @@ export const generateElectionData = (): DashboardData => {
       { caste_age: 'E(65+)', yes: 45.98, no: 54.02 },
     ],
     mandaram_overview: [
-      { mandaram: 'WITHOUT MANDARAM', yes: 31.89, high_impact: 11.02, low_impact: 57.09, no_opinion: 0 },
-      { mandaram: 'WITH MANDARAM', yes: 36.84, high_impact: 10.00, low_impact: 53.17, no_opinion: 0 },
+      { mandaram: 'WITHOUT MANDARAM', yes: 42.91, high_impact: 18.45, low_impact: 24.46, no_opinion: 57.09 },
+      { mandaram: 'WITH MANDARAM', yes: 46.83, high_impact: 20.14, low_impact: 26.69, no_opinion: 53.17 },
     ],
     mandaram_yesno: [
       { mandaram: 'WITHOUT MANDARAM', yes: 42.91, no: 57.09 },
