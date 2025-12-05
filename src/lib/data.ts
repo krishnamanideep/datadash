@@ -78,7 +78,14 @@ export const generateElectionData = (): DashboardData => {
   ];
 
   const pollingStations: PollingStation[] = rawData.map((item) => {
-    const metadata = (psMetadata as Record<string, any>)[item.ps_no];
+    const psNo = item.ps_no;
+    const metadata = (psMetadata as Record<string, any>)[psNo];
+    
+    // Explicitly extract values
+    const category = metadata ? metadata.category : undefined;
+    const strongestParty = metadata ? metadata.strongestParty : undefined;
+    const percentage = metadata ? metadata.percentage : undefined;
+    
     return {
       id: `PS-${item.ps_no}`,
       ac_id: '24',
@@ -88,9 +95,9 @@ export const generateElectionData = (): DashboardData => {
       locality: item.locality,
       latitude: item.lat,
       longitude: item.lon,
-      category: metadata?.category,
-      strongestParty: metadata?.strongestParty,
-      strongestPartyPercentage: metadata?.percentage,
+      category: category,
+      strongestParty: strongestParty,
+      strongestPartyPercentage: percentage,
       election2011: { candidates: item.y2011, year: 2011 },
       election2016: { candidates: item.y2016, year: 2016 },
       election2021: { candidates: item.y2021, year: 2021 },
