@@ -21,10 +21,9 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
 
 const TAB_VIEWS = {
   OVERVIEW: 'overview',
-  MAPS: 'maps',
+  TABLE_AND_MAPS: 'table-and-maps',
   CANDIDATES: 'candidates',
   LOCALITY: 'locality',
-  TABLE: 'table',
   GI_DASHBOARD: 'gi',
   SURVEY: 'survey',
   UPLOAD: 'upload',
@@ -117,13 +116,18 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Maps Tab */}
-        {activeTab === TAB_VIEWS.MAPS && (
-          <div>
-            <PollingLocationFilter
-              pollingStations={data.pollingStations}
-              onSelect={handleLocationFilter}
-            />
+        {/* Table & Maps Tab */}
+        {activeTab === TAB_VIEWS.TABLE_AND_MAPS && (
+          <div className="space-y-8">
+            {/* Filter Section */}
+            <div>
+              <PollingLocationFilter
+                pollingStations={data.pollingStations}
+                onSelect={handleLocationFilter}
+              />
+            </div>
+
+            {/* Maps Section */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-2xl font-bold text-gray-900">Polling Stations Map</h2>
@@ -132,6 +136,11 @@ export default function Dashboard() {
               <div style={{ height: '600px' }}>
                 <MapComponent pollingStations={filteredStations} />
               </div>
+            </div>
+
+            {/* Table Section */}
+            <div>
+              <LocationTable pollingStations={filteredStations} />
             </div>
           </div>
         )}
@@ -196,11 +205,6 @@ export default function Dashboard() {
         {/* Locality Analysis Tab */}
         {activeTab === TAB_VIEWS.LOCALITY && (
           <LocalityAnalysis pollingStations={filteredStations} />
-        )}
-
-        {/* Table Tab */}
-        {activeTab === TAB_VIEWS.TABLE && (
-          <LocationTable pollingStations={filteredStations} />
         )}
 
         {/* GI Dashboard Tab */}
