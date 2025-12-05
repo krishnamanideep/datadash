@@ -19,6 +19,8 @@ export function LocationTable({ pollingStations }: LocationTableProps) {
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">PS No</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Polling Station</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Locality</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Category</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Strongest Party</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">2021 Winner</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Winner %</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Coordinates</th>
@@ -36,6 +38,8 @@ export function LocationTable({ pollingStations }: LocationTableProps) {
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{station.ps_no}</td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{station.ps_name}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{station.locality}</td>
+                  <td className="px-6 py-4 text-sm font-semibold text-purple-600 bg-purple-50">{station.category || 'N/A'}</td>
+                  <td className="px-6 py-4 text-sm font-semibold text-green-600 bg-green-50">{station.strongestParty || 'N/A'}</td>
                   <td className="px-6 py-4 text-sm font-semibold text-blue-600">{winner?.[0] || 'N/A'}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {winner ? `${(winner[1] as number).toFixed(2)}%` : 'N/A'}

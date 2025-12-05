@@ -53,6 +53,22 @@ export default function MapComponent({ pollingStations }: MapComponentProps) {
                 <p className="text-xs text-gray-600 mb-2">
                   <strong>Locality:</strong> {station.locality}
                 </p>
+                
+                {/* Category and Strongest Party */}
+                <div className="border-t pt-2 mt-2 mb-2">
+                  <p className="text-xs font-semibold text-purple-600 mb-1">
+                    <strong>Category:</strong> <span className="bg-purple-100 px-2 py-1 rounded">{station.category || 'N/A'}</span>
+                  </p>
+                  <p className="text-xs font-semibold text-green-600 mb-1">
+                    <strong>Strongest Party:</strong> <span className="bg-green-100 px-2 py-1 rounded">{station.strongestParty || 'N/A'}</span>
+                  </p>
+                  {station.strongestPartyPercentage && (
+                    <p className="text-xs text-gray-600">
+                      <strong>Percentage:</strong> {station.strongestPartyPercentage.toFixed(2)}%
+                    </p>
+                  )}
+                </div>
+
                 <div className="border-t pt-2 mt-2">
                   <p className="text-xs font-semibold text-blue-600 mb-1">2021 Election Results:</p>
                   {station.election2021 && (
