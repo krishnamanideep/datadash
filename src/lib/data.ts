@@ -79,7 +79,7 @@ export const generateElectionData = (): DashboardData => {
 
   const pollingStations: PollingStation[] = rawData.map((item) => {
     const metadata = psMetadata[item.ps_no as keyof typeof psMetadata];
-    return {
+    const result = {
       id: `PS-${item.ps_no}`,
       ac_id: '24',
       ac_name: 'NEDUNGADU',
@@ -95,6 +95,11 @@ export const generateElectionData = (): DashboardData => {
       election2016: { candidates: item.y2016, year: 2016 },
       election2021: { candidates: item.y2021, year: 2021 },
     };
+    // Debug first few stations
+    if (item.ps_no === '1' || item.ps_no === '2') {
+      console.log(`Station ${item.ps_no}: category=${result.category}, party=${result.strongestParty}`);
+    }
+    return result;
   });
 
   // Calculate candidate performance across all booths

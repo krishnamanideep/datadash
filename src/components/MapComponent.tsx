@@ -23,6 +23,11 @@ interface MapComponentProps {
 }
 
 export default function MapComponent({ pollingStations }: MapComponentProps) {
+  // Debug
+  if (typeof window !== 'undefined' && pollingStations.length > 0) {
+    console.log('MapComponent received stations:', pollingStations[0]);
+  }
+  
   // Center on Nedungadu, Puducherry (average of coordinates)
   const center: [number, number] = [10.981, 79.816];
 
