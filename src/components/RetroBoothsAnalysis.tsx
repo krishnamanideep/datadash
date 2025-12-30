@@ -28,15 +28,28 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
   const [retroBooths, setRetroBooths] = useState<BoothData[]>([]);
   const [weakBooths, setWeakBooths] = useState<any>({});
   const [independentHotspots, setIndependentHotspots] = useState<BoothData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     fetch('/data.json')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
       .then((jsonData) => {
         const assemblyKey = `AC_${selectedAssembly}_FINAL`;
         const assemblyData = jsonData[assemblyKey] || [];
         setData(assemblyData);
         analyzeBooths(assemblyData);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error loading data:', err);
+        setError(err.message);
+        setLoading(false);
       });
   }, [selectedAssembly]);
 
@@ -70,8 +83,16 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
     setWeakBooths(weak);
   };
 
-  if (!data.length) {
+  if (loading) {
     return <div className="p-8 text-center">Loading booth analysis...</div>;
+  }
+
+  if (error) {
+    return <div className="p-8 text-center text-red-600">Error loading data: {error}</div>;
+  }
+
+  if (!data.length) {
+    return <div className="p-8 text-center">No data available for Assembly {selectedAssembly}</div>;
   }
 
   const heatMapData = data.map((booth) => ({

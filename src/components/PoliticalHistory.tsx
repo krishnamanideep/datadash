@@ -10,15 +10,28 @@ interface BoothData {
 export default function PoliticalHistory({ selectedAssembly }: { selectedAssembly: string }) {
   const [data, setData] = useState<BoothData[]>([]);
   const [trends, setTrends] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     fetch('/data.json')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
       .then((jsonData) => {
         const assemblyKey = `AC_${selectedAssembly}_FINAL`;
         const assemblyData = jsonData[assemblyKey] || [];
         setData(assemblyData);
         analyzeTrends(assemblyData);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error loading data:', err);
+        setError(err.message);
+        setLoading(false);
       });
   }, [selectedAssembly]);
 
@@ -60,8 +73,16 @@ export default function PoliticalHistory({ selectedAssembly }: { selectedAssembl
     }).filter(p => p.swing !== 0);
   };
 
-  if (!data.length || !trends) {
+  if (loading) {
     return <div className="p-8 text-center">Loading political history...</div>;
+  }
+
+  if (error) {
+    return <div className="p-8 text-center text-red-600">Error loading data: {error}</div>;
+  }
+
+  if (!data.length || !trends) {
+    return <div className="p-8 text-center">No data available for Assembly {selectedAssembly}</div>;
   }
 
   return (

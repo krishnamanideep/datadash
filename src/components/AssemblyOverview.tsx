@@ -32,15 +32,29 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 export default function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
   const [data, setData] = useState<BoothData[]>([]);
   const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     fetch('/data.json')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
       .then((jsonData: AssemblyData) => {
         const assemblyKey = `AC_${selectedAssembly}_FINAL`;
         const assemblyData = jsonData[assemblyKey] || [];
+        console.log('Loaded data for', assemblyKey, 'booths:', assemblyData.length);
         setData(assemblyData);
         calculateStats(assemblyData);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error loading data:', err);
+        setError(err.message);
+        setLoading(false);
       });
   }, [selectedAssembly]);
 
@@ -85,8 +99,16 @@ export default function AssemblyOverview({ selectedAssembly }: { selectedAssembl
     });
   };
 
-  if (!data.length) {
+  if (loading) {
     return <div className="p-8 text-center">Loading assembly data...</div>;
+  }
+
+  if (error) {
+    return <div className="p-8 text-center text-red-600">Error loading data: {error}</div>;
+  }
+
+  if (!data.length) {
+    return <div className="p-8 text-center">No data available for Assembly {selectedAssembly}</div>;
   }
 
   return (
