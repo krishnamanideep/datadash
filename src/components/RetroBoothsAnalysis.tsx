@@ -34,7 +34,8 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch('/data.json')
+    const basePath = process.env.NODE_ENV === 'production' ? '/datadash' : '';
+    fetch(`${basePath}/data.json`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.json();
