@@ -1,4 +1,4 @@
-import { PollingStation, ElectionResults, CandidatePerformance, RegionalStats, DashboardData, GIData, SurveyData } from '@/types/data';
+import { PollingStation, CandidatePerformance, RegionalStats, DashboardData, GIData, SurveyData } from '@/types/data';
 
 export const generateElectionData = (): DashboardData => {
   // Complete election data from Nedungadu constituency - All 36 booths

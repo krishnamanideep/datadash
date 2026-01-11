@@ -39,7 +39,7 @@ export function CandidateComparisonChart({ data }: CandidateComparisonChartProps
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
           <YAxis />
-          <Tooltip formatter={(value: any) => typeof value === 'number' ? `${value.toFixed(2)}%` : value} />
+          <Tooltip formatter={(value: unknown) => typeof value === 'number' ? `${value.toFixed(2)}%` : String(value)} />
           <Legend />
           <Bar dataKey="2011" fill="#3b82f6" name="2011" radius={[8, 8, 0, 0]} />
           <Bar dataKey="2016" fill="#f59e0b" name="2016" radius={[8, 8, 0, 0]} />
@@ -63,14 +63,14 @@ export function ElectionTrendChart({ data }: ElectionTrendChartProps) {
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Winner's Vote Share Over Time</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">Winner&apos;s Vote Share Over Time</h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="year" />
           <YAxis yAxisId="left" />
           <YAxis yAxisId="right" orientation="right" />
-          <Tooltip formatter={(value: any) => typeof value === 'number' ? `${value.toFixed(2)}%` : value} />
+          <Tooltip formatter={(value: unknown) => typeof value === 'number' ? `${value.toFixed(2)}%` : String(value)} />
           <Legend />
           <Line
             yAxisId="left"
@@ -127,7 +127,7 @@ export function CandidateVotePieChart({ data, year }: CandidateVotePieChartProps
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip formatter={(value: any) => typeof value === 'number' ? `${value.toFixed(2)}%` : value} />
+          <Tooltip formatter={(value: unknown) => typeof value === 'number' ? `${value.toFixed(2)}%` : String(value)} />
         </PieChart>
       </ResponsiveContainer>
     </div>

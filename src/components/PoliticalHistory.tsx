@@ -2,51 +2,28 @@
 
 import { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
-
-interface BoothData {
-  [key: string]: any;
-}
+import { PollingStation } from '@/types/data';
 
 export default function PoliticalHistory({ selectedAssembly }: { selectedAssembly: string }) {
-  const [data, setData] = useState<BoothData[]>([]);
-  const [trends, setTrends] = useState<any>(null);
+  const [data, setData] = useState<PollingStation[]>([]);
+  const [trends, setTrends] = useState<{
+    trendData: { year: string; [party: string]: string }[];
+    swingData: { party: string; swing: string }[];
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    const basePath = process.env.NODE_ENV === 'production' ? '/datadash' : '';
-    fetch(`${basePath}/data.json`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
-      .then((jsonData) => {
-        const assemblyKey = `AC_${selectedAssembly}_FINAL`;
-        const assemblyData = jsonData[assemblyKey] || [];
-        setData(assemblyData);
-        analyzeTrends(assemblyData);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error loading data:', err);
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [selectedAssembly]);
-
-  const analyzeTrends = (booths: BoothData[]) => {
+  const analyzeTrends = (booths: PollingStation[]) => {
     // Calculate party vote shares across years
     const years = ['2011', '2016', '2021'];
     const parties = ['NRC', 'DMK', 'AIADMK', 'BJP', 'PMK', 'IND', 'OTHERS'];
 
     const trendData = years.map((year) => {
-      const yearData: any = { year };
+      const yearData: { year: string; [party: string]: string } = { year };
       
       parties.forEach((party) => {
         const key = `${party}_${year}_pct`;
-        const totalPct = booths.reduce((sum, b) => sum + (b[key] || 0), 0);
+        const totalPct = booths.reduce((sum, b) => sum + ((b as any)[key] || 0), 0);
         yearData[party] = ((totalPct / booths.length) * 100).toFixed(2);
       });
 
@@ -59,20 +36,40 @@ export default function PoliticalHistory({ selectedAssembly }: { selectedAssembl
 
     setTrends({
       trendData,
-      swing2011to2016,
-      swing2016to2021,
+      swingData: [...swing2011to2016, ...swing2016to2021],
     });
   };
 
-  const calculateSwing = (booths: BoothData[], year1: string, year2: string) => {
+  const calculateSwing = (booths: PollingStation[], year1: string, year2: string) => {
     const parties = ['NRC', 'DMK', 'AIADMK', 'BJP', 'PMK'];
     return parties.map((party) => {
-      const avg1 = booths.reduce((sum, b) => sum + (b[`${party}_${year1}_pct`] || 0), 0) / booths.length;
-      const avg2 = booths.reduce((sum, b) => sum + (b[`${party}_${year2}_pct`] || 0), 0) / booths.length;
+      const avg1 = booths.reduce((sum, b) => sum + ((b as any)[`${party}_${year1}_pct`] || 0), 0) / booths.length;
+      const avg2 = booths.reduce((sum, b) => sum + ((b as any)[`${party}_${year2}_pct`] || 0), 0) / booths.length;
       const swing = ((avg2 - avg1) * 100).toFixed(2);
-      return { party, swing: parseFloat(swing) };
-    }).filter(p => p.swing !== 0);
+      return { party, swing };
+    }).filter(p => p.swing !== '0.00');
   };
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    fetch('/api/pollingStations')
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
+      .then((pollingStations: PollingStation[]) => {
+        const assemblyData = pollingStations.filter(ps => ps.ac_id === selectedAssembly);
+        setData(assemblyData);
+        analyzeTrends(assemblyData);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error loading data:', err);
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [selectedAssembly, analyzeTrends]);
 
   if (loading) {
     return <div className="p-8 text-center">Loading political history...</div>;
@@ -114,13 +111,13 @@ export default function PoliticalHistory({ selectedAssembly }: { selectedAssembl
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-xl font-semibold mb-4">Vote Swing (2011 → 2016)</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={trends.swing2011to2016}>
+            <BarChart data={trends.swingData.slice(0, 5)}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="party" />
               <YAxis label={{ value: 'Swing %', angle: -90, position: 'insideLeft' }} />
               <Tooltip />
               <Bar dataKey="swing" fill="#8884d8">
-                {trends.swing2011to2016.map((entry: any, index: number) => (
+                {trends.swingData.slice(0, 5).map((entry: any, index: number) => (
                   <Cell key={`cell-${index}`} fill={entry.swing > 0 ? '#10b981' : '#ef4444'} />
                 ))}
               </Bar>
@@ -131,13 +128,13 @@ export default function PoliticalHistory({ selectedAssembly }: { selectedAssembl
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-xl font-semibold mb-4">Vote Swing (2016 → 2021)</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={trends.swing2016to2021}>
+            <BarChart data={trends.swingData.slice(5)}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="party" />
               <YAxis label={{ value: 'Swing %', angle: -90, position: 'insideLeft' }} />
               <Tooltip />
               <Bar dataKey="swing" fill="#8884d8">
-                {trends.swing2016to2021.map((entry: any, index: number) => (
+                {trends.swingData.slice(5).map((entry: any, index: number) => (
                   <Cell key={`cell-${index}`} fill={entry.swing > 0 ? '#10b981' : '#ef4444'} />
                 ))}
               </Bar>
@@ -155,13 +152,13 @@ export default function PoliticalHistory({ selectedAssembly }: { selectedAssembl
               <span className="font-semibold mr-2">•</span>
               <span>
                 <strong>2011-2016:</strong> Major shifts in party preferences with{' '}
-                {trends.swing2011to2016.find((s: any) => s.swing > 0)?.party || 'multiple parties'} gaining ground.
+                {trends.swingData.slice(0, 5).find((s: any) => s.swing > 0)?.party || 'multiple parties'} gaining ground.
               </span>
             </li>
             <li className="flex items-start">
               <span className="font-semibold mr-2">•</span>
               <span>
-                <strong>2016-2021:</strong> BJP's emergence as a significant force with substantial vote share gains.
+                <strong>2016-2021:</strong> BJP&apos;s emergence as a significant force with substantial vote share gains.
               </span>
             </li>
             <li className="flex items-start">

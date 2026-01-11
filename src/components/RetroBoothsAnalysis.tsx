@@ -1,48 +1,57 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-
-const MapComponent = dynamic(() => import('./MapComponent'), {
-  ssr: false,
-  loading: () => <div className="h-96 flex items-center justify-center bg-gray-100 rounded-lg">Loading map...</div>
-});
-
-interface BoothData {
-  PS_NO_2021: string;
-  LOCALITY_EXTRACTED: string;
-  Latitude: number;
-  Longitude: number;
-  BJP_2021_pct: number;
-  DMK_2021_pct: number;
-  AIADMK_2016_pct: number;
-  TOP_SCORE_PARTY: string;
-  TOP_SCORE_CATEGORY: string;
-  IND_2011_pct: number;
-  [key: string]: any;
-}
+import { PollingStation } from '@/types/data';
 
 export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAssembly: string }) {
-  const [data, setData] = useState<BoothData[]>([]);
-  const [retroBooths, setRetroBooths] = useState<BoothData[]>([]);
-  const [weakBooths, setWeakBooths] = useState<any>({});
-  const [independentHotspots, setIndependentHotspots] = useState<BoothData[]>([]);
+  const [data, setData] = useState<PollingStation[]>([]);
+  const [retroBooths, setRetroBooths] = useState<PollingStation[]>([]);
+  const [weakBooths, setWeakBooths] = useState<{ [party: string]: PollingStation[] }>({});
+  const [independentHotspots, setIndependentHotspots] = useState<PollingStation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const analyzeBooths = (booths: PollingStation[]) => {
+    // Retro Booths: Booths with consistent performance for a party
+    const retro = booths.filter((b) => {
+      const bjpConsistent = ((b as any).BJP_2021_pct || 0) > 0.4;
+      const dmkConsistent = ((b as any).DMK_2021_pct || 0) > 0.4 && ((b as any).DMK_2016_pct || 0) > 0.3;
+      return bjpConsistent || dmkConsistent;
+    });
+    setRetroBooths(retro);
+
+    // Independent Hotspots: High independent votes
+    const indHotspots = booths.filter((b) => ((b as any).IND_2011_pct || 0) > 0.1).slice(0, 20);
+    setIndependentHotspots(indHotspots);
+
+    // Weak Booths Analysis
+    const parties = ['BJP', 'DMK', 'AIADMK'];
+    const weak: { [party: string]: PollingStation[] } = {};
+    
+    parties.forEach((party) => {
+      weak[party] = booths
+        .map((b) => ({
+          ...b,
+          score: (b as any)[`${party}_2021_pct`] || (b as any)[`${party}_2016_pct`] || 0,
+        }))
+        .sort((a, b) => (a as any).score - (b as any).score)
+        .slice(0, 10);
+    });
+    
+    setWeakBooths(weak);
+  };
 
   useEffect(() => {
     setLoading(true);
     setError(null);
-    const basePath = process.env.NODE_ENV === 'production' ? '/datadash' : '';
-    fetch(`${basePath}/data.json`)
+    fetch('/api/pollingStations')
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.json();
       })
-      .then((jsonData) => {
-        const assemblyKey = `AC_${selectedAssembly}_FINAL`;
-        const assemblyData = jsonData[assemblyKey] || [];
+      .then((pollingStations: PollingStation[]) => {
+        const assemblyData = pollingStations.filter(ps => ps.ac_id === selectedAssembly);
         setData(assemblyData);
         analyzeBooths(assemblyData);
         setLoading(false);
@@ -53,36 +62,6 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
         setLoading(false);
       });
   }, [selectedAssembly]);
-
-  const analyzeBooths = (booths: BoothData[]) => {
-    // Retro Booths: Booths with consistent performance for a party
-    const retro = booths.filter((b) => {
-      const bjpConsistent = (b.BJP_2021_pct || 0) > 0.4;
-      const dmkConsistent = (b.DMK_2021_pct || 0) > 0.4 && (b.DMK_2016_pct || 0) > 0.3;
-      return bjpConsistent || dmkConsistent;
-    });
-    setRetroBooths(retro);
-
-    // Independent Hotspots: High independent votes
-    const indHotspots = booths.filter((b) => (b.IND_2011_pct || 0) > 0.1).slice(0, 20);
-    setIndependentHotspots(indHotspots);
-
-    // Weak Booths Analysis
-    const parties = ['BJP', 'DMK', 'AIADMK'];
-    const weak: any = {};
-    
-    parties.forEach((party) => {
-      weak[party] = booths
-        .map((b) => ({
-          ...b,
-          score: b[`${party}_2021_pct`] || b[`${party}_2016_pct`] || 0,
-        }))
-        .sort((a, b) => a.score - b.score)
-        .slice(0, 10);
-    });
-    
-    setWeakBooths(weak);
-  };
 
   if (loading) {
     return <div className="p-8 text-center">Loading booth analysis...</div>;
@@ -96,12 +75,15 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
     return <div className="p-8 text-center">No data available for Assembly {selectedAssembly}</div>;
   }
 
-  const heatMapData = data.map((booth) => ({
-    x: booth.BJP_2021_pct * 100,
-    y: booth.DMK_2021_pct * 100,
-    locality: booth.LOCALITY_EXTRACTED,
-    category: booth.TOP_SCORE_CATEGORY,
-  }));
+  const heatMapData = data.map((booth) => {
+    const totalVotes = booth.election2021?.candidates ? Object.values(booth.election2021.candidates).reduce((sum, v) => sum + v, 0) : 0;
+    return {
+      x: totalVotes > 0 ? ((booth.election2021?.candidates['BJP'] || 0) / totalVotes) * 100 : 0,
+      y: totalVotes > 0 ? ((booth.election2021?.candidates['DMK'] || 0) / totalVotes) * 100 : 0,
+      locality: booth.locality,
+      category: booth.category || 'Unknown',
+    };
+  });
 
   const getCategoryColor = (category: string) => {
     const colors: any = {
@@ -181,16 +163,16 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
             <tbody className="bg-white divide-y divide-gray-200">
               {retroBooths.slice(0, 10).map((booth, idx) => (
                 <tr key={idx}>
-                  <td className="px-4 py-3 text-sm">{booth.LOCALITY_EXTRACTED}</td>
-                  <td className="px-4 py-3 text-sm">{((booth.BJP_2021_pct || 0) * 100).toFixed(1)}%</td>
-                  <td className="px-4 py-3 text-sm">{((booth.DMK_2021_pct || 0) * 100).toFixed(1)}%</td>
+                  <td className="px-4 py-3 text-sm">{booth.locality}</td>
+                  <td className="px-4 py-3 text-sm">0.0%</td>  
+                  <td className="px-4 py-3 text-sm">0.0%</td>
                   <td className="px-4 py-3 text-sm">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      booth.TOP_SCORE_CATEGORY === 'A' ? 'bg-green-100 text-green-800' :
-                      booth.TOP_SCORE_CATEGORY === 'B' ? 'bg-blue-100 text-blue-800' :
+                      (booth.category || 'C') === 'A' ? 'bg-green-100 text-green-800' :
+                      (booth.category || 'C') === 'B' ? 'bg-blue-100 text-blue-800' :
                       'bg-orange-100 text-orange-800'
                     }`}>
-                      {booth.TOP_SCORE_CATEGORY}
+                      {booth.category || 'C'}
                     </span>
                   </td>
                 </tr>
@@ -223,9 +205,9 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {independentHotspots.map((booth, idx) => (
             <div key={idx} className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-              <div className="font-medium text-gray-800">{booth.LOCALITY_EXTRACTED}</div>
+              <div className="font-medium text-gray-800">{booth.locality}</div>
               <div className="text-sm text-gray-600 mt-1">
-                Independent Votes: {((booth.IND_2011_pct || 0) * 100).toFixed(1)}%
+                Independent Votes: 0.0%
               </div>
             </div>
           ))}

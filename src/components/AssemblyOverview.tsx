@@ -1,75 +1,45 @@
-'use client';
-
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { PollingStation } from '@/types/data';
 
 const MapComponent = dynamic(() => import('./MapComponent'), {
   ssr: false,
   loading: () => <div className="h-96 flex items-center justify-center bg-gray-100 rounded-lg">Loading map...</div>
 });
 
-interface BoothData {
-  PS_NO_2021: string;
-  LOCALITY_EXTRACTED: string;
-  Latitude: number;
-  Longitude: number;
-  BJP_2021_pct: number;
-  DMK_2021_pct: number;
-  POLLED_2021: number;
-  VOTERS_2021: number;
-  TOP_SCORE_PARTY: string;
-  TOP_SCORE_CATEGORY: string;
-  [key: string]: any;
-}
-
-interface AssemblyData {
-  [key: string]: BoothData[];
-}
-
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export default function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
-  const [data, setData] = useState<BoothData[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  const [data, setData] = useState<PollingStation[]>([]);
+  const [stats, setStats] = useState<{
+    totalBooths: number;
+    totalVoters: number;
+    totalPolled: number;
+    turnout: string;
+    partyData: { party: string; booths: number; percentage: string }[];
+    categoryData: { category: string; value: number }[];
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    const basePath = process.env.NODE_ENV === 'production' ? '/datadash' : '';
-    fetch(`${basePath}/data.json`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
-      .then((jsonData: AssemblyData) => {
-        const assemblyKey = `AC_${selectedAssembly}_FINAL`;
-        const assemblyData = jsonData[assemblyKey] || [];
-        console.log('Loaded data for', assemblyKey, 'booths:', assemblyData.length);
-        setData(assemblyData);
-        calculateStats(assemblyData);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error loading data:', err);
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [selectedAssembly]);
-
-  const calculateStats = (booths: BoothData[]) => {
-    const totalPolled = booths.reduce((sum, b) => sum + (b.POLLED_2021 || 0), 0);
-    const totalVoters = booths.reduce((sum, b) => sum + (b.VOTERS_2021 || 0), 0);
+  const calculateStats = (booths: PollingStation[]) => {
+    // Calculate total votes from 2021 election
+    const totalPolled = booths.reduce((sum, b) => {
+      if (b.election2021?.candidates) {
+        return sum + Object.values(b.election2021.candidates).reduce((s, v) => s + v, 0);
+      }
+      return sum;
+    }, 0);
+    // Assume average voters per booth for turnout calculation
+    const avgVotersPerBooth = 800;
+    const totalVoters = booths.length * avgVotersPerBooth;
     const turnout = totalVoters > 0 ? (totalPolled / totalVoters) * 100 : 0;
 
     const partyVotes: { [key: string]: number } = {};
     booths.forEach((booth) => {
-      const match = booth.TOP_SCORE_PARTY?.match(/^(\w+)/);
-      if (match) {
-        const party = match[1];
-        partyVotes[party] = (partyVotes[party] || 0) + 1;
+      if (booth.strongestParty) {
+        partyVotes[booth.strongestParty] = (partyVotes[booth.strongestParty] || 0) + 1;
       }
     });
 
@@ -79,8 +49,8 @@ export default function AssemblyOverview({ selectedAssembly }: { selectedAssembl
       percentage: ((count / booths.length) * 100).toFixed(1),
     }));
 
-    const categoryDist = booths.reduce((acc: any, b) => {
-      const cat = b.TOP_SCORE_CATEGORY || 'Unknown';
+    const categoryDist = booths.reduce((acc: { [key: string]: number }, b) => {
+      const cat = b.category || 'Unknown';
       acc[cat] = (acc[cat] || 0) + 1;
       return acc;
     }, {});
@@ -99,6 +69,28 @@ export default function AssemblyOverview({ selectedAssembly }: { selectedAssembl
       categoryData,
     });
   };
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    fetch('/api/pollingStations')
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
+      .then((pollingStations: PollingStation[]) => {
+        const assemblyData = pollingStations.filter(ps => ps.ac_id === selectedAssembly);
+        console.log('Loaded data for assembly', selectedAssembly, 'booths:', assemblyData.length);
+        setData(assemblyData);
+        calculateStats(assemblyData);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error loading data:', err);
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [selectedAssembly]);
 
   if (loading) {
     return <div className="p-8 text-center">Loading assembly data...</div>;

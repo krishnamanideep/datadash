@@ -2,10 +2,9 @@
 
 interface HeaderProps {
   title: string;
-  subtitle: string;
 }
 
-export function DashboardHeader({ title, subtitle }: HeaderProps) {
+export function DashboardHeader({ title }: HeaderProps) {
   return (
     <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">

@@ -1,0 +1,35 @@
+[debug] [2026-01-10T20:33:07.389Z] ----------------------------------------------------------------------
+[debug] [2026-01-10T20:33:07.390Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\krish\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init emulators --project demo-datadash
+[debug] [2026-01-10T20:33:07.390Z] CLI Version:   15.2.1
+[debug] [2026-01-10T20:33:07.390Z] Platform:      win32
+[debug] [2026-01-10T20:33:07.390Z] Node Version:  v24.12.0
+[debug] [2026-01-10T20:33:07.390Z] Time:          Sun Jan 11 2026 02:03:07 GMT+0530 (India Standard Time)
+[debug] [2026-01-10T20:33:07.391Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-01-10T20:33:07.394Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  D:\datadash\datadash
+
+Before we get started, keep in mind:
+
+  * You are initializing within an existing Firebase project directory
+
+[debug] [2026-01-10T20:33:08.898Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-01-10T20:33:08.898Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] 
+[info] Skipping Firebase project setup because a demo project is provided
+[info] 
+=== Emulators Setup

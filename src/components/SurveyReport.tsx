@@ -68,7 +68,7 @@ export function SurveyReport({ surveyData }: SurveyReportProps) {
                     <Cell key={`cell-${index}`} fill={COLORS[index]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: any) => typeof value === 'number' ? `${value.toFixed(2)}%` : value} />
+                <Tooltip formatter={(value: unknown) => typeof value === 'number' ? `${value.toFixed(2)}%` : String(value)} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -108,7 +108,7 @@ export function SurveyReport({ surveyData }: SurveyReportProps) {
                     <Cell key={`cell-${index}`} fill={index === 0 ? '#10b981' : '#ef4444'} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: any) => typeof value === 'number' ? `${value.toFixed(2)}%` : value} />
+                <Tooltip formatter={(value: unknown) => typeof value === 'number' ? `${value.toFixed(2)}%` : String(value)} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -154,7 +154,7 @@ export function SurveyReport({ surveyData }: SurveyReportProps) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="gender" />
             <YAxis />
-            <Tooltip formatter={(value: any) => typeof value === 'number' ? `${value.toFixed(2)}%` : value} />
+            <Tooltip formatter={(value: unknown) => typeof value === 'number' ? `${value.toFixed(2)}%` : String(value)} />
             <Legend />
             <Bar dataKey="High Impact" fill="#ef4444" />
             <Bar dataKey="Low Impact" fill="#f59e0b" />

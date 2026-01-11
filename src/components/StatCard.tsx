@@ -42,7 +42,13 @@ export function StatCard({ title, value, change, icon, suffix, color = 'blue' }:
 }
 
 interface ElectionSummaryStatsProps {
-  summary: any;
+  summary: {
+    totalStations: number;
+    constituency: string;
+    totalVotes2021: number;
+    avgTurnout2021: number;
+    winner2021: string;
+  };
 }
 
 export function ElectionSummaryStats({ summary }: ElectionSummaryStatsProps) {

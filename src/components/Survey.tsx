@@ -6,7 +6,17 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 const COLORS = ['#FF6B35', '#E63946', '#06A77D', '#FFC300', '#0077B6'];
 
 export default function Survey({ selectedAssembly }: { selectedAssembly: string }) {
-  const [surveyData, setSurveyData] = useState<any>(null);
+  const [surveyData, setSurveyData] = useState<{
+    totalRespondents: number;
+    sampleDate: string;
+    votingIntention: { party: string; percentage: number; votes: number }[];
+    issuesPriority: { issue: string; score: number }[];
+    leaderApproval: { leader: string; approval: number; disapproval: number; neutral: number }[];
+    demographicBreakdown: {
+      age: { group: string; BJP: number; DMK: number; AIADMK: number; Others: number }[];
+      gender: { category: string; BJP: number; DMK: number; AIADMK: number; Others: number }[];
+    };
+  } | null>(null);
 
   useEffect(() => {
     // Simulate survey data - replace with actual survey API call
@@ -76,9 +86,8 @@ export default function Survey({ selectedAssembly }: { selectedAssembly: string 
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
-                label={(props: any) => `${props.party} ${props.percentage}%`}
               >
-                {surveyData.votingIntention.map((entry: any, index: number) => (
+                {surveyData.votingIntention.map((entry: { party: string; percentage: number }, index: number) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -119,28 +128,28 @@ export default function Survey({ selectedAssembly }: { selectedAssembly: string 
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-xl font-semibold mb-4">Leader Approval Ratings</h3>
         <div className="space-y-6">
-          {surveyData.leaderApproval.map((leader: any, idx: number) => (
+          {surveyData.leaderApproval.map((leader: { leader: string; approval: number }, idx: number) => (
             <div key={idx}>
               <div className="mb-2 font-medium text-gray-700">{leader.leader}</div>
               <div className="flex items-center gap-2">
                 <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden flex">
                   <div
                     className="bg-green-500 flex items-center justify-center text-xs text-white font-medium"
-                    style={{ width: `${leader.approval}%` }}
+                    style={{ width: `${(leader as any).approval}%` }}
                   >
-                    {leader.approval}% Approve
+                    {(leader as any).approval}% Approve
                   </div>
                   <div
                     className="bg-gray-400 flex items-center justify-center text-xs text-white font-medium"
-                    style={{ width: `${leader.neutral}%` }}
+                    style={{ width: `${(leader as any).neutral}%` }}
                   >
-                    {leader.neutral > 8 && `${leader.neutral}%`}
+                    {(leader as any).neutral > 8 && `${(leader as any).neutral}%`}
                   </div>
                   <div
                     className="bg-red-500 flex items-center justify-center text-xs text-white font-medium"
-                    style={{ width: `${leader.disapproval}%` }}
+                    style={{ width: `${(leader as any).disapproval}%` }}
                   >
-                    {leader.disapproval}% Disapprove
+                    {(leader as any).disapproval}% Disapprove
                   </div>
                 </div>
               </div>

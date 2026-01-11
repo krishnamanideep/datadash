@@ -3,9 +3,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { PollingStation } from '@/types/data';
+import L from 'leaflet';
 
 interface MapComponentProps {
-  data: any[];
+  data: PollingStation[];
 }
 
 function MapUpdater({ center, zoom }: { center: [number, number], zoom: number }) {
@@ -17,12 +19,11 @@ function MapUpdater({ center, zoom }: { center: [number, number], zoom: number }
 }
 
 export default function MapComponent({ data }: MapComponentProps) {
-  const [icons, setIcons] = useState<any>(null);
+  const [icons, setIcons] = useState<{ [key: string]: unknown } | null>(null);
   
   useEffect(() => {
     // Only run on client side
     if (typeof window !== 'undefined') {
-      const L = require('leaflet');
       
       const blueIcon = L.icon({
         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
@@ -67,21 +68,21 @@ export default function MapComponent({ data }: MapComponentProps) {
   // Calculate center based on data
   const { center, zoom } = useMemo(() => {
     if (data && data.length > 0) {
-      const validBooths = data.filter(b => b.Latitude && b.Longitude);
+      const validBooths = data.filter(b => b.latitude && b.longitude);
       if (validBooths.length > 0) {
-        const avgLat = validBooths.reduce((sum, b) => sum + b.Latitude, 0) / validBooths.length;
-        const avgLon = validBooths.reduce((sum, b) => sum + b.Longitude, 0) / validBooths.length;
+        const avgLat = validBooths.reduce((sum, b) => sum + b.latitude, 0) / validBooths.length;
+        const avgLon = validBooths.reduce((sum, b) => sum + b.longitude, 0) / validBooths.length;
         return { center: [avgLat, avgLon] as [number, number], zoom: 13 };
       }
     }
     return { center: [11.9416, 79.8083] as [number, number], zoom: 11 };
   }, [data]);
 
-  const getMarkerIcon = (booth: any) => {
+  const getMarkerIcon = (booth: PollingStation) => {
     if (!icons) return null;
     
     // Color code by top party
-    const party = booth.TOP_SCORE_PARTY?.toUpperCase();
+    const party = booth.strongestParty?.toUpperCase();
     if (party?.includes('BJP')) return icons.orange;
     if (party?.includes('DMK')) return icons.red;
     if (party?.includes('AIADMK')) return icons.green;
@@ -92,7 +93,7 @@ export default function MapComponent({ data }: MapComponentProps) {
     return <div className="h-96 flex items-center justify-center bg-gray-100 rounded-lg">Loading map...</div>;
   }
 
-  const validBooths = data.filter(booth => booth.Latitude && booth.Longitude);
+  const validBooths = data.filter(booth => booth.latitude && booth.longitude);
 
   return (
     <div className="w-full h-full bg-gray-100 rounded-lg overflow-hidden relative">
@@ -131,62 +132,47 @@ export default function MapComponent({ data }: MapComponentProps) {
           return (
             <Marker
               key={idx}
-              position={[booth.Latitude, booth.Longitude]}
-              icon={markerIcon}
+              position={[booth.latitude, booth.longitude]}
+              icon={markerIcon as any}
             >
               <Popup maxWidth={300}>
                 <div className="p-3">
-                  <h3 className="font-bold text-sm mb-2 text-gray-800">{booth.LOCALITY_EXTRACTED}</h3>
+                  <h3 className="font-bold text-sm mb-2 text-gray-800">{booth.locality}</h3>
                   <div className="text-xs text-gray-600 mb-3 border-b pb-2">
-                    {booth.PS_NO_2021}
+                    {booth.ps_no}
                   </div>
                   
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-purple-700">Category:</span>
                       <span className={`px-2 py-1 rounded text-xs font-bold ${
-                        booth.TOP_SCORE_CATEGORY === 'A' ? 'bg-green-100 text-green-800' :
-                        booth.TOP_SCORE_CATEGORY === 'B' ? 'bg-blue-100 text-blue-800' :
-                        booth.TOP_SCORE_CATEGORY === 'C' ? 'bg-orange-100 text-orange-800' :
+                        booth.category === 'A' ? 'bg-green-100 text-green-800' :
+                        booth.category === 'B' ? 'bg-blue-100 text-blue-800' :
+                        booth.category === 'C' ? 'bg-orange-100 text-orange-800' :
                         'bg-red-100 text-red-800'
                       }`}>
-                        {booth.TOP_SCORE_CATEGORY || 'N/A'}
+                        {booth.category || 'N/A'}
                       </span>
                     </div>
                     
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-green-700">Leading Party:</span>
-                      <span className="font-bold text-sm">{booth.TOP_SCORE_PARTY || 'N/A'}</span>
+                      <span className="font-bold text-sm">{booth.strongestParty || 'N/A'}</span>
                     </div>
                   </div>
 
                   <div className="border-t pt-2 mt-3">
                     <p className="text-xs font-semibold text-blue-700 mb-2">2021 Election Results:</p>
                     <div className="space-y-1">
-                      {booth.BJP_2021_pct && (
-                        <div className="flex justify-between">
-                          <span className="text-xs text-gray-700">BJP:</span>
-                          <span className="text-xs font-semibold text-orange-600">
-                            {(booth.BJP_2021_pct * 100).toFixed(1)}%
+                      {booth.election2021?.candidates && Object.entries(booth.election2021.candidates).map(([party, votes]) => (
+                        <div key={party} className="flex justify-between">
+                          <span className="text-xs text-gray-700">{party}:</span>
+                          <span className="text-xs font-semibold text-blue-600">
+                            {votes}
                           </span>
                         </div>
-                      )}
-                      {booth.DMK_2021_pct && (
-                        <div className="flex justify-between">
-                          <span className="text-xs text-gray-700">DMK:</span>
-                          <span className="text-xs font-semibold text-red-600">
-                            {(booth.DMK_2021_pct * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      )}
-                      {booth.POLLED_2021 && booth.VOTERS_2021 && (
-                        <div className="flex justify-between border-t pt-1 mt-1">
-                          <span className="text-xs text-gray-700">Turnout:</span>
-                          <span className="text-xs font-semibold text-gray-800">
-                            {booth.POLLED_2021} / {booth.VOTERS_2021} ({((booth.POLLED_2021/booth.VOTERS_2021)*100).toFixed(1)}%)
-                          </span>
-                        </div>
-                      )}
+                      ))}
+                      {/* Turnout calculation can be added if voter data is available */}
                     </div>
                   </div>
                 </div>
