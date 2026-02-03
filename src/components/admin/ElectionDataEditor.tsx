@@ -24,7 +24,7 @@ interface PollingStation {
 }
 
 const ELECTION_YEARS = ['2021', '2016', '2011'];
-const PARTIES = ['BJP', 'DMK', 'AIADMK', 'INC', 'NR Congress', 'PMK', 'VCK', 'CPI', 'CPI(M)', 'IND', 'NOTA', 'Others'];
+const PARTIES = ['BJP', 'DMK', 'AIADMK', 'INC', 'NR Congress', 'PMK', 'VCK', 'CPI', 'CPI(M)', 'LJK', 'IND', 'NOTA', 'Others'];
 
 export default function ElectionDataEditor() {
     const [assemblyId, setAssemblyId] = useState('1');

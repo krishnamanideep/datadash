@@ -135,9 +135,8 @@ export interface Candidate {
   name: string;
   party: string;
   image?: string;
-  age: number;
-  education: string;
-  experience: string;
+  caste: string;
+  designation: string;
   strengths: string[];
   weaknesses: string[];
   advantages: string[];

@@ -326,7 +326,7 @@ export default function AssemblyMetaEditor() {
                                             </select>
                                             <button onClick={() => removeArrayItem('scenarios', i)} className="text-red-500"><Trash2 size={16} /></button>
                                         </div>
-                                        <textarea className="w-full border rounded p-2" rows={2} value={s.content} onChange={e => updateArrayItem('scenarios', i, 'content', e.target.value)} placeholder="Content..." />
+                                        <textarea className="w-full border rounded p-2" rows={3} value={s.content} onChange={e => updateArrayItem('scenarios', i, 'content', e.target.value)} placeholder="Content (supports line breaks)..." />
                                     </div>
                                 ))}
                             </section>
@@ -380,7 +380,7 @@ export default function AssemblyMetaEditor() {
                                             <input className="font-bold border rounded p-1 flex-1" value={f.title} onChange={e => updateArrayItem('decidingFactors', i, 'title', e.target.value)} placeholder="Title" />
                                             <button onClick={() => removeArrayItem('decidingFactors', i)} className="text-red-500"><Trash2 size={16} /></button>
                                         </div>
-                                        <input className="w-full border rounded p-1" value={f.description} onChange={e => updateArrayItem('decidingFactors', i, 'description', e.target.value)} placeholder="Description" />
+                                        <textarea className="w-full border rounded p-2" rows={2} value={f.description} onChange={e => updateArrayItem('decidingFactors', i, 'description', e.target.value)} placeholder="Description (supports line breaks)..." />
                                     </div>
                                 ))}
                             </section>

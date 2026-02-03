@@ -83,18 +83,13 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-gray-500 text-xs uppercase tracking-wide">Age</div>
-                  <div className="font-bold text-gray-800 text-lg">{candidate.age} years</div>
+                  <div className="text-gray-500 text-xs uppercase tracking-wide">Caste</div>
+                  <div className="font-bold text-gray-800 text-lg">{candidate.caste || 'N/A'}</div>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-gray-500 text-xs uppercase tracking-wide">Experience</div>
-                  <div className="font-bold text-gray-800 text-lg">{candidate.experience?.split(' ')[0] || '0'} years</div>
+                  <div className="text-gray-500 text-xs uppercase tracking-wide">Designation</div>
+                  <div className="font-bold text-gray-800 text-lg">{candidate.designation || 'N/A'}</div>
                 </div>
-              </div>
-
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Education</div>
-                <div className="font-medium text-gray-800">{candidate.education}</div>
               </div>
 
               {/* Strengths */}
@@ -249,15 +244,15 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                   ))}
                 </tr>
                 <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium">Age</td>
+                  <td className="px-6 py-4 font-medium">Caste</td>
                   {candidates.map((c, idx) => (
-                    <td key={idx} className="px-6 py-4">{c.age}</td>
+                    <td key={idx} className="px-6 py-4">{c.caste || 'N/A'}</td>
                   ))}
                 </tr>
                 <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium">Experience</td>
+                  <td className="px-6 py-4 font-medium">Designation</td>
                   {candidates.map((c, idx) => (
-                    <td key={idx} className="px-6 py-4">{c.experience}</td>
+                    <td key={idx} className="px-6 py-4">{c.designation || 'N/A'}</td>
                   ))}
                 </tr>
                 <tr className="hover:bg-gray-50">

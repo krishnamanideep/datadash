@@ -71,7 +71,7 @@ export default function CurrentScenario({ selectedAssembly, previewData }: { sel
                     {scenario.status}
                   </span>
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed">{scenario.content}</p>
+                <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap break-words">{scenario.content}</p>
               </div>
             </div>
           </div>
@@ -113,8 +113,8 @@ export default function CurrentScenario({ selectedAssembly, previewData }: { sel
               <li key={idx} className="flex items-start gap-3">
                 <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
                 <div>
-                  <div className="font-medium text-gray-800">{factor.title}</div>
-                  <div className="text-sm text-gray-600">{factor.description}</div>
+                  <div className="font-bold text-gray-800">{factor.title}</div>
+                  <div className="text-sm text-gray-600 whitespace-pre-wrap break-words">{factor.description}</div>
                 </div>
               </li>
             ))}

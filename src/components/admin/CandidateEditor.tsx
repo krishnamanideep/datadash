@@ -53,9 +53,8 @@ export default function CandidateEditor() {
             assemblyId,
             name: '',
             party: '',
-            age: 0,
-            education: '',
-            experience: '',
+            caste: '',
+            designation: '',
             strengths: [],
             weaknesses: [],
             advantages: [],
@@ -168,12 +167,12 @@ export default function CandidateEditor() {
                                 <option value="PMK">PMK</option>
                                 <option value="NRC">NRC</option>
                                 <option value="AINRC">AINRC</option>
+                                <option value="LJK">LJK</option>
                                 <option value="IND">Independent</option>
                                 <option value="Others">Others</option>
                             </select>
-                            <input className="border p-2 rounded" type="number" placeholder="Age" value={formData.age || ''} onChange={e => setFormData({ ...formData, age: Number(e.target.value) })} />
-                            <input className="border p-2 rounded" placeholder="Education" value={formData.education || ''} onChange={e => setFormData({ ...formData, education: e.target.value })} />
-                            <input className="border p-2 rounded" placeholder="Experience" value={formData.experience || ''} onChange={e => setFormData({ ...formData, experience: e.target.value })} />
+                            <input className="border p-2 rounded" placeholder="Caste" value={formData.caste || ''} onChange={e => setFormData({ ...formData, caste: e.target.value })} />
+                            <input className="border p-2 rounded" placeholder="Designation" value={formData.designation || ''} onChange={e => setFormData({ ...formData, designation: e.target.value })} />
                             <select
                                 className="border p-2 rounded bg-white"
                                 value={formData.assemblyId || assemblyId}
