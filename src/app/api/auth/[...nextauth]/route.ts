@@ -1,10 +1,13 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
 const allowedEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
 
+// Use a default secret for development, but require env var in production
+const secret = process.env.NEXTAUTH_SECRET || 'development-secret-key-change-in-production';
+
 export const authOptions: NextAuthOptions = {
+    secret,
     providers: [
         // Simulating "Specific Mail Only" login without needing Google Keys immediately
         // In production, you would swap this for GoogleProvider or EmailProvider

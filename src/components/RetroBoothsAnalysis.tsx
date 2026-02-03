@@ -270,17 +270,13 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
     }).sort((a, b) => b.voteShare - a.voteShare);
   }, [data, selectedYear]);
 
-  // Compute map marker data - BOOTH LEVEL with approximate coordinates
+  // Compute map marker data - BOOTH LEVEL using ACTUAL COORDINATES
   const mapMarkersData = useMemo(() => {
     if (!data.length) return [];
 
     const yearKey = `election${selectedYear}` as 'election2021' | 'election2016' | 'election2011';
-    const assemblyCoords = ASSEMBLY_COORDINATES[selectedAssembly];
 
-    if (!assemblyCoords) return [];
-
-    // Generate approximate booth coordinates around the assembly center
-    return data.map((booth, index) => {
+    return data.map((booth) => {
       const candidates = booth[yearKey]?.candidates || {};
       const partyShares = Object.entries(candidates)
         .map(([party, share]) => ({ party, share: (share as number) * 100 }))
@@ -289,11 +285,10 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
 
       const winner = partyShares[0];
 
-      // Spread booths around assembly center in a circular pattern
-      const angle = (index / data.length) * 2 * Math.PI;
-      const radius = 0.02; // ~2km radius
-      const lat = assemblyCoords.lat + radius * Math.cos(angle);
-      const lng = assemblyCoords.lng + radius * Math.sin(angle);
+      // Use actual coordinates from data
+      // Fallback to assembly center if missing (though we fixed nulls in cleaning)
+      const lat = booth.latitude || ASSEMBLY_COORDINATES[selectedAssembly]?.lat || 0;
+      const lng = booth.longitude || ASSEMBLY_COORDINATES[selectedAssembly]?.lng || 0;
 
       return {
         boothId: booth.ps_no,
@@ -307,7 +302,7 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
         totalVotes: booth[yearKey]?.total_votes || 0,
         category: booth.category || 'Unknown'
       };
-    });
+    }).filter(m => m.lat !== 0 && m.lng !== 0); // Filter out invalid coordinates
   }, [data, selectedYear, selectedAssembly]);
 
 
