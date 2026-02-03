@@ -1,16 +1,12 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
-const allowedEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
-
-// Use a default secret for development, but require env var in production
-const secret = process.env.NEXTAUTH_SECRET || 'development-secret-key-change-in-production';
+// Use a robust fallback secret
+const secret = process.env.NEXTAUTH_SECRET || 'development-fallback-secret-key-must-be-long-enough';
 
 export const authOptions: NextAuthOptions = {
     secret,
     providers: [
-        // Simulating "Specific Mail Only" login without needing Google Keys immediately
-        // In production, you would swap this for GoogleProvider or EmailProvider
         CredentialsProvider({
             name: 'Admin Access',
             credentials: {
@@ -23,31 +19,27 @@ export const authOptions: NextAuthOptions = {
                 const email = credentials.email.toLowerCase();
                 const password = credentials.password;
 
-                // Simple hardcoded check to bypass broken Firebase Web Key
+                // 1. Hardcoded Super Admin
                 if (email === 'admin@example.com' && password === 'adminpassword123') {
                     return { id: 'admin', email: email, name: 'System Admin', role: 'admin' };
                 }
 
-                // Allow fallback to just Allowed Emails if we want multiple admins without password check (Optional, but better to enforce password now)
+                // 2. Allowed Emails check
+                const allowedEmailsStr = process.env.ADMIN_EMAILS || '';
+                const allowedEmails = allowedEmailsStr.split(',').map(e => e.trim().toLowerCase());
+
                 if (allowedEmails.includes(email)) {
-                    // For other emails, we might want strict password but for now let's just allow admin
                     if (password === 'adminpassword123') {
                         return { id: email, email: email, name: 'Admin', role: 'admin' };
                     }
                 }
 
-                throw new Error('Invalid email or password');
+                return null; // Return null instead of throwing error for cleaner UI handling
             }
-        }),
-        /*
-        GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID || '',
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
         })
-        */
     ],
     pages: {
-        signIn: '/admin', // Custom login page
+        signIn: '/admin',
     },
     callbacks: {
         async jwt({ token, user }) {
@@ -65,8 +57,9 @@ export const authOptions: NextAuthOptions = {
     },
     session: {
         strategy: 'jwt',
+        maxAge: 30 * 24 * 60 * 60, // 30 days
     },
-    // Trust host is required for Vercel deployment when not setting NEXTAUTH_URL explicitly
+    debug: process.env.NODE_ENV === 'development',
     // @ts-ignore
     trustHost: true,
 };
