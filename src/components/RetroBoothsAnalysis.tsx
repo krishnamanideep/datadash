@@ -9,6 +9,9 @@ import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Re
 import { PollingStation, Candidate } from '@/types/data';
 import { ASSEMBLIES } from '@/data/assemblies';
 import { ASSEMBLY_COORDINATES, getRegionCenter } from '@/data/assemblyCoordinates';
+import { db } from '@/lib/firebase/client';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import rawPollingData from '@/data/Form20_Localities_Pct.json';
 
 // Dynamically import Leaflet components (client-side only)
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -83,6 +86,48 @@ const defaultConfig: PageConfig = {
   heatMapDescription: 'Visualizing booth-wise performance distribution. Each point represents a polling booth.'
 };
 
+const processLocalPollingData = (targetAssemblyId: string | null, jsonData: any): PollingStation[] => {
+  let allStations: any[] = [];
+
+  Object.keys(jsonData).forEach(key => {
+    if (key.startsWith('AC_') && key.endsWith('_FINAL')) {
+      const acId = key.replace('AC_', '').replace('_FINAL', '');
+
+      // Skip if specific assembly requested and doesn't match
+      if (targetAssemblyId && acId !== targetAssemblyId) return;
+
+      const stations = jsonData[key].map((station: any, index: number) => {
+        const candidates2021: Record<string, number> = {};
+        const candidates2016: Record<string, number> = {};
+        const candidates2011: Record<string, number> = {};
+
+        Object.keys(station).forEach(k => {
+          if (k.endsWith('_2021_pct')) candidates2021[k.replace('_2021_pct', '')] = station[k];
+          else if (k.endsWith('_2016_pct')) candidates2016[k.replace('_2016_pct', '')] = station[k];
+          else if (k.endsWith('_2011_pct')) candidates2011[k.replace('_2011_pct', '')] = station[k];
+        });
+
+        return {
+          id: `${acId}_${station.PS_NO_2021 || index}`,
+          ac_id: acId,
+          ps_no: station.PS_NO_2021,
+          ps_name: station.PS_NO_2021,
+          locality: station.LOCALITY_EXTRACTED,
+          latitude: station.Latitude,
+          longitude: station.Longitude,
+          category: station.TOP_SCORE_CATEGORY,
+          strongestParty: station.TOP_SCORE_PARTY,
+          election2021: { year: 2021, total_votes: station.POLLED_2021, candidates: candidates2021 },
+          election2016: { year: 2016, total_votes: station.POLLED_2016, candidates: candidates2016 },
+          election2011: { year: 2011, total_votes: station.POLLED_2011, candidates: candidates2011 }
+        };
+      });
+      allStations = [...allStations, ...stations];
+    }
+  });
+  return allStations;
+};
+
 export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAssembly: string }) {
   const [data, setData] = useState<PollingStation[]>([]);
   const [allAssembliesData, setAllAssembliesData] = useState<PollingStation[]>([]);
@@ -105,99 +150,67 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
     setLoading(true);
     setError(null);
 
-    // Fetch all data including manual entries
-    Promise.all([
-      fetch('/api/pollingStations').then(res => res.ok ? res.json() : []),
-      fetch(`/api/candidates?assemblyId=${selectedAssembly}`).then(res => res.json()).catch(() => []),
-      fetch(`/api/customCards?assemblyId=${selectedAssembly}&section=retro`).then(res => res.json()).catch(() => []),
-      fetch(`/api/pageConfig?assemblyId=${selectedAssembly}&pageType=retrobooths`).then(res => res.json()).catch(() => ({})),
-      fetch(`/api/weakBooths?assemblyId=${selectedAssembly}`).then(res => res.json()).catch(() => []),
-      fetch(`/api/independentHotspots?assemblyId=${selectedAssembly}`).then(res => res.json()).catch(() => [])
-    ])
-      .then(([pollingStations, candidatesData, cardsData, configData, manualWeakBooths, manualHotspots]) => {
-        const assemblyData = (pollingStations as PollingStation[]).filter(ps => ps.ac_id === selectedAssembly);
+    const loadData = async () => {
+      try {
+        // 1. Local Processing for Polling Data
+        const assemblyData = processLocalPollingData(selectedAssembly, rawPollingData);
+        const allData = processLocalPollingData(null, rawPollingData);
+
         setData(assemblyData);
-        setAllAssembliesData(pollingStations as PollingStation[]); // Store all assemblies data for heatmaps
-        setCandidates(candidatesData || []);
-        const sortedCards = Array.isArray(cardsData) ? [...cardsData].sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
-        setCustomCards(sortedCards);
+        setAllAssembliesData(allData);
 
-        // Apply page config
-        if (configData && !configData.error) {
-          setPageConfig({
-            showPollingTable: configData.showPollingTable ?? true,
-            showHeatMap: configData.showHeatMap ?? true,
-            showWeakBooths: configData.showWeakBooths ?? true,
-            showIndependentHotspots: configData.showIndependentHotspots ?? true,
-            showCustomCards: configData.showCustomCards ?? true,
-            heatMapTitle: configData.heatMapTitle || defaultConfig.heatMapTitle,
-            heatMapDescription: configData.heatMapDescription || defaultConfig.heatMapDescription
-          });
-        }
+        // 2. Firestore Fetches for Dynamic Data
+        const [candidatesSnap, cardsSnap] = await Promise.all([
+          getDocs(query(collection(db, 'candidates'), where('assemblyId', '==', selectedAssembly))),
+          getDocs(query(collection(db, 'customCards'), where('assemblyId', '==', selectedAssembly)))
+        ]);
 
-        // Process weak booths - use manual entries if available, else auto-analyze
-        const manualWeak = Array.isArray(manualWeakBooths) ? manualWeakBooths : [];
-        if (manualWeak.length > 0) {
-          const grouped: { [party: string]: any[] } = {};
-          manualWeak.forEach((booth: ManualWeakBooth) => {
-            if (!grouped[booth.party]) grouped[booth.party] = [];
-            grouped[booth.party].push(booth);
-          });
-          setWeakBooths(grouped);
-        } else {
-          // Auto-analyze from polling data
-          const parties = ['BJP', 'DMK', 'AIADMK'];
-          const weak: { [party: string]: any[] } = {};
-          parties.forEach((party) => {
-            weak[party] = assemblyData
-              .map((b) => ({
-                locality: b.locality,
-                score: b.election2021?.candidates[party] || b.election2016?.candidates[party] || 0
-              }))
-              .sort((a, b) => a.score - b.score)
-              .slice(0, 5);
-          });
-          setWeakBooths(weak);
-        }
+        const candidatesList = candidatesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Candidate));
+        const cardsList = cardsSnap.docs.map(d => ({ id: d.id, ...d.data() } as CustomCard));
 
-        // Process hotspots - use manual entries if available
-        const manualHots = Array.isArray(manualHotspots) ? manualHotspots : [];
-        if (manualHots.length > 0) {
-          setIndependentHotspots(manualHots);
-        } else {
-          // Auto-analyze from polling data
-          const indHotspots = assemblyData
-            .filter((b) => (b.election2011?.candidates['IND'] || 0) > 0.1)
-            .slice(0, 6)
-            .map((booth) => ({
-              locality: booth.locality,
-              psName: booth.ps_name,
-              candidateName: 'Independent Candidate',
-              bestPerformance: booth.election2011?.candidates['IND'] || 0,
-              bestYear: '2011',
-              perf2021: booth.election2021?.candidates['IND'] || 0,
-              perf2016: booth.election2016?.candidates['IND'] || 0,
-              perf2011: booth.election2011?.candidates['IND'] || 0,
-            }));
-          setIndependentHotspots(indHotspots);
-        }
+        setCandidates(candidatesList);
+        setCustomCards(cardsList.filter(c => c.section === 'retro').sort((a, b) => (a.order || 0) - (b.order || 0)));
 
-        // Retro booths (always auto-analyzed)
-        const retro = assemblyData.filter((b) => {
-          const dmk2021 = b.election2021?.candidates['DMK'] || 0;
-          const dmk2016 = b.election2016?.candidates['DMK'] || 0;
-          const bjp2021 = b.election2021?.candidates['BJP'] || 0;
-          return (dmk2021 > 0.4 && dmk2016 > 0.3) || bjp2021 > 0.4;
+        // 3. Fallbacks / Calculations (Weak Booths & Hotspots)
+        // Auto-calc logic moved here since API is gone
+        const parties = ['BJP', 'DMK', 'AIADMK'];
+        const weak: { [party: string]: any[] } = {};
+        parties.forEach((party) => {
+          weak[party] = assemblyData
+            .map((b) => ({
+              locality: b.locality,
+              score: b.election2021?.candidates[party] || b.election2016?.candidates[party] || 0
+            }))
+            .sort((a, b) => a.score - b.score)
+            .slice(0, 5);
         });
-        setRetroBooths(retro);
+        setWeakBooths(weak);
+
+        const indHotspots = assemblyData
+          .filter((b) => (b.election2011?.candidates['IND'] || 0) > 0.1)
+          .slice(0, 6)
+          .map((booth) => ({
+            locality: booth.locality,
+            psName: booth.ps_name,
+            candidateName: 'Independent Candidate',
+            bestPerformance: booth.election2011?.candidates['IND'] || 0,
+            bestYear: '2011',
+            perf2021: booth.election2021?.candidates['IND'] || 0,
+            perf2016: booth.election2016?.candidates['IND'] || 0,
+            perf2011: booth.election2011?.candidates['IND'] || 0,
+          }));
+        setIndependentHotspots(indHotspots);
 
         setLoading(false);
-      })
-      .catch((err) => {
+
+      } catch (err: any) {
         console.error('Error loading data:', err);
         setError(err.message);
         setLoading(false);
-      });
+      }
+    };
+
+    loadData();
   }, [selectedAssembly]);
 
   // Helper function to get party color

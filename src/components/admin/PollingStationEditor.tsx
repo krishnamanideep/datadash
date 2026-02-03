@@ -6,6 +6,8 @@ import { PollingStation } from '@/types/data';
 import { Search, Edit2, Save, X, ArrowLeft, MapPin } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { ASSEMBLIES } from '@/data/assemblies';
+import { db } from '@/lib/firebase/client';
+import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
 
 // Dynamic import for Map to avoid SSR issues
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { ssr: false });
@@ -23,9 +25,16 @@ export default function PollingStationEditor() {
     useEffect(() => {
         setLoading(true);
         // Fetch only selected assembly stations
-        fetch(`/api/pollingStations?assemblyId=${assemblyId}`)
-            .then(res => res.json())
-            .then(data => {
+        const q = query(collection(db, 'pollingStations'), where('ac_id', '==', assemblyId));
+
+        getDocs(q)
+            .then(snapshot => {
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PollingStation));
+                // If data is empty, maybe fallback to JSON? For now assume DB populated.
+
+                // Sort by PS No
+                data.sort((a, b) => parseInt(a.ps_no) - parseInt(b.ps_no));
+
                 setStations(data);
                 setFiltered(data);
                 setLoading(false);
@@ -66,18 +75,14 @@ export default function PollingStationEditor() {
         const currentId = editingId; // Capture ID
 
         try {
-            const res = await fetch('/api/pollingStations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formState)
-            });
-            if (res.ok) {
-                // Success feedback could go here
-                setEditingId(null);
-                setFormState(null);
-            }
+            const docRef = doc(db, 'pollingStations', formState.id);
+            await setDoc(docRef, formState, { merge: true });
+
+            setEditingId(null);
+            setFormState(null);
         } catch (e) {
             alert('Failed to save changes');
+            console.error(e);
         }
     };
 

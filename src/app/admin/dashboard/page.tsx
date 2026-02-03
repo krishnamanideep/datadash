@@ -1,8 +1,8 @@
 /* eslint-disable */
 'use client';
 
-import { useState } from 'react';
-import { signOut, useSession } from 'next-auth/react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../../context/LocalAuthContext';
 import {
   LayoutDashboard,
   Map,
@@ -29,7 +29,7 @@ import ElectionDataEditor from '../../../components/admin/ElectionDataEditor';
 import PoliticalHistoryEditor from '../../../components/admin/PoliticalHistoryEditor';
 
 function AdminDashboardContent() {
-  const { data: session } = useSession();
+  const { logout, isAuthenticated, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<'stations' | 'survey' | 'widgets' | 'candidates' | 'meta' | 'retrobooths' | 'mlas' | 'elections' | 'politicalhistory'>('stations');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -133,7 +133,7 @@ function AdminDashboardContent() {
 
           <div className="p-4 border-t border-slate-700">
             <button
-              onClick={() => signOut({ callbackUrl: '/admin' })}
+              onClick={logout}
               className="w-full flex items-center p-3 rounded-lg hover:bg-red-900/50 text-red-300 transition-colors"
             >
               <LogOut size={24} />
@@ -141,7 +141,7 @@ function AdminDashboardContent() {
             </button>
             {isSidebarOpen && (
               <div className="mt-4 text-xs text-slate-500 text-center">
-                Logged in as {session?.user?.email}
+                Logged in as Admin User
               </div>
             )}
           </div>
@@ -168,8 +168,6 @@ function AdminDashboardContent() {
 
 export default function AdminDashboard() {
   return (
-    <SessionProviderWrapper>
-      <AdminDashboardContent />
-    </SessionProviderWrapper>
+    <AdminDashboardContent />
   );
 }

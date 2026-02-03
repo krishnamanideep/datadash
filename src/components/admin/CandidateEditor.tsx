@@ -6,6 +6,8 @@ import { Plus, Edit, Trash2, Save, X, CreditCard, ChevronDown, ChevronUp } from 
 import { Candidate, CandidateCard } from '@/types/data';
 import { ASSEMBLIES } from '@/data/assemblies';
 import CandidatePanel from '../CandidatePanel';
+import { db } from '@/lib/firebase/client';
+import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export default function CandidateEditor() {
     const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -19,11 +21,15 @@ export default function CandidateEditor() {
         fetchCandidates();
     }, [assemblyId]);
 
-    const fetchCandidates = () => {
-        fetch(`/api/candidates?assemblyId=${assemblyId}`)
-            .then(res => res.json())
-            .then(data => setCandidates(data))
-            .catch(console.error);
+    const fetchCandidates = async () => {
+        try {
+            const q = query(collection(db, 'candidates'), where('assemblyId', '==', assemblyId));
+            const snapshot = await getDocs(q);
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Candidate));
+            setCandidates(data);
+        } catch (error) {
+            console.error("Error fetching candidates:", error);
+        }
     };
 
     const getAssemblyName = (id: string) => {
@@ -61,20 +67,17 @@ export default function CandidateEditor() {
     };
 
     const saveCandidate = async () => {
-        const method = editingId === 'new' ? 'POST' : 'PUT';
-
         try {
-            const res = await fetch('/api/candidates', {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
-            if (res.ok) {
-                setEditingId(null);
-                fetchCandidates();
+            if (editingId === 'new') {
+                await addDoc(collection(db, 'candidates'), formData);
+            } else if (editingId) {
+                await updateDoc(doc(db, 'candidates', editingId), formData);
             }
+            setEditingId(null);
+            fetchCandidates();
         } catch (e) {
             alert('Failed to save');
+            console.error(e);
         }
     };
 
@@ -82,17 +85,12 @@ export default function CandidateEditor() {
         if (!confirm("Are you sure you want to delete this candidate?")) return;
 
         try {
-            const res = await fetch(`/api/candidates?id=${id}`, {
-                method: 'DELETE',
-            });
-            if (res.ok) {
-                setEditingId(null);
-                fetchCandidates();
-            } else {
-                alert('Failed to delete');
-            }
+            await deleteDoc(doc(db, 'candidates', id));
+            setEditingId(null);
+            fetchCandidates();
         } catch (e) {
             alert('Failed to delete');
+            console.error(e);
         }
     };
 
@@ -246,8 +244,8 @@ export default function CandidateEditor() {
                                         <div className="space-y-2 mb-4">
                                             {formData.customCards?.map(card => (
                                                 <div key={card.id} className={`p-3 rounded-lg border flex justify-between items-start ${card.type === 'highlight' ? 'bg-green-50 border-green-200' :
-                                                        card.type === 'warning' ? 'bg-yellow-50 border-yellow-200' :
-                                                            'bg-blue-50 border-blue-200'
+                                                    card.type === 'warning' ? 'bg-yellow-50 border-yellow-200' :
+                                                        'bg-blue-50 border-blue-200'
                                                     }`}>
                                                     <div>
                                                         <div className="font-semibold text-sm">{card.title}</div>

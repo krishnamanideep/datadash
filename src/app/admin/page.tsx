@@ -4,46 +4,31 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, Loader2 } from 'lucide-react';
-import { signIn } from 'next-auth/react';
-// import { auth } from '@/lib/firebase/client'; // Not needed anymore
+import { useAuth } from '../../context/LocalAuthContext';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLocalLoading(true);
     setError('');
 
-    try {
-      // Use NextAuth Credentials Login with Timeout
-      const loginPromise = signIn('credentials', {
-        redirect: false,
-        email,
-        password,
-      });
-
-      const timeoutPromise = new Promise<{ error?: string, ok?: boolean }>((_, reject) =>
-        setTimeout(() => reject(new Error('Request timed out')), 15000)
-      );
-
-      const result = await Promise.race([loginPromise, timeoutPromise]);
-
-      if (result?.error) {
-        setError('Invalid email or password.');
-        setLoading(false);
-      } else {
+    // Simulate network delay for UX
+    setTimeout(() => {
+      const success = login(password);
+      if (success) {
         router.push('/admin/dashboard');
-        router.refresh();
+      } else {
+        setError('Invalid email or password.');
+        setLocalLoading(false);
       }
-    } catch (err) {
-      setError('Login request timed out. Please check your connection or refresh.');
-      setLoading(false);
-    }
+    }, 800);
   };
 
   return (
@@ -96,10 +81,10 @@ export default function AdminLogin() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={localLoading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors flex items-center justify-center"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Access Dashboard'}
+            {localLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Access Dashboard'}
           </button>
         </form>
 
