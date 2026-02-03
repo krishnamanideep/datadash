@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Star, Zap, Award, Info, TrendingUp, FileText } from 'lucide-react';
+import { db } from '@/lib/firebase/client';
+import { doc, getDoc } from 'firebase/firestore';
 
 const COLORS = ['#FF6B35', '#E63946', '#06A77D', '#FFC300', '#0077B6'];
 
@@ -13,14 +15,18 @@ export default function Survey({ selectedAssembly, previewData }: { selectedAsse
       return;
     }
 
-    fetch(`/api/surveyData?assemblyId=${selectedAssembly}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && Object.keys(data).length > 0) {
-          setSurveyData(data);
+    const loadData = async () => {
+      try {
+        const docRef = doc(db, 'surveyData', selectedAssembly);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setSurveyData(docSnap.data());
         }
-      })
-      .catch(err => console.error("Failed to load survey data", err));
+      } catch (err) {
+        console.error("Failed to load survey data", err);
+      }
+    };
+    loadData();
   }, [selectedAssembly, previewData]);
 
   const getCardIcon = (iconName: string) => {

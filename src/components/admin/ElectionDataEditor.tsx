@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Save, Edit2, Plus, Trash2, Calendar } from 'lucide-react';
 import { ASSEMBLIES } from '@/data/assemblies';
+import { db } from '@/lib/firebase/client';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 interface ElectionResults {
     candidates: { [key: string]: number };
@@ -43,9 +45,10 @@ export default function ElectionDataEditor() {
     const fetchStations = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/pollingStations?assemblyId=${assemblyId}`);
-            const data = await res.json();
-            setStations(Array.isArray(data) ? data : []);
+            const q = query(collection(db, 'pollingStations'), where('ac_id', '==', assemblyId));
+            const snapshot = await getDocs(q);
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PollingStation));
+            setStations(data);
         } catch (e) { console.error(e); }
         setLoading(false);
     };
@@ -110,22 +113,16 @@ export default function ElectionDataEditor() {
                 }
             };
 
-            const res = await fetch('/api/pollingStations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedStation)
-            });
+            const docRef = doc(db, 'pollingStations', selectedStation.id);
+            await updateDoc(docRef, updatedStation);
 
-            if (res.ok) {
-                // Update local state
-                setStations(stations.map(s => s.id === selectedStation.id ? updatedStation : s));
-                setEditingYear(null);
-                setSelectedStation(null);
-                alert('Election data saved successfully!');
-            } else {
-                alert('Failed to save');
-            }
+            // Update local state
+            setStations(stations.map(s => s.id === selectedStation.id ? updatedStation : s));
+            setEditingYear(null);
+            setSelectedStation(null);
+            alert('Election data saved successfully!');
         } catch (e) {
+            console.error(e);
             alert('Failed to save');
         }
         setSaving(false);

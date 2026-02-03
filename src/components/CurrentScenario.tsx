@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, AlertCircle, Target, Users, Zap, BarChart3, Flag, MessageCircle } from 'lucide-react';
 import { getAssemblyName } from '@/data/assemblies';
+import { db } from '@/lib/firebase/client';
+import { doc, getDoc } from 'firebase/firestore';
 
 const ICON_MAP: any = {
   users: <Users className="w-8 h-8" />,
@@ -21,10 +23,22 @@ export default function CurrentScenario({ selectedAssembly, previewData }: { sel
       setData(previewData);
       return;
     }
-    fetch(`/api/assemblyMeta?assemblyId=${selectedAssembly}`)
-      .then(res => res.json())
-      .then(setData)
-      .catch(console.error);
+
+    const fetchData = async () => {
+      try {
+        const docRef = doc(db, 'assemblyMeta', selectedAssembly);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setData(docSnap.data());
+        } else {
+          setData(null);
+        }
+      } catch (error) {
+        console.error('Error fetching scenario data:', error);
+      }
+    };
+
+    fetchData();
   }, [selectedAssembly, previewData]);
 
   const scenarios = data?.scenarios || [

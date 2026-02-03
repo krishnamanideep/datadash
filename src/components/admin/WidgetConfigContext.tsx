@@ -2,6 +2,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import { db } from '@/lib/firebase/client';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export type WidgetType = 'bar' | 'pie' | 'line';
 
@@ -38,14 +40,21 @@ export function WidgetConfigProvider({ children }: { children: React.ReactNode }
 
     // Load config from Server (Firestore)
     useEffect(() => {
-        fetch('/api/admin/config')
-            .then(res => res.json())
-            .then(data => {
-                if (data && Object.keys(data).length > 0) {
-                    setConfig(prev => ({ ...prev, ...data }));
+        const loadConfig = async () => {
+            try {
+                const docRef = doc(db, 'settings', 'global_widget_config');
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data && Object.keys(data).length > 0) {
+                        setConfig(prev => ({ ...prev, ...data }));
+                    }
                 }
-            })
-            .catch(console.error);
+            } catch (e) {
+                console.error("Failed to load global config:", e);
+            }
+        };
+        loadConfig();
     }, []);
 
     const updateConfig = (key: keyof WidgetConfig, value: boolean | WidgetType) => {
@@ -55,11 +64,7 @@ export function WidgetConfigProvider({ children }: { children: React.ReactNode }
 
     const saveConfig = async () => {
         try {
-            await fetch('/api/admin/config', {
-                method: 'POST',
-                body: JSON.stringify(config),
-                headers: { 'Content-Type': 'application/json' }
-            });
+            await setDoc(doc(db, 'settings', 'global_widget_config'), config);
             alert('Configuration saved globally!');
         } catch (e) {
             console.error("Failed to save config remotely", e);

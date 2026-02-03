@@ -7,6 +7,9 @@ import {
   Star, Zap, Award, Info, TrendingUp, FileText, Map as MapIcon, Users, Target, AlertTriangle
 } from 'lucide-react';
 import { PollingStation } from '@/types/data';
+import { db } from '@/lib/firebase/client';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { processLocalPollingData } from '@/utils/dataProcessing';
 
 const CARD_ICONS: Record<string, any> = {
   star: Star,
@@ -162,44 +165,65 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
     setLoading(true);
     setError(null);
 
-    // Fetch all data in parallel
-    Promise.all([
-      fetch('/api/pollingStations').then(res => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      }),
-      fetch(`/api/mlas?assemblyId=${selectedAssembly}`).then(res => res.json()),
-      fetch(`/api/assemblyMeta?assemblyId=${selectedAssembly}`).then(res => res.json()),
-      fetch(`/api/customCards?assemblyId=${selectedAssembly}&section=overview`).then(res => res.json()).catch(() => [])
-    ])
-      .then(([pollingStations, mlasData, meta, cardsData]) => {
-        // Process polling stations
-        const assemblyData = pollingStations.filter((ps: PollingStation) => ps.ac_id === selectedAssembly);
+    const fetchData = async () => {
+      try {
+        // 1. Polling Stations (Local)
+        const pollingStations = processLocalPollingData(null); // Fetch all to filter later? Or fetch specific?
+        // Logic below filters: const assemblyData = pollingStations.filter(...)
+        // Let's pass null to get all, OR better, pass selectedAssembly if util supports it properly.
+        // Util supports filtering! Let's just fetch for this assembly.
+        const assemblyData = processLocalPollingData(selectedAssembly);
         console.log('Loaded data for assembly', selectedAssembly, 'booths:', assemblyData.length);
         setData(assemblyData);
         calculateStats(assemblyData, selectedYear);
 
-        // Process MLAs
-        setMlas(Array.isArray(mlasData) ? mlasData : []);
+        // 2. Fetch MLAs
+        let mlasData: any[] = [];
+        try {
+          const q = query(collection(db, 'mlas'), where('assemblyId', '==', selectedAssembly));
+          const snap = await getDocs(q);
+          mlasData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+          console.warn('Error fetching MLAs', e);
+        }
+        setMlas(mlasData);
+
+        // 3. Assembly Meta
+        let metaData: any = {};
+        try {
+          const metaRef = doc(db, 'assemblyMeta', selectedAssembly);
+          const metaSnap = await getDoc(metaRef);
+          if (metaSnap.exists()) metaData = metaSnap.data();
+        } catch (e) { console.warn('Meta fetch error', e); }
 
         // Process map URL
-        if (meta?.assemblyMapUrl) {
-          setMapUrl(meta.assemblyMapUrl);
+        if (metaData?.assemblyMapUrl) {
+          setMapUrl(metaData.assemblyMapUrl);
         } else {
           setMapUrl(null);
         }
 
-        // Process custom cards
-        const sortedCards = Array.isArray(cardsData) ? [...cardsData].sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
+        // 4. Custom Cards
+        let cardsData: any[] = [];
+        try {
+          // Previous API: /api/customCards?assemblyId=...&section=overview
+          const q = query(collection(db, 'customCards'), where('assemblyId', '==', selectedAssembly), where('section', '==', 'overview'));
+          const snap = await getDocs(q);
+          cardsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (e) { console.warn('Cards fetch error', e); }
+
+        const sortedCards = Array.isArray(cardsData) ? [...cardsData].sort((a: any, b: any) => (a.order || 0) - (b.order || 0)) : [];
         setCustomCards(sortedCards);
 
         setLoading(false);
-      })
-      .catch((err) => {
+
+      } catch (err: any) {
         console.error('Error loading data:', err);
         setError(err.message);
         setLoading(false);
-      });
+      }
+    };
+    fetchData();
   }, [selectedAssembly]);
 
   // Helper for party colors

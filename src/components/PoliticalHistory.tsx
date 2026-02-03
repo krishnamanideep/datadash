@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { PollingStation } from '@/types/data';
+import { db } from '@/lib/firebase/client';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { processLocalPollingData } from '@/utils/dataProcessing';
 import { TrendingUp, AlertTriangle, Info, Lightbulb, Star, Zap, Award, FileText, Trophy } from 'lucide-react';
 
 interface Insight {
@@ -120,56 +123,72 @@ export default function PoliticalHistory({ selectedAssembly, previewData }: { se
       setConfig(previewData);
     }
 
-    // Fetch MLAs for all years
-    Promise.all([
-      fetch(`/api/mlas?assemblyId=${selectedAssembly}&year=2021`).then(r => r.json()).catch(() => []),
-      fetch(`/api/mlas?assemblyId=${selectedAssembly}&year=2016`).then(r => r.json()).catch(() => []),
-      fetch(`/api/mlas?assemblyId=${selectedAssembly}&year=2011`).then(r => r.json()).catch(() => [])
-    ]).then(([mlas2021, mlas2016, mlas2011]) => {
-      setMlas({
-        '2021': mlas2021.sort((a: any, b: any) => (b.voteShare || 0) - (a.voteShare || 0)),
-        '2016': mlas2016.sort((a: any, b: any) => (b.voteShare || 0) - (a.voteShare || 0)),
-        '2011': mlas2011.sort((a: any, b: any) => (b.voteShare || 0) - (a.voteShare || 0))
-      });
-    });
+    const fetchData = async () => {
+      try {
+        setError(null);
 
-    setError(null);
-
-    fetch(`/api/pollingStations?assemblyId=${selectedAssembly}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
-      .then((assemblyData: PollingStation[]) => {
+        // 1. Load Polling Data (Local)
+        const assemblyData = processLocalPollingData(selectedAssembly);
         setData(assemblyData);
 
+        // 2. Load MLAs (Firestore)
+        // Note: Assuming 'mlas' collection exists. If fetching by query fails, we handle gracefully.
+        let fetchedMlas: any[] = [];
+        try {
+          const q = query(collection(db, 'mlas'), where('assemblyId', '==', selectedAssembly));
+          const querySnapshot = await getDocs(q);
+          fetchedMlas = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+          console.warn('Error fetching MLAs:', e);
+        }
+
+        // Group MLAs by year
+        const mlasByYear: any = { '2021': [], '2016': [], '2011': [] };
+        fetchedMlas.forEach((m: any) => {
+          if (mlasByYear[m.year]) mlasByYear[m.year].push(m);
+        });
+
+        // Sort each year
+        ['2021', '2016', '2011'].forEach(year => {
+          mlasByYear[year].sort((a: any, b: any) => (b.voteShare || 0) - (a.voteShare || 0));
+        });
+        setMlas(mlasByYear);
+
+
         if (!previewData) {
-          Promise.all([
-            fetch(`/api/assemblyMeta?assemblyId=${selectedAssembly}`).then(r => r.json()).catch(() => ({})),
-            fetch(`/api/politicalHistoryConfig?assemblyId=${selectedAssembly}`).then(r => r.json()).catch(() => ({}))
-          ]).then(([meta, pageConfig]) => {
-            setConfig({
-              historyNarrative: meta?.historyNarrative,
-              showElectoralTrends: pageConfig?.showElectoralTrends ?? true,
-              showVoteSwing: pageConfig?.showVoteSwing ?? true,
-              showInsights: pageConfig?.showInsights ?? true,
-              showCustomCards: pageConfig?.showCustomCards ?? true,
-              insights: pageConfig?.insights || [],
-              customCards: pageConfig?.customCards || []
-            });
-            analyzeTrends(assemblyData, meta?.historyNarrative);
-            setLoading(false);
+          // 3. Load Meta & Config (Firestore)
+          const metaRef = doc(db, 'assemblyMeta', selectedAssembly);
+          const configRef = doc(db, 'politicalHistoryConfig', selectedAssembly); // Assuming docID is assemblyId
+
+          const [metaSnap, configSnap] = await Promise.all([
+            getDoc(metaRef),
+            getDoc(configRef)
+          ]);
+
+          const meta = metaSnap.exists() ? metaSnap.data() : {};
+          const pageConfig = configSnap.exists() ? configSnap.data() : {};
+
+          setConfig({
+            historyNarrative: meta?.historyNarrative,
+            showElectoralTrends: pageConfig?.showElectoralTrends ?? true,
+            showVoteSwing: pageConfig?.showVoteSwing ?? true,
+            showInsights: pageConfig?.showInsights ?? true,
+            showCustomCards: pageConfig?.showCustomCards ?? true,
+            insights: pageConfig?.insights || [],
+            customCards: pageConfig?.customCards || []
           });
+          analyzeTrends(assemblyData, meta?.historyNarrative);
         } else {
           analyzeTrends(assemblyData, previewData.historyNarrative);
-          setLoading(false);
         }
-      })
-      .catch((err) => {
+        setLoading(false);
+      } catch (err: any) {
         console.error('Error loading data:', err);
         setError(err.message);
         setLoading(false);
-      });
+      }
+    };
+    fetchData();
   }, [selectedAssembly, previewData]);
 
   const getInsightIcon = (type: string) => {

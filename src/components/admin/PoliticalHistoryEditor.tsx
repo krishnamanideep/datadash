@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Edit2, Trash2, Save, X, RefreshCw, Eye, TrendingUp, AlertTriangle, Info, Lightbulb, FileText, Star, Zap, Award } from 'lucide-react';
 import { ASSEMBLIES } from '@/data/assemblies';
+import { db } from '@/lib/firebase/client';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import dynamic from 'next/dynamic';
 
 // Dynamic import for live preview
@@ -87,18 +89,21 @@ export default function PoliticalHistoryEditor() {
 
     const fetchConfig = async () => {
         try {
-            const res = await fetch(`/api/politicalHistoryConfig?assemblyId=${assemblyId}`);
-            const data = await res.json();
-            setConfig({
-                assemblyId,
-                showElectoralTrends: data.showElectoralTrends ?? true,
-                showVoteSwing: data.showVoteSwing ?? true,
-                showInsights: data.showInsights ?? true,
-                showCustomCards: data.showCustomCards ?? true,
-                customNarrative: data.customNarrative || '',
-                insights: data.insights || [],
-                customCards: data.customCards || []
-            });
+            const docRef = doc(db, 'pageConfig', `politicalHistoryConfig_${assemblyId}`);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                setConfig({
+                    assemblyId,
+                    showElectoralTrends: data.showElectoralTrends ?? true,
+                    showVoteSwing: data.showVoteSwing ?? true,
+                    showInsights: data.showInsights ?? true,
+                    showCustomCards: data.showCustomCards ?? true,
+                    customNarrative: data.customNarrative || '',
+                    insights: data.insights || [],
+                    customCards: data.customCards || []
+                });
+            }
         } catch (e) {
             console.error(e);
         }
@@ -107,18 +112,11 @@ export default function PoliticalHistoryEditor() {
     const saveConfig = async () => {
         setSaving(true);
         try {
-            const res = await fetch('/api/politicalHistoryConfig', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(config)
-            });
-            if (res.ok) {
-                refreshPreview();
-                alert('Saved successfully!');
-            } else {
-                alert('Failed to save');
-            }
+            await setDoc(doc(db, 'pageConfig', `politicalHistoryConfig_${assemblyId}`), config);
+            refreshPreview();
+            alert('Saved successfully!');
         } catch (e) {
+            console.error(e);
             alert('Failed to save');
         }
         setSaving(false);

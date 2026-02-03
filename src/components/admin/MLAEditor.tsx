@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Save, X, User, Trophy } from 'lucide-react';
 import { ASSEMBLIES } from '@/data/assemblies';
+import { db } from '@/lib/firebase/client';
+import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 interface MLA {
     id?: string;
@@ -32,9 +34,10 @@ export default function MLAEditor() {
 
     const fetchMLAs = async () => {
         try {
-            const res = await fetch(`/api/mlas?assemblyId=${assemblyId}`);
-            const data = await res.json();
-            setMlas(Array.isArray(data) ? data : []);
+            const q = query(collection(db, 'mlas'), where('assemblyId', '==', assemblyId));
+            const snapshot = await getDocs(q);
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MLA));
+            setMlas(data);
         } catch (e) { console.error(e); }
     };
 
@@ -42,24 +45,24 @@ export default function MLAEditor() {
         if (!editing) return;
         setSaving(true);
         try {
-            const method = editing.id ? 'PUT' : 'POST';
-            const res = await fetch('/api/mlas', {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...editing, assemblyId })
-            });
-            if (res.ok) {
-                setEditing(null);
-                fetchMLAs();
-            } else alert('Failed to save');
-        } catch (e) { alert('Failed to save'); }
+            if (editing.id) {
+                await updateDoc(doc(db, 'mlas', editing.id), { ...editing, assemblyId });
+            } else {
+                await addDoc(collection(db, 'mlas'), { ...editing, assemblyId });
+            }
+            setEditing(null);
+            fetchMLAs();
+        } catch (e) {
+            console.error(e);
+            alert('Failed to save');
+        }
         setSaving(false);
     };
 
     const deleteMLA = async (id: string) => {
         if (!confirm('Delete this MLA record?')) return;
         try {
-            await fetch(`/api/mlas?id=${id}`, { method: 'DELETE' });
+            await deleteDoc(doc(db, 'mlas', id));
             fetchMLAs();
         } catch (e) { alert('Failed to delete'); }
     };

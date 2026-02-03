@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Save, RefreshCw, Plus, Trash2, Layout, BarChart, Users, Star, Zap, Award, Info, TrendingUp, FileText, Eye, EyeOff } from 'lucide-react';
+import { Save, Plus, Trash2, Layout, BarChart, Star, Zap, Award, Info, TrendingUp, FileText, Eye, EyeOff } from 'lucide-react';
+import { db } from '@/lib/firebase/client';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import Survey from '@/components/Survey';
 import { ASSEMBLIES } from '@/data/assemblies';
 
@@ -29,10 +31,13 @@ export default function SurveyEditor() {
     const [activeTab, setActiveTab] = useState<'settings' | 'data' | 'cards'>('data');
 
     useEffect(() => {
-        setLoading(true);
-        fetch(`/api/surveyData?assemblyId=${selectedAssembly}`)
-            .then(res => res.json())
-            .then(fetched => {
+        const loadData = async () => {
+            setLoading(true);
+            try {
+                const docRef = doc(db, 'surveyData', selectedAssembly);
+                const docSnap = await getDoc(docRef);
+                const fetched = docSnap.exists() ? docSnap.data() : null;
+
                 const defaultData = {
                     totalRespondents: 0,
                     sampleDate: new Date().toISOString().split('T')[0],
@@ -48,21 +53,21 @@ export default function SurveyEditor() {
                     customCards: []
                 };
                 setData(fetched ? { ...defaultData, ...fetched } : defaultData);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
+            } catch (e) {
+                console.error("Error loading survey data:", e);
+            }
+            setLoading(false);
+        };
+        loadData();
     }, [selectedAssembly]);
 
     const handleSave = async () => {
         try {
-            await fetch(`/api/surveyData?assemblyId=${selectedAssembly}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
+            await setDoc(doc(db, 'surveyData', selectedAssembly), data);
             setSaved(true);
             setTimeout(() => setSaved(false), 2000);
         } catch (e) {
+            console.error("Error saving survey data:", e);
             alert('Failed to save');
         }
     };

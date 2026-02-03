@@ -3,11 +3,11 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { PollingStation } from '@/types/data';
-import { Search, Edit2, Save, X, ArrowLeft, MapPin } from 'lucide-react';
+import { collection, query, where, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { Plus, Search, Edit2, Save, X, ArrowLeft, MapPin, Trash2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { ASSEMBLIES } from '@/data/assemblies';
 import { db } from '@/lib/firebase/client';
-import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
 
 // Dynamic import for Map to avoid SSR issues
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { ssr: false });
@@ -21,6 +21,10 @@ export default function PollingStationEditor() {
     const [loading, setLoading] = useState(true);
 
     const [assemblyId, setAssemblyId] = useState('1'); // Default to Assembly 1
+
+    const getAssemblyName = (id: string) => {
+        return ASSEMBLIES.find(a => a.id === id)?.name || `Assembly ${id}`;
+    };
 
     useEffect(() => {
         setLoading(true);
@@ -120,12 +124,12 @@ export default function PollingStationEditor() {
                             <button onClick={cancelEditing} className="p-2 hover:bg-gray-200 rounded-full">
                                 <ArrowLeft size={20} />
                             </button>
-                            <h2 className="font-bold text-lg">Editing Station {formState?.ps_no}</h2>
+                            <h2 className="font-bold text-lg">{editingId === 'new' ? 'Adding New Station' : `Editing Station ${formState?.ps_no}`}</h2>
                         </div>
                     ) : (
-                        <div className="relative flex-1 flex gap-2">
+                        <div className="relative flex-1 flex gap-2 items-center">
                             <select
-                                className="border rounded-lg px-2 bg-gray-50 font-bold text-sm"
+                                className="border rounded-lg px-2 py-2 bg-white font-bold text-sm"
                                 value={assemblyId}
                                 onChange={(e) => setAssemblyId(e.target.value)}
                             >
@@ -143,6 +147,30 @@ export default function PollingStationEditor() {
                                     onChange={e => setSearch(e.target.value)}
                                 />
                             </div>
+                            <button
+                                onClick={() => {
+                                    setEditingId('new');
+                                    setFormState({
+                                        id: `ps_${Date.now()}`,
+                                        ac_id: assemblyId,
+                                        ac_name: getAssemblyName(assemblyId),
+                                        ps_no: (stations.length + 1).toString(),
+                                        ps_name: '',
+                                        locality: '',
+                                        category: 'B',
+                                        latitude: 11.9416,
+                                        longitude: 79.8083,
+                                        strongestParty: 'BJP',
+                                        election2021: { year: 2021, candidates: { BJP: 0, DMK: 0, AIADMK: 0, OTHERS: 0 } },
+                                        election2016: { year: 2016, candidates: { BJP: 0, DMK: 0, AIADMK: 0, OTHERS: 0 } },
+                                        election2011: { year: 2011, candidates: { BJP: 0, DMK: 0, AIADMK: 0, OTHERS: 0 } }
+                                    });
+                                }}
+                                className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+                                title="Add New Station"
+                            >
+                                <Plus size={20} /> <span className="hidden xl:inline">Add</span>
+                            </button>
                         </div>
                     )}
                 </div>
@@ -213,13 +241,28 @@ export default function PollingStationEditor() {
                                         </div>
                                         <Edit2 size={16} className="text-gray-300 group-hover:text-blue-500" />
                                     </div>
-                                    <div className="mt-2 flex gap-2">
-                                        <span className={`text-xs px-2 py-0.5 rounded ${s.category === 'A' ? 'bg-green-100 text-green-800' : 'bg-gray-100'}`}>
-                                            Cat {s.category}
-                                        </span>
-                                        <span className="text-xs px-2 py-0.5 rounded bg-purple-50 text-purple-700">
-                                            {s.strongestParty}
-                                        </span>
+                                    <div className="mt-2 flex justify-between items-center">
+                                        <div className="flex gap-2">
+                                            <span className={`text-xs px-2 py-0.5 rounded ${s.category === 'A' ? 'bg-green-100 text-green-800' : 'bg-gray-100'}`}>
+                                                Cat {s.category}
+                                            </span>
+                                            <span className="text-xs px-2 py-0.5 rounded bg-purple-50 text-purple-700">
+                                                {s.strongestParty}
+                                            </span>
+                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (confirm(`Delete station ${s.ps_no}?`)) {
+                                                    deleteDoc(doc(db, 'pollingStations', s.id))
+                                                        .then(() => setStations(prev => prev.filter(p => p.id !== s.id)))
+                                                        .catch(err => alert('Delete failed'));
+                                                }
+                                            }}
+                                            className="p-1 text-gray-300 hover:text-red-500 rounded"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
                                     </div>
                                 </div>
                             ))}

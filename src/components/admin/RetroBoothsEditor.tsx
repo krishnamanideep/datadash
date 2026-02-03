@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Save, Settings, FileText, AlertTriangle, MapPin, Eye, RefreshCw, Star, Zap, Award, Info, TrendingUp, Map, Users, Target } from 'lucide-react';
 import RetroBoothsAnalysis from '../RetroBoothsAnalysis';
 import { ASSEMBLIES } from '@/data/assemblies';
+import { db } from '@/lib/firebase/client';
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, addDoc, deleteDoc } from 'firebase/firestore';
 
 const CARD_ICONS = [
     { id: 'star', icon: Star, label: 'Star' },
@@ -111,9 +113,10 @@ export default function RetroBoothsEditor() {
     // API calls
     const fetchConfig = async () => {
         try {
-            const res = await fetch(`/api/pageConfig?assemblyId=${assemblyId}&pageType=retrobooths`);
-            const data = await res.json();
-            if (data && !data.error) {
+            const docRef = doc(db, 'pageConfig', `retrobooths_${assemblyId}`);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
                 setConfig({
                     showPollingTable: data.showPollingTable ?? true,
                     showHeatMap: data.showHeatMap ?? true,
@@ -130,24 +133,30 @@ export default function RetroBoothsEditor() {
     const saveConfig = async () => {
         setSaving(true);
         try {
-            const res = await fetch('/api/pageConfig', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ assemblyId, pageType: 'retrobooths', ...config })
+            await setDoc(doc(db, 'pageConfig', `retrobooths_${assemblyId}`), {
+                ...config,
+                assemblyId,
+                pageType: 'retrobooths'
             });
-            if (res.ok) {
-                alert('Configuration saved!');
-                refreshPreview();
-            } else alert('Failed to save configuration');
-        } catch (e) { alert('Failed to save'); }
+            alert('Configuration saved!');
+            refreshPreview();
+        } catch (e) {
+            console.error(e);
+            alert('Failed to save configuration');
+        }
         setSaving(false);
     };
 
     const fetchCards = async () => {
         try {
-            const res = await fetch(`/api/customCards?assemblyId=${assemblyId}&section=retro`);
-            const data = await res.json();
-            const sorted = Array.isArray(data) ? [...data].sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
+            const q = query(
+                collection(db, 'customCards'),
+                where('assemblyId', '==', assemblyId),
+                where('section', '==', 'retro')
+            );
+            const snapshot = await getDocs(q);
+            const cardsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CustomCard));
+            const sorted = cardsData.sort((a, b) => (a.order || 0) - (b.order || 0));
             setCards(sorted);
         } catch (e) { console.error(e); }
     };
@@ -156,26 +165,26 @@ export default function RetroBoothsEditor() {
         if (!editingCard) return;
         setSaving(true);
         try {
-            const method = editingCard.id ? 'PUT' : 'POST';
             const payload = { ...editingCard, assemblyId, section: 'retro' };
-            const res = await fetch('/api/customCards', {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (res.ok) {
-                setEditingCard(null);
-                fetchCards();
-                refreshPreview();
-            } else alert('Failed to save card');
-        } catch (e) { alert('Failed to save'); }
+            if (editingCard.id) {
+                await updateDoc(doc(db, 'customCards', editingCard.id), payload);
+            } else {
+                await addDoc(collection(db, 'customCards'), payload);
+            }
+            setEditingCard(null);
+            fetchCards();
+            refreshPreview();
+        } catch (e) {
+            console.error(e);
+            alert('Failed to save card');
+        }
         setSaving(false);
     };
 
     const deleteCard = async (id: string) => {
         if (!confirm('Delete this card?')) return;
         try {
-            await fetch(`/api/customCards?id=${id}`, { method: 'DELETE' });
+            await deleteDoc(doc(db, 'customCards', id));
             fetchCards();
             refreshPreview();
         } catch (e) { alert('Failed to delete'); }
@@ -183,9 +192,13 @@ export default function RetroBoothsEditor() {
 
     const fetchWeakBooths = async () => {
         try {
-            const res = await fetch(`/api/weakBooths?assemblyId=${assemblyId}`);
-            const data = await res.json();
-            const sorted = Array.isArray(data) ? [...data].sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
+            const q = query(
+                collection(db, 'weakBooths'),
+                where('assemblyId', '==', assemblyId)
+            );
+            const snapshot = await getDocs(q);
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WeakBooth));
+            const sorted = data.sort((a, b) => (a.order || 0) - (b.order || 0));
             setWeakBooths(sorted);
         } catch (e) { console.error(e); }
     };
@@ -194,26 +207,26 @@ export default function RetroBoothsEditor() {
         if (!editingWeakBooth) return;
         setSaving(true);
         try {
-            const method = editingWeakBooth.id ? 'PUT' : 'POST';
             const payload = { ...editingWeakBooth, assemblyId };
-            const res = await fetch('/api/weakBooths', {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (res.ok) {
-                setEditingWeakBooth(null);
-                fetchWeakBooths();
-                refreshPreview();
-            } else alert('Failed to save');
-        } catch (e) { alert('Failed to save'); }
+            if (editingWeakBooth.id) {
+                await updateDoc(doc(db, 'weakBooths', editingWeakBooth.id), payload);
+            } else {
+                await addDoc(collection(db, 'weakBooths'), payload);
+            }
+            setEditingWeakBooth(null);
+            fetchWeakBooths();
+            refreshPreview();
+        } catch (e) {
+            console.error(e);
+            alert('Failed to save');
+        }
         setSaving(false);
     };
 
     const deleteWeakBooth = async (id: string) => {
         if (!confirm('Delete this entry?')) return;
         try {
-            await fetch(`/api/weakBooths?id=${id}`, { method: 'DELETE' });
+            await deleteDoc(doc(db, 'weakBooths', id));
             fetchWeakBooths();
             refreshPreview();
         } catch (e) { alert('Failed to delete'); }
@@ -221,9 +234,13 @@ export default function RetroBoothsEditor() {
 
     const fetchHotspots = async () => {
         try {
-            const res = await fetch(`/api/independentHotspots?assemblyId=${assemblyId}`);
-            const data = await res.json();
-            const sorted = Array.isArray(data) ? [...data].sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
+            const q = query(
+                collection(db, 'independentHotspots'),
+                where('assemblyId', '==', assemblyId)
+            );
+            const snapshot = await getDocs(q);
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as IndependentHotspot));
+            const sorted = data.sort((a, b) => (a.order || 0) - (b.order || 0));
             setHotspots(sorted);
         } catch (e) { console.error(e); }
     };
@@ -232,26 +249,26 @@ export default function RetroBoothsEditor() {
         if (!editingHotspot) return;
         setSaving(true);
         try {
-            const method = editingHotspot.id ? 'PUT' : 'POST';
             const payload = { ...editingHotspot, assemblyId };
-            const res = await fetch('/api/independentHotspots', {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (res.ok) {
-                setEditingHotspot(null);
-                fetchHotspots();
-                refreshPreview();
-            } else alert('Failed to save');
-        } catch (e) { alert('Failed to save'); }
+            if (editingHotspot.id) {
+                await updateDoc(doc(db, 'independentHotspots', editingHotspot.id), payload);
+            } else {
+                await addDoc(collection(db, 'independentHotspots'), payload);
+            }
+            setEditingHotspot(null);
+            fetchHotspots();
+            refreshPreview();
+        } catch (e) {
+            console.error(e);
+            alert('Failed to save');
+        }
         setSaving(false);
     };
 
     const deleteHotspot = async (id: string) => {
         if (!confirm('Delete this hotspot?')) return;
         try {
-            await fetch(`/api/independentHotspots?id=${id}`, { method: 'DELETE' });
+            await deleteDoc(doc(db, 'independentHotspots', id));
             fetchHotspots();
             refreshPreview();
         } catch (e) { alert('Failed to delete'); }

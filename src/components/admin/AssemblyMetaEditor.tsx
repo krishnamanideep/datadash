@@ -4,6 +4,8 @@ import CurrentScenario from '../CurrentScenario';
 import PoliticalHistory from '../PoliticalHistory';
 import AssemblyOverview from '../AssemblyOverview';
 import { ASSEMBLIES } from '@/data/assemblies';
+import { db } from '@/lib/firebase/client';
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, addDoc, deleteDoc } from 'firebase/firestore';
 
 const CARD_ICONS = [
     { id: 'star', icon: Star, label: 'Star' },
@@ -51,63 +53,68 @@ export default function AssemblyMetaEditor() {
         setPreviewKey(prev => prev + 1);
     }, []);
 
-    const fetchData = () => {
+    const fetchData = async () => {
         setLoading(true);
-        fetch(`/api/assemblyMeta?assemblyId=${assemblyId}`)
-            .then(res => res.json())
-            .then(fetched => {
-                if (fetched && Object.keys(fetched).length > 0) {
-                    // Ensure headers exist
-                    if (!fetched.headers) {
-                        fetched.headers = {
-                            pageTitle: 'Current Political Scenario',
-                            scenariosTitle: 'Current Scenarios',
-                            reportsTitle: 'Recent Ground Reports',
-                            factorsTitle: 'Key Deciding Factors',
-                            outlookTitle: 'Electoral Outlook'
-                        };
-                    }
-                    setData(fetched);
-                } else {
-                    // Defaults
-                    setData({
-                        headers: {
-                            pageTitle: 'Current Political Scenario',
-                            scenariosTitle: 'Current Scenarios',
-                            reportsTitle: 'Recent Ground Reports',
-                            factorsTitle: 'Key Deciding Factors',
-                            outlookTitle: 'Electoral Outlook'
-                        },
-                        scenarios: [
-                            { title: 'Coalition Dynamics', icon: 'users', content: '', status: 'Active', color: 'blue' },
-                            { title: 'Key Issues', icon: 'alert', content: '', status: 'Critical', color: 'red' },
-                            { title: 'Vote Bank Analysis', icon: 'target', content: '', status: 'Evolving', color: 'green' },
-                            { title: 'Campaign Momentum', icon: 'trending', content: '', status: 'Shifting', color: 'orange' }
-                        ],
-                        groundReports: [],
-                        decidingFactors: [],
-                        electoralOutlook: [
-                            { party: 'BJP', range: '0-0%', value: 0, color: 'orange' },
-                            { party: 'DMK', range: '0-0%', value: 0, color: 'red' },
-                            { party: 'AIADMK', range: '0-0%', value: 0, color: 'green' },
-                            { party: 'Others', range: '0-0%', value: 0, color: 'gray' }
-                        ],
-                        historyNarrative: '<h3>Political History</h3><p>Enter history details here...</p>'
-                    });
+        try {
+            const docRef = doc(db, 'assemblyMeta', assemblyId);
+            const docSnap = await getDoc(docRef);
+            const fetched = docSnap.exists() ? docSnap.data() : null;
+
+            if (fetched && Object.keys(fetched).length > 0) {
+                // Ensure headers exist
+                if (!fetched.headers) {
+                    fetched.headers = {
+                        pageTitle: 'Current Political Scenario',
+                        scenariosTitle: 'Current Scenarios',
+                        reportsTitle: 'Recent Ground Reports',
+                        factorsTitle: 'Key Deciding Factors',
+                        outlookTitle: 'Electoral Outlook'
+                    };
                 }
-                setLoading(false);
-            })
-            .catch(e => {
-                console.error(e);
-                setLoading(false);
-            });
+                setData(fetched);
+            } else {
+                // Defaults
+                setData({
+                    headers: {
+                        pageTitle: 'Current Political Scenario',
+                        scenariosTitle: 'Current Scenarios',
+                        reportsTitle: 'Recent Ground Reports',
+                        factorsTitle: 'Key Deciding Factors',
+                        outlookTitle: 'Electoral Outlook'
+                    },
+                    scenarios: [
+                        { title: 'Coalition Dynamics', icon: 'users', content: '', status: 'Active', color: 'blue' },
+                        { title: 'Key Issues', icon: 'alert', content: '', status: 'Critical', color: 'red' },
+                        { title: 'Vote Bank Analysis', icon: 'target', content: '', status: 'Evolving', color: 'green' },
+                        { title: 'Campaign Momentum', icon: 'trending', content: '', status: 'Shifting', color: 'orange' }
+                    ],
+                    groundReports: [],
+                    decidingFactors: [],
+                    electoralOutlook: [
+                        { party: 'BJP', range: '0-0%', value: 0, color: 'orange' },
+                        { party: 'DMK', range: '0-0%', value: 0, color: 'red' },
+                        { party: 'AIADMK', range: '0-0%', value: 0, color: 'green' },
+                        { party: 'Others', range: '0-0%', value: 0, color: 'gray' }
+                    ],
+                    historyNarrative: '<h3>Political History</h3><p>Enter history details here...</p>'
+                });
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        setLoading(false);
     };
 
     const fetchCards = async () => {
         try {
-            const res = await fetch(`/api/customCards?assemblyId=${assemblyId}&section=overview`);
-            const data = await res.json();
-            const sorted = Array.isArray(data) ? [...data].sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
+            const q = query(
+                collection(db, 'customCards'),
+                where('assemblyId', '==', assemblyId),
+                where('section', '==', 'overview')
+            );
+            const snapshot = await getDocs(q);
+            const cardsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const sorted = cardsData.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
             setCustomCards(sorted);
         } catch (e) { console.error(e); }
     };
@@ -116,43 +123,38 @@ export default function AssemblyMetaEditor() {
         if (!editingCard) return;
         setSavingCard(true);
         try {
-            const method = editingCard.id ? 'PUT' : 'POST';
             const payload = { ...editingCard, assemblyId, section: 'overview' };
-            const res = await fetch('/api/customCards', {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (res.ok) {
-                setEditingCard(null);
-                fetchCards();
-                refreshPreview();
-            } else alert('Failed to save card');
-        } catch (e) { alert('Failed to save'); }
+            if (editingCard.id) {
+                await updateDoc(doc(db, 'customCards', editingCard.id), payload);
+            } else {
+                await addDoc(collection(db, 'customCards'), payload);
+            }
+            setEditingCard(null);
+            fetchCards();
+            refreshPreview();
+        } catch (e) {
+            console.error(e);
+            alert('Failed to save card');
+        }
         setSavingCard(false);
     };
 
     const deleteCard = async (id: string) => {
         if (!confirm('Delete this card?')) return;
         try {
-            const res = await fetch(`/api/customCards?id=${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                fetchCards();
-                refreshPreview();
-            } else alert('Failed to delete');
+            await deleteDoc(doc(db, 'customCards', id));
+            fetchCards();
+            refreshPreview();
         } catch (e) { alert('Failed to delete'); }
     };
 
     const saveData = async () => {
         try {
-            await fetch('/api/assemblyMeta', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ assemblyId, ...data })
-            });
+            await setDoc(doc(db, 'assemblyMeta', assemblyId), data);
             setSaved(true);
             setTimeout(() => setSaved(false), 2000);
         } catch (e) {
+            console.error(e);
             alert('Failed to save');
         }
     };

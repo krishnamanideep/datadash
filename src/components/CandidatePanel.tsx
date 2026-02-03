@@ -3,6 +3,8 @@
 import { Users, TrendingUp, MapPin, Award, Shield, Target, AlertTriangle, CreditCard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Candidate } from '@/types/data';
+import { db } from '@/lib/firebase/client';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { ASSEMBLIES } from '@/data/assemblies';
 
 export default function CandidatePanel({ selectedAssembly, previewData }: { selectedAssembly: string, previewData?: Candidate[] }) {
@@ -20,16 +22,21 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
       return;
     }
     setLoading(true);
-    fetch(`/api/candidates?assemblyId=${selectedAssembly}`)
-      .then(res => res.json())
-      .then(data => {
+
+    const fetchCandidates = async () => {
+      try {
+        const q = query(collection(db, 'candidates'), where('assemblyId', '==', selectedAssembly));
+        const snapshot = await getDocs(q);
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Candidate));
         setCandidates(data);
         setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
+      } catch (err) {
+        console.error("Error fetching candidates from Firestore:", err);
         setLoading(false);
-      });
+      }
+    };
+
+    fetchCandidates();
   }, [selectedAssembly, previewData]);
 
   if (loading) return <div className="p-8 text-center text-gray-500">Loading candidates...</div>;
@@ -189,16 +196,16 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                   </div>
                   {candidate.customCards.map((card, i) => (
                     <div key={i} className={`p-4 rounded-lg border ${card.type === 'highlight' ? 'bg-emerald-50 border-emerald-200' :
-                        card.type === 'warning' ? 'bg-amber-50 border-amber-200' :
-                          'bg-indigo-50 border-indigo-200'
+                      card.type === 'warning' ? 'bg-amber-50 border-amber-200' :
+                        'bg-indigo-50 border-indigo-200'
                       }`}>
                       <div className={`font-semibold text-sm ${card.type === 'highlight' ? 'text-emerald-800' :
-                          card.type === 'warning' ? 'text-amber-800' :
-                            'text-indigo-800'
+                        card.type === 'warning' ? 'text-amber-800' :
+                          'text-indigo-800'
                         }`}>{card.title}</div>
                       <div className={`text-sm mt-1 ${card.type === 'highlight' ? 'text-emerald-700' :
-                          card.type === 'warning' ? 'text-amber-700' :
-                            'text-indigo-700'
+                        card.type === 'warning' ? 'text-amber-700' :
+                          'text-indigo-700'
                         }`}>{card.content}</div>
                     </div>
                   ))}
