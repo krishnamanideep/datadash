@@ -94,7 +94,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
               </div>
 
               {/* Show detailed info only if expanded */}
-              {expandedCandidateId === candidate.id && (
+              {expandedCandidateId === (candidate.id || '') && (
                 <>
                   {/* Strengths */}
                   {candidate.strengths?.length > 0 && (
