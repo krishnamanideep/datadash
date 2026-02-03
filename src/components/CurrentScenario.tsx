@@ -74,7 +74,7 @@ export default function CurrentScenario({ selectedAssembly, previewData }: { sel
               </div>
             </div>
             <div className="mt-3 overflow-y-auto flex-1 min-h-0">
-              <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap break-words">{scenario.content}</p>
+              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap break-words max-h-[500px] overflow-y-auto" dangerouslySetInnerHTML={{ __html: scenario.content }} />
             </div>
           </div>
         ))}
@@ -95,7 +95,7 @@ export default function CurrentScenario({ selectedAssembly, previewData }: { sel
                   {report.sentiment}
                 </span>
               </div>
-              <p className="text-sm text-gray-700">{report.observation}</p>
+              <p className="text-gray-700 text-sm leading-relaxed break-words" dangerouslySetInnerHTML={{ __html: report.observation }} />
             </div>
           ))}
         </div>

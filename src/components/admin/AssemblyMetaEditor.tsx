@@ -6,6 +6,7 @@ import AssemblyOverview from '../AssemblyOverview';
 import { ASSEMBLIES } from '@/data/assemblies';
 import { db } from '@/lib/firebase/client';
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, addDoc, deleteDoc } from 'firebase/firestore';
+import RichTextEditor from './RichTextEditor';
 
 const CARD_ICONS = [
     { id: 'star', icon: Star, label: 'Star' },
@@ -326,7 +327,12 @@ export default function AssemblyMetaEditor() {
                                             </select>
                                             <button onClick={() => removeArrayItem('scenarios', i)} className="text-red-500"><Trash2 size={16} /></button>
                                         </div>
-                                        <textarea className="w-full border rounded p-2" rows={3} value={s.content} onChange={e => updateArrayItem('scenarios', i, 'content', e.target.value)} placeholder="Content (supports line breaks)..." />
+                                        <RichTextEditor
+                                            value={s.content || ''}
+                                            onChange={(html: string) => updateArrayItem('scenarios', i, 'content', html)}
+                                            placeholder="Content (use formatting toolbar)..."
+                                            minHeight="80px"
+                                        />
                                     </div>
                                 ))}
                             </section>
@@ -355,7 +361,12 @@ export default function AssemblyMetaEditor() {
                                             </select>
                                             <button onClick={() => removeArrayItem('groundReports', i)} className="text-red-500"><Trash2 size={16} /></button>
                                         </div>
-                                        <textarea className="w-full border rounded p-2" rows={2} value={r.observation} onChange={e => updateArrayItem('groundReports', i, 'observation', e.target.value)} placeholder="Observation..." />
+                                        <RichTextEditor
+                                            value={r.observation || ''}
+                                            onChange={(html: string) => updateArrayItem('groundReports', i, 'observation', html)}
+                                            placeholder="Observation (use formatting toolbar)..."
+                                            minHeight="60px"
+                                        />
                                     </div>
                                 ))}
                             </section>
@@ -480,11 +491,11 @@ export default function AssemblyMetaEditor() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Content</label>
-                                <textarea
-                                    value={editingCard.content}
-                                    onChange={(e) => setEditingCard({ ...editingCard, content: e.target.value })}
-                                    className="w-full border rounded px-3 py-2"
-                                    rows={4}
+                                <RichTextEditor
+                                    value={editingCard.content || ''}
+                                    onChange={(html: string) => setEditingCard({ ...editingCard, content: html })}
+                                    placeholder="Card content (use formatting toolbar)..."
+                                    minHeight="80px"
                                 />
                             </div>
                             <div>

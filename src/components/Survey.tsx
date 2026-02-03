@@ -245,7 +245,7 @@ export default function Survey({ selectedAssembly, previewData }: { selectedAsse
                 {getCardIcon(card.icon)}
                 <span className="font-semibold">{card.title}</span>
               </div>
-              <div className="p-4 text-gray-700 whitespace-pre-wrap">{card.content}</div>
+              <div className="p-4 text-gray-700 whitespace-pre-wrap break-words" dangerouslySetInnerHTML={{ __html: card.content }} />
             </div>
           ))}
         </div>

@@ -437,7 +437,7 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
                   )}
                   <h4 className="font-extrabold text-gray-900 text-2xl tracking-tight leading-tight">{card.heading}</h4>
                 </div>
-                <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap pl-1">{card.content}</p>
+                <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap break-words pl-1" dangerouslySetInnerHTML={{ __html: card.content }} />
               </div>
             ))}
           </div>

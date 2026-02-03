@@ -319,12 +319,11 @@ export default function CandidateEditor() {
                                                 <option value="custom">Custom</option>
                                             </select>
                                         </div>
-                                        <textarea
-                                            className="w-full border p-2 rounded text-sm"
-                                            rows={2}
-                                            placeholder="Card Content"
+                                        <RichTextEditor
                                             value={newCard.content || ''}
-                                            onChange={e => setNewCard({ ...newCard, content: e.target.value })}
+                                            onChange={(html: string) => setNewCard({ ...newCard, content: html })}
+                                            placeholder="Card Content (use formatting toolbar)..."
+                                            minHeight="60px"
                                         />
                                         <button
                                             onClick={addCustomCard}

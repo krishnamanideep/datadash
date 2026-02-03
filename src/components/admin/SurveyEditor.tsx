@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Save, Plus, Trash2, Layout, BarChart, Star, Zap, Award, Info, TrendingUp, FileText, Eye, EyeOff } from 'lucide-react';
 import { db } from '@/lib/firebase/client';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import RichTextEditor from './RichTextEditor';
 import Survey from '@/components/Survey';
 import { ASSEMBLIES } from '@/data/assemblies';
 
@@ -291,10 +292,11 @@ export default function SurveyEditor() {
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Content</label>
-                                                <textarea
-                                                    className="w-full border p-2 rounded text-sm h-24"
-                                                    value={card.content}
-                                                    onChange={e => updateArrayItem('customCards', idx, 'content', e.target.value)}
+                                                <RichTextEditor
+                                                    value={card.content || ''}
+                                                    onChange={(html: string) => updateArrayItem('customCards', idx, 'content', html)}
+                                                    placeholder="Card content (use formatting toolbar)..."
+                                                    minHeight="80px"
                                                 />
                                             </div>
                                             <div className="flex gap-4">

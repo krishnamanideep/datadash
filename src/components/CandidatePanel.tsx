@@ -202,10 +202,10 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                             card.type === 'warning' ? 'text-amber-800' :
                               'text-indigo-800'
                             }`}>{card.title}</div>
-                          <div className={`text-sm mt-1 ${card.type === 'highlight' ? 'text-emerald-700' :
+                          <div className={`text-sm mt-1 break-words ${card.type === 'highlight' ? 'text-emerald-700' :
                             card.type === 'warning' ? 'text-amber-700' :
                               'text-indigo-700'
-                            }`}>{card.content}</div>
+                            }`} dangerouslySetInnerHTML={{ __html: card.content }} />
                         </div>
                       ))}
                     </div>
