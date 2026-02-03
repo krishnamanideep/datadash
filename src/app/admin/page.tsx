@@ -19,19 +19,30 @@ export default function AdminLogin() {
     setLoading(true);
     setError('');
 
-    // Use NextAuth Credentials Login
-    const result = await signIn('credentials', {
-      redirect: false,
-      email,
-      password,
-    });
+    try {
+      // Use NextAuth Credentials Login with Timeout
+      const loginPromise = signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
 
-    if (result?.error) {
-      setError('Invalid email or password.');
+      const timeoutPromise = new Promise<{ error?: string, ok?: boolean }>((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out')), 15000)
+      );
+
+      const result = await Promise.race([loginPromise, timeoutPromise]);
+
+      if (result?.error) {
+        setError('Invalid email or password.');
+        setLoading(false);
+      } else {
+        router.push('/admin/dashboard');
+        router.refresh();
+      }
+    } catch (err) {
+      setError('Login request timed out. Please check your connection or refresh.');
       setLoading(false);
-    } else {
-      router.push('/admin/dashboard');
-      router.refresh(); // Ensure middleware state updates
     }
   };
 
