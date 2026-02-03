@@ -65,7 +65,10 @@ export const authOptions: NextAuthOptions = {
     },
     session: {
         strategy: 'jwt',
-    }
+    },
+    // Trust host is required for Vercel deployment when not setting NEXTAUTH_URL explicitly
+    // @ts-ignore
+    trustHost: true,
 };
 
 const handler = NextAuth(authOptions);
