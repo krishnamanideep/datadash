@@ -8,6 +8,7 @@ import { ASSEMBLIES } from '@/data/assemblies';
 import CandidatePanel from '../CandidatePanel';
 import { db } from '@/lib/firebase/client';
 import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import RichTextEditor from './RichTextEditor';
 
 export default function CandidateEditor() {
     const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -193,20 +194,44 @@ export default function CandidateEditor() {
 
                         {/* Strengths */}
                         <div>
-                            <label className="block text-sm font-bold text-green-700 mb-1">Strengths (comma separated)</label>
-                            <textarea className="w-full border border-green-300 p-2 rounded" rows={2} value={formData.strengths?.join(', ') || ''} onChange={e => setFormData({ ...formData, strengths: e.target.value.split(',').map(s => s.trim()).filter(s => s) })} />
+                            <label className="block text-sm font-bold text-green-700 mb-1">Strengths</label>
+                            <RichTextEditor
+                                value={formData.strengths?.join('<br>') || ''}
+                                onChange={(html: string) => {
+                                    const items = html.split('<br>').filter((s: string) => s.trim());
+                                    setFormData({ ...formData, strengths: items });
+                                }}
+                                placeholder="Enter strengths (use formatting toolbar)..."
+                                minHeight="80px"
+                            />
                         </div>
 
                         {/* Weaknesses */}
                         <div>
-                            <label className="block text-sm font-bold text-red-700 mb-1">Weaknesses/Challenges (comma separated)</label>
-                            <textarea className="w-full border border-red-300 p-2 rounded" rows={2} value={formData.weaknesses?.join(', ') || ''} onChange={e => setFormData({ ...formData, weaknesses: e.target.value.split(',').map(s => s.trim()).filter(s => s) })} />
+                            <label className="block text-sm font-bold text-red-700 mb-1">Weaknesses/Challenges</label>
+                            <RichTextEditor
+                                value={formData.weaknesses?.join('<br>') || ''}
+                                onChange={(html: string) => {
+                                    const items = html.split('<br>').filter((s: string) => s.trim());
+                                    setFormData({ ...formData, weaknesses: items });
+                                }}
+                                placeholder="Enter weaknesses (use formatting toolbar)..."
+                                minHeight="80px"
+                            />
                         </div>
 
                         {/* Advantages */}
                         <div>
-                            <label className="block text-sm font-bold text-blue-700 mb-1">Advantages (comma separated)</label>
-                            <textarea className="w-full border border-blue-300 p-2 rounded" rows={2} value={formData.advantages?.join(', ') || ''} onChange={e => setFormData({ ...formData, advantages: e.target.value.split(',').map(s => s.trim()).filter(s => s) })} />
+                            <label className="block text-sm font-bold text-blue-700 mb-1">Advantages</label>
+                            <RichTextEditor
+                                value={formData.advantages?.join('<br>') || ''}
+                                onChange={(html: string) => {
+                                    const items = html.split('<br>').filter((s: string) => s.trim());
+                                    setFormData({ ...formData, advantages: items });
+                                }}
+                                placeholder="Enter advantages (use formatting toolbar)..."
+                                minHeight="80px"
+                            />
                         </div>
 
                         {/* Advanced Section Toggle */}
@@ -222,14 +247,30 @@ export default function CandidateEditor() {
                             <div className="space-y-4 p-4 bg-gray-100 rounded-lg border">
                                 {/* Opportunities */}
                                 <div>
-                                    <label className="block text-sm font-bold text-purple-700 mb-1">Opportunities (comma separated)</label>
-                                    <textarea className="w-full border border-purple-300 p-2 rounded" rows={2} value={formData.opportunities?.join(', ') || ''} onChange={e => setFormData({ ...formData, opportunities: e.target.value.split(',').map(s => s.trim()).filter(s => s) })} />
+                                    <label className="block text-sm font-bold text-purple-700 mb-1">Opportunities</label>
+                                    <RichTextEditor
+                                        value={formData.opportunities?.join('<br>') || ''}
+                                        onChange={(html: string) => {
+                                            const items = html.split('<br>').filter((s: string) => s.trim());
+                                            setFormData({ ...formData, opportunities: items });
+                                        }}
+                                        placeholder="Enter opportunities (use formatting toolbar)..."
+                                        minHeight="80px"
+                                    />
                                 </div>
 
                                 {/* Threats */}
                                 <div>
-                                    <label className="block text-sm font-bold text-orange-700 mb-1">Threats (comma separated)</label>
-                                    <textarea className="w-full border border-orange-300 p-2 rounded" rows={2} value={formData.threats?.join(', ') || ''} onChange={e => setFormData({ ...formData, threats: e.target.value.split(',').map(s => s.trim()).filter(s => s) })} />
+                                    <label className="block text-sm font-bold text-orange-700 mb-1">Threats</label>
+                                    <RichTextEditor
+                                        value={formData.threats?.join('<br>') || ''}
+                                        onChange={(html: string) => {
+                                            const items = html.split('<br>').filter((s: string) => s.trim());
+                                            setFormData({ ...formData, threats: items });
+                                        }}
+                                        placeholder="Enter threats (use formatting toolbar)..."
+                                        minHeight="80px"
+                                    />
                                 </div>
 
                                 {/* Custom Cards */}

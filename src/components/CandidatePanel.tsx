@@ -61,7 +61,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {candidates.map((candidate, idx) => (
-          <div key={idx} className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+          <div key={idx} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100">
             {/* Header */}
             <div className={`p-6 ${getPartyColor(candidate.party)} text-white`}>
               <div className="flex items-center gap-4">
@@ -106,8 +106,8 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                       <ul className="space-y-1">
                         {candidate.strengths.map((strength, i) => (
                           <li key={i} className="text-sm text-green-700 flex items-start gap-2">
-                            <span className="text-green-600 font-bold">✓</span>
-                            <span>{strength}</span>
+                            <span className="text-green-600 font-bold flex-shrink-0">✓</span>
+                            <span dangerouslySetInnerHTML={{ __html: strength }} className="break-words" />
                           </li>
                         ))}
                       </ul>
@@ -124,8 +124,8 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                       <ul className="space-y-1">
                         {candidate.weaknesses.map((weakness, i) => (
                           <li key={i} className="text-sm text-red-700 flex items-start gap-2">
-                            <span className="text-red-600 font-bold">!</span>
-                            <span>{weakness}</span>
+                            <span className="text-red-600 font-bold flex-shrink-0">!</span>
+                            <span dangerouslySetInnerHTML={{ __html: weakness }} className="break-words" />
                           </li>
                         ))}
                       </ul>
@@ -142,8 +142,8 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                       <ul className="space-y-1">
                         {candidate.advantages.map((advantage, i) => (
                           <li key={i} className="text-sm text-blue-700 flex items-start gap-2">
-                            <span className="text-blue-600 font-bold">★</span>
-                            <span>{advantage}</span>
+                            <span className="text-blue-600 font-bold flex-shrink-0">★</span>
+                            <span dangerouslySetInnerHTML={{ __html: advantage }} className="break-words" />
                           </li>
                         ))}
                       </ul>
@@ -160,8 +160,8 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                       <ul className="space-y-1">
                         {candidate.opportunities.map((opportunity, i) => (
                           <li key={i} className="text-sm text-purple-700 flex items-start gap-2">
-                            <span className="text-purple-600 font-bold">→</span>
-                            <span>{opportunity}</span>
+                            <span className="text-purple-600 font-bold flex-shrink-0">→</span>
+                            <span dangerouslySetInnerHTML={{ __html: opportunity }} className="break-words" />
                           </li>
                         ))}
                       </ul>
@@ -178,8 +178,8 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                       <ul className="space-y-1">
                         {candidate.threats.map((threat, i) => (
                           <li key={i} className="text-sm text-orange-700 flex items-start gap-2">
-                            <span className="text-orange-600 font-bold">⚠</span>
-                            <span>{threat}</span>
+                            <span className="text-orange-600 font-bold flex-shrink-0">⚠</span>
+                            <span dangerouslySetInnerHTML={{ __html: threat }} className="break-words" />
                           </li>
                         ))}
                       </ul>
@@ -217,7 +217,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
             <div className="px-6 py-4 bg-gray-50 border-t">
               <button
                 onClick={() => setExpandedCandidateId(expandedCandidateId === (candidate.id || '') ? null : (candidate.id || ''))}
-                className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
               >
                 {expandedCandidateId === (candidate.id || '') ? 'Hide Details' : 'View Detailed Profile'}
               </button>
