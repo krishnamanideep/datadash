@@ -1,28 +1,13 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/admin';
 
-// Helper to get collection ref
-const collection = db.collection('customCards');
-
-export interface CustomCard {
-    id?: string;
-    assemblyId: string;
-    heading: string;
-    content: string;
-    cardType: 'text' | 'note' | 'info';
-    section: 'overview' | 'retro' | 'politicalhistory' | 'survey';
-    icon?: string;
-    order: number;
-    createdAt?: string;
-    updatedAt?: string;
-}
-
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const assemblyId = searchParams.get('assemblyId');
         const section = searchParams.get('section');
 
+        const collection = db.collection('customCards');
         let query: FirebaseFirestore.Query = collection;
         if (assemblyId) {
             query = query.where('assemblyId', '==', assemblyId);
@@ -34,7 +19,10 @@ export async function GET(request: Request) {
         const snapshot = await query.get();
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         return NextResponse.json(data);
-    } catch (error) {
+    } catch (error: any) {
+        if (error.message?.includes('Firebase not initialized')) {
+            return NextResponse.json([]);
+        }
         console.error(error);
         return NextResponse.json({ error: 'Failed to fetch custom cards' }, { status: 500 });
     }
@@ -49,9 +37,13 @@ export async function POST(request: Request) {
             createdAt: now,
             updatedAt: now
         };
+        const collection = db.collection('customCards');
         const docRef = await collection.add(cardData);
         return NextResponse.json({ id: docRef.id, ...cardData });
-    } catch (error) {
+    } catch (error: any) {
+        if (error.message?.includes('Firebase not initialized')) {
+            return NextResponse.json({ error: 'Database not connected' }, { status: 503 });
+        }
         return NextResponse.json({ error: 'Failed to create custom card' }, { status: 500 });
     }
 }
@@ -66,9 +58,13 @@ export async function PUT(request: Request) {
             ...data,
             updatedAt: new Date().toISOString()
         };
+        const collection = db.collection('customCards');
         await collection.doc(id).update(updateData);
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
+        if (error.message?.includes('Firebase not initialized')) {
+            return NextResponse.json({ error: 'Database not connected' }, { status: 503 });
+        }
         return NextResponse.json({ error: 'Failed to update custom card' }, { status: 500 });
     }
 }
@@ -80,9 +76,13 @@ export async function DELETE(request: Request) {
 
         if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
 
+        const collection = db.collection('customCards');
         await collection.doc(id).delete();
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
+        if (error.message?.includes('Firebase not initialized')) {
+            return NextResponse.json({ error: 'Database not connected' }, { status: 503 });
+        }
         return NextResponse.json({ error: 'Failed to delete custom card' }, { status: 500 });
     }
 }
