@@ -1,0 +1,35 @@
+[dotenv@17.2.3] injecting env (3) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+DEBUG: Private Key loaded.
+DEBUG: Length: 36
+DEBUG: Has literal \n: false
+DEBUG: Has real newline: false
+DEBUG: First 40 chars: PASTE_YOUR_MATCHING_PRIVATE_KEY_HERE
+Firebase initialization failed: FirebaseAppError: Failed to parse private key: Error: Invalid PEM formatted message.
+    at new ServiceAccount (D:\datadock\datadash\node_modules\firebase-admin\lib\app\credential-internal.js:153:19)
+    at new ServiceAccountCredential (D:\datadock\datadash\node_modules\firebase-admin\lib\app\credential-internal.js:70:15)
+    at Object.cert (D:\datadock\datadash\node_modules\firebase-admin\lib\app\credential-factory.js:103:54)
+    at admin (D:\datadock\datadash\src\lib\firebase\admin.ts:25:38)
+    at Object.<anonymous> (D:\datadock\datadash\src\lib\firebase\admin.ts:44:1)
+    at Module._compile (node:internal/modules/cjs/loader:1761:14)
+    at Object.transformer (D:\datadock\datadash\node_modules\tsx\dist\register-D46fvsV_.cjs:3:1104)
+    at Module.load (node:internal/modules/cjs/loader:1481:32)
+    at Module._load (node:internal/modules/cjs/loader:1300:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14) {
+  errorInfo: {
+    code: 'app/invalid-credential',
+    message: 'Failed to parse private key: Error: Invalid PEM formatted message.'
+  },
+  codePrefix: 'app'
+}
+Seeding Firestore...
+SEEDING FAILED: Error: Firebase not initialized
+    at Object.collection (D:\datadock\datadash\src\lib\firebase\admin.ts:39:29)
+    at seedFirestore (D:\datadock\datadash\scripts\seed-firestore.ts:44:14)
+    at fs (D:\datadock\datadash\scripts\seed-firestore.ts:160:1)
+    at Object.<anonymous> (D:\datadock\datadash\scripts\seed-firestore.ts:163:2)
+    at Module._compile (node:internal/modules/cjs/loader:1761:14)
+    at Object.transformer (D:\datadock\datadash\node_modules\tsx\dist\register-D46fvsV_.cjs:3:1104)
+    at Module.load (node:internal/modules/cjs/loader:1481:32)
+    at Module._load (node:internal/modules/cjs/loader:1300:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)

@@ -20,6 +20,7 @@ export interface ElectionResults {
     [key: string]: number;
   };
   year: number;
+  total_votes?: number;
 }
 
 export interface CandidatePerformance {
@@ -119,3 +120,30 @@ export interface DashboardData {
     winner2021: string;
   };
 }
+
+export interface CandidateCard {
+  id?: string;
+  title: string;
+  content: string;
+  type: 'info' | 'highlight' | 'warning' | 'custom';
+  icon?: string;
+}
+
+export interface Candidate {
+  id?: string;
+  assemblyId?: string;
+  name: string;
+  party: string;
+  image?: string;
+  age: number;
+  education: string;
+  experience: string;
+  strengths: string[];
+  weaknesses: string[];
+  advantages: string[];
+  opportunities: string[];
+  threats: string[];
+  constituency: string;
+  customCards: CandidateCard[];
+}
+

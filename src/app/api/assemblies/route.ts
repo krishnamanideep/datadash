@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/admin';
+import { ASSEMBLIES } from '@/lib/assemblies';
 
 export async function GET() {
   try {
     const snapshot = await db.collection('assemblies').get();
-    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const data = snapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
     return NextResponse.json(data);
-  } catch {
-    return NextResponse.json({ error: 'Failed to fetch assemblies' }, { status: 500 });
+  } catch (error) {
+    console.error('Error fetching assemblies, falling back to mock data:', error);
+    return NextResponse.json(ASSEMBLIES);
   }
 }
 

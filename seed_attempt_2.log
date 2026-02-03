@@ -1,0 +1,21 @@
+[dotenv@17.2.3] injecting env (3) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+DEBUG: Private Key loaded.
+DEBUG: Length: 1704
+DEBUG: Has literal \n: false
+DEBUG: Has real newline: true
+DEBUG: First 40 chars: -----BEGIN PRIVATE KEY-----
+MIIEvgIBADAN
+Seeding Firestore...
+Processing AC_1_FINAL (AC ID: 1)...
+Processing AC_2_FINAL (AC ID: 2)...
+SEEDING FAILED: Error: Value for argument "data" is not a valid Firestore document. Cannot use "undefined" as a Firestore value (found in field "nrc_score"). If you want to ignore undefined values, enable `ignoreUndefinedProperties`.
+    at validateUserInput (D:\datadock\datadash\node_modules\@google-cloud\firestore\build\src\serializer.js:383:19)
+    at validateUserInput (D:\datadock\datadash\node_modules\@google-cloud\firestore\build\src\serializer.js:375:13)
+    at validateDocumentData (D:\datadock\datadash\node_modules\@google-cloud\firestore\build\src\write-batch.js:609:40)
+    at WriteBatch.set (D:\datadock\datadash\node_modules\@google-cloud\firestore\build\src\write-batch.js:263:9)
+    at D:\datadock\datadash\node_modules\@google-cloud\firestore\build\src\reference\document-reference.js:348:41
+    at D:\datadock\datadash\node_modules\@google-cloud\firestore\build\src\telemetry\enabled-trace-util.js:110:30
+    at NoopContextManager.with (D:\datadock\datadash\node_modules\@opentelemetry\api\src\context\NoopContextManager.ts:31:15)
+    at ContextAPI.with (D:\datadock\datadash\node_modules\@opentelemetry\api\src\api\context.ts:77:42)
+    at NoopTracer.startActiveSpan (D:\datadock\datadash\node_modules\@opentelemetry\api\src\trace\NoopTracer.ts:98:27)
+    at ProxyTracer.startActiveSpan (D:\datadock\datadash\node_modules\@opentelemetry\api\src\trace\ProxyTracer.ts:51:20)

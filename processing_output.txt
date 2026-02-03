@@ -1,0 +1,41 @@
+﻿Processing missing assembly data...
+Loaded existing data with 34 keys
+
+Processing AC_14 (Raj Bhavan)...
+  Processed 24 entries
+
+Processing AC_16 (Orleampeth)...
+  Processed 22 entries
+
+Processing AC_30 (Yanam)...
+  Processed 33 entries
+
+Saving updated JSON...
+Done!
+
+Total keys in updated JSON: 37
+
+============================================================
+PROCESSING SUMMARY
+============================================================
+
+AC_14 (Raj Bhavan):
+  Total booths: 24
+  Category A (>50%): 0 booths
+  Category B (30-50%): 17 booths
+  Category C (<30%): 7 booths
+  Dominant parties: {'DMK': 3, 'AINRC': 13, 'INC': 8}
+
+AC_16 (Orleampeth):
+  Total booths: 22
+  Category A (>50%): 0 booths
+  Category B (30-50%): 22 booths
+  Category C (<30%): 0 booths
+  Dominant parties: {'DMK': 22}
+
+AC_30 (Yanam):
+  Total booths: 33
+  Category A (>50%): 26 booths
+  Category B (30-50%): 7 booths
+  Category C (<30%): 0 booths
+  Dominant parties: {'AINRC': 19, 'INC': 14}

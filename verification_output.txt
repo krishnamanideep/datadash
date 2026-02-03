@@ -1,0 +1,26 @@
+﻿Fixing data issues...
+
+Found null coordinates at AC_3[32]: Unknown
+  Fixed: Set to (11.941496, 79.772556)
+
+JSON updated successfully!
+
+============================================================
+FINAL VERIFICATION
+============================================================
+
+Total assemblies: 30
+Assembly numbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+Missing assemblies: None - ALL 30 PRESENT!
+
+Total polling stations: 949
+Entries with null coordinates: 0
+
+Category Distribution:
+  Category A (>50%): 228 booths (24.0%)
+  Category B (30-50%): 460 booths (48.5%)
+  Category C (<30%): 261 booths (27.5%)
+
+============================================================
+ALL FIXES COMPLETE!
+============================================================

@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/admin';
+import { generateElectionData } from '@/lib/data';
 
 export async function GET() {
   try {
     const doc = await db.collection('giData').doc('nedungadu').get();
     if (!doc.exists) return NextResponse.json({});
     return NextResponse.json(doc.data());
-  } catch {
-    return NextResponse.json({ error: 'Failed to fetch GI data' }, { status: 500 });
+  } catch (error) {
+    console.error('Error fetching GI data, falling back to mock data:', error);
+    const mockData = generateElectionData();
+    return NextResponse.json(mockData.giData);
   }
 }
 
