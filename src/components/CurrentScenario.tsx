@@ -59,20 +59,22 @@ export default function CurrentScenario({ selectedAssembly, previewData }: { sel
       <h3 className="text-xl font-semibold mb-2 text-gray-700 hidden">{data?.headers?.scenariosTitle || 'Current Scenarios'}</h3>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {scenarios.map((scenario: any, idx: number) => (
-          <div key={idx} className="bg-white rounded-lg shadow-lg p-6 border-l-4" style={{ borderColor: `var(--${scenario.color}-600, #3b82f6)` }}>
-            <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-lg bg-${scenario.color}-50 text-${scenario.color}-600`}>
+          <div key={idx} className="bg-white rounded-lg shadow-lg p-6 border-l-4 flex flex-col max-h-[500px]" style={{ borderColor: `var(--${scenario.color}-600, #3b82f6)` }}>
+            <div className="flex items-start gap-4 flex-shrink-0">
+              <div className={`p-3 rounded-lg bg-${scenario.color}-50 text-${scenario.color}-600 flex-shrink-0`}>
                 {ICON_MAP[scenario.icon] || <Users className="w-8 h-8" />}
               </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start mb-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-2 gap-2">
                   <h3 className="text-lg font-semibold text-gray-800">{scenario.title}</h3>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium bg-${scenario.color}-100 text-${scenario.color}-800`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium bg-${scenario.color}-100 text-${scenario.color}-800 flex-shrink-0`}>
                     {scenario.status}
                   </span>
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap break-words">{scenario.content}</p>
               </div>
+            </div>
+            <div className="mt-3 overflow-y-auto flex-1 min-h-0">
+              <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap break-words">{scenario.content}</p>
             </div>
           </div>
         ))}
