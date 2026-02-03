@@ -10,6 +10,7 @@ import { ASSEMBLIES } from '@/data/assemblies';
 export default function CandidatePanel({ selectedAssembly, previewData }: { selectedAssembly: string, previewData?: Candidate[] }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedCandidateId, setExpandedCandidateId] = useState<string | null>(null);
 
   const getAssemblyName = (id: string) => {
     return ASSEMBLIES.find(a => a.id === id)?.name || `Assembly ${id}`;
@@ -92,126 +93,133 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                 </div>
               </div>
 
-              {/* Strengths */}
-              {candidate.strengths?.length > 0 && (
-                <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp size={18} className="text-green-600" />
-                    <span className="font-semibold text-green-800">Strengths</span>
-                  </div>
-                  <ul className="space-y-1">
-                    {candidate.strengths.map((strength, i) => (
-                      <li key={i} className="text-sm text-green-700 flex items-start gap-2">
-                        <span className="text-green-600 font-bold">✓</span>
-                        <span>{strength}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Weaknesses */}
-              {candidate.weaknesses?.length > 0 && (
-                <div className="bg-red-50 p-4 rounded-lg border border-red-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Award size={18} className="text-red-600" />
-                    <span className="font-semibold text-red-800">Challenges</span>
-                  </div>
-                  <ul className="space-y-1">
-                    {candidate.weaknesses.map((weakness, i) => (
-                      <li key={i} className="text-sm text-red-700 flex items-start gap-2">
-                        <span className="text-red-600 font-bold">!</span>
-                        <span>{weakness}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Advantages */}
-              {candidate.advantages?.length > 0 && (
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Shield size={18} className="text-blue-600" />
-                    <span className="font-semibold text-blue-800">Advantages</span>
-                  </div>
-                  <ul className="space-y-1">
-                    {candidate.advantages.map((advantage, i) => (
-                      <li key={i} className="text-sm text-blue-700 flex items-start gap-2">
-                        <span className="text-blue-600 font-bold">★</span>
-                        <span>{advantage}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Opportunities */}
-              {candidate.opportunities?.length > 0 && (
-                <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Target size={18} className="text-purple-600" />
-                    <span className="font-semibold text-purple-800">Opportunities</span>
-                  </div>
-                  <ul className="space-y-1">
-                    {candidate.opportunities.map((opportunity, i) => (
-                      <li key={i} className="text-sm text-purple-700 flex items-start gap-2">
-                        <span className="text-purple-600 font-bold">→</span>
-                        <span>{opportunity}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Threats */}
-              {candidate.threats?.length > 0 && (
-                <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle size={18} className="text-orange-600" />
-                    <span className="font-semibold text-orange-800">Threats</span>
-                  </div>
-                  <ul className="space-y-1">
-                    {candidate.threats.map((threat, i) => (
-                      <li key={i} className="text-sm text-orange-700 flex items-start gap-2">
-                        <span className="text-orange-600 font-bold">⚠</span>
-                        <span>{threat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Custom Cards */}
-              {candidate.customCards?.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CreditCard size={18} className="text-indigo-600" />
-                    <span className="font-semibold text-indigo-800">Additional Information</span>
-                  </div>
-                  {candidate.customCards.map((card, i) => (
-                    <div key={i} className={`p-4 rounded-lg border ${card.type === 'highlight' ? 'bg-emerald-50 border-emerald-200' :
-                      card.type === 'warning' ? 'bg-amber-50 border-amber-200' :
-                        'bg-indigo-50 border-indigo-200'
-                      }`}>
-                      <div className={`font-semibold text-sm ${card.type === 'highlight' ? 'text-emerald-800' :
-                        card.type === 'warning' ? 'text-amber-800' :
-                          'text-indigo-800'
-                        }`}>{card.title}</div>
-                      <div className={`text-sm mt-1 ${card.type === 'highlight' ? 'text-emerald-700' :
-                        card.type === 'warning' ? 'text-amber-700' :
-                          'text-indigo-700'
-                        }`}>{card.content}</div>
+              {/* Show detailed info only if expanded */}
+              {expandedCandidateId === candidate.id && (
+                <>
+                  {/* Strengths */}
+                  {candidate.strengths?.length > 0 && (
+                    <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp size={18} className="text-green-600" />
+                        <span className="font-semibold text-green-800">Strengths</span>
+                      </div>
+                      <ul className="space-y-1">
+                        {candidate.strengths.map((strength, i) => (
+                          <li key={i} className="text-sm text-green-700 flex items-start gap-2">
+                            <span className="text-green-600 font-bold">✓</span>
+                            <span>{strength}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  ))}
-                </div>
+                  )}
+
+                  {/* Weaknesses */}
+                  {candidate.weaknesses?.length > 0 && (
+                    <div className="bg-red-50 p-4 rounded-lg border border-red-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Award size={18} className="text-red-600" />
+                        <span className="font-semibold text-red-800">Challenges</span>
+                      </div>
+                      <ul className="space-y-1">
+                        {candidate.weaknesses.map((weakness, i) => (
+                          <li key={i} className="text-sm text-red-700 flex items-start gap-2">
+                            <span className="text-red-600 font-bold">!</span>
+                            <span>{weakness}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Advantages */}
+                  {candidate.advantages?.length > 0 && (
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Shield size={18} className="text-blue-600" />
+                        <span className="font-semibold text-blue-800">Advantages</span>
+                      </div>
+                      <ul className="space-y-1">
+                        {candidate.advantages.map((advantage, i) => (
+                          <li key={i} className="text-sm text-blue-700 flex items-start gap-2">
+                            <span className="text-blue-600 font-bold">★</span>
+                            <span>{advantage}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Opportunities */}
+                  {candidate.opportunities?.length > 0 && (
+                    <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Target size={18} className="text-purple-600" />
+                        <span className="font-semibold text-purple-800">Opportunities</span>
+                      </div>
+                      <ul className="space-y-1">
+                        {candidate.opportunities.map((opportunity, i) => (
+                          <li key={i} className="text-sm text-purple-700 flex items-start gap-2">
+                            <span className="text-purple-600 font-bold">→</span>
+                            <span>{opportunity}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Threats */}
+                  {candidate.threats?.length > 0 && (
+                    <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle size={18} className="text-orange-600" />
+                        <span className="font-semibold text-orange-800">Threats</span>
+                      </div>
+                      <ul className="space-y-1">
+                        {candidate.threats.map((threat, i) => (
+                          <li key={i} className="text-sm text-orange-700 flex items-start gap-2">
+                            <span className="text-orange-600 font-bold">⚠</span>
+                            <span>{threat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Custom Cards */}
+                  {candidate.customCards?.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CreditCard size={18} className="text-indigo-600" />
+                        <span className="font-semibold text-indigo-800">Additional Information</span>
+                      </div>
+                      {candidate.customCards.map((card, i) => (
+                        <div key={i} className={`p-4 rounded-lg border ${card.type === 'highlight' ? 'bg-emerald-50 border-emerald-200' :
+                          card.type === 'warning' ? 'bg-amber-50 border-amber-200' :
+                            'bg-indigo-50 border-indigo-200'
+                          }`}>
+                          <div className={`font-semibold text-sm ${card.type === 'highlight' ? 'text-emerald-800' :
+                            card.type === 'warning' ? 'text-amber-800' :
+                              'text-indigo-800'
+                            }`}>{card.title}</div>
+                          <div className={`text-sm mt-1 ${card.type === 'highlight' ? 'text-emerald-700' :
+                            card.type === 'warning' ? 'text-amber-700' :
+                              'text-indigo-700'
+                            }`}>{card.content}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
-            {/* Footer */}
             <div className="px-6 py-4 bg-gray-50 border-t">
-              <button className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                View Detailed Profile
+              <button
+                onClick={() => setExpandedCandidateId(expandedCandidateId === candidate.id ? null : candidate.id)}
+                className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                {expandedCandidateId === candidate.id ? 'Hide Details' : 'View Detailed Profile'}
               </button>
             </div>
           </div>
