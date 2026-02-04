@@ -366,18 +366,16 @@ export default function AssemblyMetaEditor() {
                                                                     <option value="Anti">Anti ( - )</option>
                                                                     <option value="Neutral">Neutral</option>
                                                                 </select>
-                                                                {type !== 'Neutral' && (
-                                                                    <select
-                                                                        className="border rounded p-1 font-medium"
-                                                                        value={PARTIES.includes(party) ? party : 'Others'}
-                                                                        onChange={e => handleUpdate(type, e.target.value)}
-                                                                    >
-                                                                        <option value="">Select Party</option>
-                                                                        {PARTIES.map(p => <option key={p} value={p}>{p}</option>)}
-                                                                    </select>
-                                                                )}
+                                                                <select
+                                                                    className="border rounded p-1 font-medium"
+                                                                    value={PARTIES.includes(party) ? party : 'Others'}
+                                                                    onChange={e => handleUpdate(type, e.target.value)}
+                                                                >
+                                                                    <option value="">Select Party</option>
+                                                                    {PARTIES.map(p => <option key={p} value={p}>{p}</option>)}
+                                                                </select>
                                                             </div>
-                                                            {type !== 'Neutral' && (!PARTIES.includes(party) || party === 'Others') && (
+                                                            {(!PARTIES.includes(party) || party === 'Others') && (
                                                                 <input
                                                                     className="border rounded p-1 flex-1 placeholder-gray-400"
                                                                     placeholder="Custom Party/Entity..."
