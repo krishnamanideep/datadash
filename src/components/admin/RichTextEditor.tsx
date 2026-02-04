@@ -201,8 +201,14 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Enter t
           word-wrap: break-word;
           overflow-wrap: break-word;
         }
-        [contentEditable] ul,
+        [contentEditable] ul {
+          list-style-type: disc;
+          margin-left: 1.5rem;
+          margin-top: 0.5rem;
+          margin-bottom: 0.5rem;
+        }
         [contentEditable] ol {
+          list-style-type: decimal;
           margin-left: 1.5rem;
           margin-top: 0.5rem;
           margin-bottom: 0.5rem;
