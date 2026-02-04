@@ -10,6 +10,7 @@ import { PollingStation } from '@/types/data';
 import { db } from '@/lib/firebase/client';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { processLocalPollingData } from '@/utils/dataProcessing';
+import { ASSEMBLIES } from '@/data/assemblies';
 
 const CARD_ICONS: Record<string, any> = {
   star: Star,
@@ -85,6 +86,9 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
   const [error, setError] = useState<string | null>(null);
   const [mapUrl, setMapUrl] = useState<string | null>(null);
   const [customCards, setCustomCards] = useState<CustomCard[]>([]);
+
+  // Get assembly name from ASSEMBLIES constant
+  const assemblyName = ASSEMBLIES.find(a => a.id === selectedAssembly)?.name || `Assembly ${selectedAssembly}`;
   const [partyConfig, setPartyConfig] = useState<{ selectedParties: string[] } | null>(null);
 
   // Get current MLA for selected year
@@ -272,7 +276,7 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
     <div className="p-6 space-y-6">
       {/* Header with Year Selector */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-3xl font-bold text-gray-800">Assembly {selectedAssembly} - Overview</h2>
+        <h2 className="text-3xl font-bold text-gray-800">{assemblyName} - Overview</h2>
 
         {/* Election Year Dropdown */}
         <div className="flex items-center gap-3">
