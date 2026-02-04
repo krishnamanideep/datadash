@@ -447,10 +447,12 @@ export default function AssemblyMetaEditor() {
                                                         await uploadBytes(storageRef, file);
                                                         const url = await getDownloadURL(storageRef);
 
+                                                        // Update local state
                                                         setData((prev: any) => ({ ...prev, assemblyMapUrl: url }));
 
-                                                        // Auto-save after upload
-                                                        await setDoc(doc(db, 'assemblyMeta', assemblyId), { ...data, assemblyMapUrl: url });
+                                                        // Auto-save to Firestore - use the fresh URL, not stale data
+                                                        const docRef = doc(db, 'assemblyMeta', assemblyId);
+                                                        await setDoc(docRef, { assemblyMapUrl: url }, { merge: true });
 
                                                         alert('✅ Map image uploaded and saved successfully!');
                                                         refreshPreview();
