@@ -10,16 +10,54 @@ interface RichTextEditorProps {
     minHeight?: string;
 }
 
+// Comprehensive HTML cleaning function
+const cleanHTML = (html: string): string => {
+    if (!html) return '';
+
+    // Remove all inline styles
+    let cleaned = html.replace(/\s*style="[^"]*"/gi, '');
+
+    // Remove all class attributes
+    cleaned = cleaned.replace(/\s*class="[^"]*"/gi, '');
+
+    // Remove all id attributes except specific ones
+    cleaned = cleaned.replace(/\s*id="[^"]*"/gi, '');
+
+    // Remove dir attributes
+    cleaned = cleaned.replace(/\s*dir="[^"]*"/gi, '');
+
+    // Remove aria attributes
+    cleaned = cleaned.replace(/\s*aria-[^=]*="[^"]*"/gi, '');
+
+    // Remove data attributes
+    cleaned = cleaned.replace(/\s*data-[^=]*="[^"]*"/gi, '');
+
+    // Remove span tags (keep content)
+    cleaned = cleaned.replace(/<span[^>]*>/gi, '');
+    cleaned = cleaned.replace(/<\/span>/gi, '');
+
+    // Convert divs to paragraphs
+    cleaned = cleaned.replace(/<div>/gi, '<p>');
+    cleaned = cleaned.replace(/<\/div>/gi, '</p>');
+
+    // Remove empty paragraphs
+    cleaned = cleaned.replace(/<p>\s*<\/p>/gi, '');
+
+    // Clean up multiple spaces
+    cleaned = cleaned.replace(/\s+/g, ' ');
+
+    return cleaned.trim();
+};
+
 export default function RichTextEditor({ value, onChange, placeholder = 'Enter text...', minHeight = '100px' }: RichTextEditorProps) {
     const editorRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (editorRef.current && editorRef.current.innerHTML !== value) {
-            // Clean the HTML to remove unwanted inline styles
-            const cleanedValue = value
-                .replace(/style="[^"]*"/g, '') // Remove inline styles
-                .replace(/class="[^"]*"/g, ''); // Remove classes
-            editorRef.current.innerHTML = cleanedValue || '';
+        if (editorRef.current) {
+            const cleanedValue = cleanHTML(value);
+            if (editorRef.current.innerHTML !== cleanedValue) {
+                editorRef.current.innerHTML = cleanedValue;
+            }
         }
     }, [value]);
 
@@ -31,15 +69,8 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Enter t
 
     const handleInput = () => {
         if (editorRef.current) {
-            // Clean the HTML before saving
-            let html = editorRef.current.innerHTML;
-            // Remove unwanted inline styles that browsers add
-            html = html
-                .replace(/style="[^"]*"/g, '')
-                .replace(/class="[^"]*"/g, '')
-                .replace(/<div>/g, '<p>')
-                .replace(/<\/div>/g, '</p>');
-            onChange(html);
+            const cleaned = cleanHTML(editorRef.current.innerHTML);
+            onChange(cleaned);
         }
     };
 
