@@ -575,7 +575,9 @@ export default function AssemblyMetaEditor() {
                                 {customCards.map(card => (
                                     <div key={card.id} className={`border-2 rounded-xl overflow-hidden transition-all hover:shadow-md ${card.cardType === 'note' ? 'bg-yellow-50 border-yellow-200' :
                                         card.cardType === 'info' ? 'bg-blue-50 border-blue-200' :
-                                            'bg-white border-gray-200'
+                                            card.cardType === 'table' ? 'bg-green-50 border-green-200' :
+                                                card.cardType === 'small' ? 'bg-purple-50 border-purple-200' :
+                                                    'bg-white border-gray-200'
                                         }`}>
                                         <div className="p-5">
                                             <div className="flex items-start justify-between gap-4 mb-3">
@@ -584,8 +586,10 @@ export default function AssemblyMetaEditor() {
                                                         const Icon = CARD_ICONS.find(i => i.id === card.icon)!.icon;
                                                         return (
                                                             <div className={`p-2 rounded-lg ${card.cardType === 'note' ? 'bg-yellow-100 text-yellow-700' :
-                                                                card.cardType === 'info' ? 'bg-blue-100 text-blue-700' :
-                                                                    'bg-gray-100 text-gray-700'
+                                                                    card.cardType === 'info' ? 'bg-blue-100 text-blue-700' :
+                                                                        card.cardType === 'table' ? 'bg-green-100 text-green-700' :
+                                                                            card.cardType === 'small' ? 'bg-purple-100 text-purple-700' :
+                                                                                'bg-gray-100 text-gray-700'
                                                                 }`}>
                                                                 <Icon size={20} strokeWidth={2.5} />
                                                             </div>
@@ -687,6 +691,8 @@ export default function AssemblyMetaEditor() {
                                         <option value="text">Text</option>
                                         <option value="note">Note (Yellow)</option>
                                         <option value="info">Info (Blue)</option>
+                                        <option value="table">Table</option>
+                                        <option value="small">Small Card</option>
                                     </select>
                                 </div>
                                 <div>

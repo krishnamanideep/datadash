@@ -30,7 +30,7 @@ interface CustomCard {
   assemblyId: string;
   heading: string;
   content: string;
-  cardType: 'text' | 'note' | 'info';
+  cardType: 'text' | 'note' | 'info' | 'table' | 'small';
   icon?: string;
   order: number;
 }
@@ -470,26 +470,32 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
             {customCards.map((card) => (
               <div
                 key={card.id}
-                className={`p-8 rounded-2xl border-2 transition-all hover:shadow-lg ${card.cardType === 'note' ? 'bg-yellow-50 border-yellow-100 shadow-yellow-100/30' :
-                  card.cardType === 'info' ? 'bg-blue-50 border-blue-100 shadow-blue-100/30' :
-                    'bg-white border-gray-100 shadow-gray-100/30'
+                className={`rounded-2xl border-2 transition-all hover:shadow-lg ${card.cardType === 'note' ? 'bg-yellow-50 border-yellow-100 shadow-yellow-100/30 p-8' :
+                  card.cardType === 'info' ? 'bg-blue-50 border-blue-100 shadow-blue-100/30 p-8' :
+                    card.cardType === 'table' ? 'bg-green-50 border-green-100 shadow-green-100/30 p-8' :
+                      card.cardType === 'small' ? 'bg-purple-50 border-purple-100 shadow-purple-100/30 p-4' :
+                        'bg-white border-gray-100 shadow-gray-100/30 p-8'
                   }`}
               >
-                <div className="flex items-center gap-4 mb-4">
+                <div className={`flex items-center gap-4 ${card.cardType === 'small' ? 'mb-2' : 'mb-4'}`}>
                   {card.icon && CARD_ICONS[card.icon] && (
-                    <div className={`p-4 rounded-xl ${card.cardType === 'note' ? 'bg-yellow-100 text-yellow-700' :
-                      card.cardType === 'info' ? 'bg-blue-100 text-blue-700' :
-                        'bg-gray-100 text-gray-700'
+                    <div className={`rounded-xl ${card.cardType === 'note' ? 'bg-yellow-100 text-yellow-700 p-4' :
+                      card.cardType === 'info' ? 'bg-blue-100 text-blue-700 p-4' :
+                        card.cardType === 'table' ? 'bg-green-100 text-green-700 p-4' :
+                          card.cardType === 'small' ? 'bg-purple-100 text-purple-700 p-2' :
+                            'bg-gray-100 text-gray-700 p-4'
                       }`}>
                       {(() => {
                         const Icon = CARD_ICONS[card.icon];
-                        return <Icon size={28} strokeWidth={2.5} />;
+                        return <Icon size={card.cardType === 'small' ? 20 : 28} strokeWidth={2.5} />;
                       })()}
                     </div>
                   )}
-                  <h4 className="font-extrabold text-gray-900 text-2xl tracking-tight leading-tight">{card.heading}</h4>
+                  <h4 className={`font-extrabold text-gray-900 tracking-tight leading-tight ${card.cardType === 'small' ? 'text-lg' : 'text-2xl'
+                    }`}>{card.heading}</h4>
                 </div>
-                <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap break-words pl-1" dangerouslySetInnerHTML={{ __html: card.content }} />
+                <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words pl-1 ${card.cardType === 'small' ? 'text-sm' : 'text-lg'
+                  }`} dangerouslySetInnerHTML={{ __html: card.content }} />
               </div>
             ))}
           </div>
