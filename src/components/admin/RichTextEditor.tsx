@@ -15,7 +15,11 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Enter t
 
     useEffect(() => {
         if (editorRef.current && editorRef.current.innerHTML !== value) {
-            editorRef.current.innerHTML = value || '';
+            // Clean the HTML to remove unwanted inline styles
+            const cleanedValue = value
+                .replace(/style="[^"]*"/g, '') // Remove inline styles
+                .replace(/class="[^"]*"/g, ''); // Remove classes
+            editorRef.current.innerHTML = cleanedValue || '';
         }
     }, [value]);
 
@@ -27,7 +31,15 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Enter t
 
     const handleInput = () => {
         if (editorRef.current) {
-            onChange(editorRef.current.innerHTML);
+            // Clean the HTML before saving
+            let html = editorRef.current.innerHTML;
+            // Remove unwanted inline styles that browsers add
+            html = html
+                .replace(/style="[^"]*"/g, '')
+                .replace(/class="[^"]*"/g, '')
+                .replace(/<div>/g, '<p>')
+                .replace(/<\/div>/g, '</p>');
+            onChange(html);
         }
     };
 
