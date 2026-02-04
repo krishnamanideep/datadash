@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { Bold, Italic, List, ListOrdered, Eraser } from 'lucide-react';
+import { Bold, Italic, Underline, Strikethrough, List, ListOrdered, Eraser, Heading1, Heading2, Heading3 } from 'lucide-react';
 
 interface RichTextEditorProps {
     value: string;
@@ -94,6 +94,22 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Enter t
                 >
                     <Italic size={16} />
                 </button>
+                <button
+                    type="button"
+                    onClick={() => execCommand('underline')}
+                    className="p-2 hover:bg-gray-200 rounded transition-colors"
+                    title="Underline"
+                >
+                    <Underline size={16} />
+                </button>
+                <button
+                    type="button"
+                    onClick={() => execCommand('strikeThrough')}
+                    className="p-2 hover:bg-gray-200 rounded transition-colors"
+                    title="Strikethrough"
+                >
+                    <Strikethrough size={16} />
+                </button>
                 <div className="w-px bg-gray-300 mx-1" />
                 <button
                     type="button"
@@ -110,6 +126,31 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Enter t
                     title="Numbered List"
                 >
                     <ListOrdered size={16} />
+                </button>
+                <div className="w-px bg-gray-300 mx-1" />
+                <button
+                    type="button"
+                    onClick={() => execCommand('formatBlock', 'h1')}
+                    className="p-2 hover:bg-gray-200 rounded transition-colors"
+                    title="Heading 1"
+                >
+                    <Heading1 size={16} />
+                </button>
+                <button
+                    type="button"
+                    onClick={() => execCommand('formatBlock', 'h2')}
+                    className="p-2 hover:bg-gray-200 rounded transition-colors"
+                    title="Heading 2"
+                >
+                    <Heading2 size={16} />
+                </button>
+                <button
+                    type="button"
+                    onClick={() => execCommand('formatBlock', 'h3')}
+                    className="p-2 hover:bg-gray-200 rounded transition-colors"
+                    title="Heading 3"
+                >
+                    <Heading3 size={16} />
                 </button>
                 <div className="w-px bg-gray-300 mx-1" />
                 <button
@@ -180,6 +221,31 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Enter t
         }
         [contentEditable] em {
           font-style: italic;
+        }
+        [contentEditable] u {
+          text-decoration: underline;
+        }
+        [contentEditable] strike,
+        [contentEditable] s {
+          text-decoration: line-through;
+        }
+        [contentEditable] h1 {
+          font-size: 2em;
+          font-weight: 700;
+          margin-bottom: 0.5rem;
+          margin-top: 0.5rem;
+        }
+        [contentEditable] h2 {
+          font-size: 1.5em;
+          font-weight: 700;
+          margin-bottom: 0.4rem;
+          margin-top: 0.4rem;
+        }
+        [contentEditable] h3 {
+          font-size: 1.25em;
+          font-weight: 700;
+          margin-bottom: 0.3rem;
+          margin-top: 0.3rem;
         }
         [contentEditable] br {
           display: block;
