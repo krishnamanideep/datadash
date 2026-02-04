@@ -27,10 +27,11 @@ import RetroBoothsEditor from '../../../components/admin/RetroBoothsEditor';
 import MLAEditor from '../../../components/admin/MLAEditor';
 import ElectionDataEditor from '../../../components/admin/ElectionDataEditor';
 import PoliticalHistoryEditor from '../../../components/admin/PoliticalHistoryEditor';
+import AssemblyOverviewEditor from '../../../components/admin/AssemblyOverviewEditor';
 
 function AdminDashboardContent() {
   const { logout, isAuthenticated, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'stations' | 'survey' | 'widgets' | 'candidates' | 'meta' | 'retrobooths' | 'mlas' | 'elections' | 'politicalhistory'>('stations');
+  const [activeTab, setActiveTab] = useState<'stations' | 'survey' | 'widgets' | 'candidates' | 'meta' | 'retrobooths' | 'mlas' | 'elections' | 'politicalhistory' | 'assemblyoverview'>('stations');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   return (
@@ -122,6 +123,15 @@ function AdminDashboardContent() {
             </button>
 
             <button
+              onClick={() => setActiveTab('assemblyoverview')}
+              className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'assemblyoverview' ? 'bg-blue-600' : 'hover:bg-slate-800'
+                }`}
+            >
+              <LayoutDashboard size={24} />
+              {isSidebarOpen && <span className="ml-3">Assembly Overview</span>}
+            </button>
+
+            <button
               onClick={() => setActiveTab('widgets')}
               className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'widgets' ? 'bg-blue-600' : 'hover:bg-slate-800'
                 }`}
@@ -159,6 +169,7 @@ function AdminDashboardContent() {
             {activeTab === 'mlas' && <MLAEditor />}
             {activeTab === 'elections' && <ElectionDataEditor />}
             {activeTab === 'politicalhistory' && <PoliticalHistoryEditor />}
+            {activeTab === 'assemblyoverview' && <AssemblyOverviewEditor />}
           </div>
         </main>
       </div>

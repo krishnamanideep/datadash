@@ -85,6 +85,7 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
   const [error, setError] = useState<string | null>(null);
   const [mapUrl, setMapUrl] = useState<string | null>(null);
   const [customCards, setCustomCards] = useState<CustomCard[]>([]);
+  const [partyConfig, setPartyConfig] = useState<{ selectedParties: string[] } | null>(null);
 
   // Get current MLA for selected year
   const currentMLA = mlas.find(m => m.year === selectedYear);
@@ -122,15 +123,22 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
       }
     });
 
-    const partyData = Object.entries(partyVotesRaw)
+    let partyData = Object.entries(partyVotesRaw)
       .map(([party, rawVotes]) => ({
         party,
         rawVotes: Math.round(rawVotes),
         percentage: ((rawVotes / totalPolled) * 100).toFixed(1),
         share: parseFloat(((rawVotes / totalPolled) * 100).toFixed(1))
       }))
-      .sort((a, b) => b.share - a.share)
-      .slice(0, 8);
+      .sort((a, b) => b.share - a.share);
+
+    // Filter based on party configuration or default to top 5 (excluding VOTERS)
+    if (partyConfig?.selectedParties && partyConfig.selectedParties.length > 0) {
+      partyData = partyData.filter(p => partyConfig.selectedParties.includes(p.party));
+    } else {
+      // Default: top 5 parties, excluding VOTERS
+      partyData = partyData.filter(p => p.party !== 'VOTERS').slice(0, 5);
+    }
 
     // 4. Category Distribution
     const categoryDist = booths.reduce((acc: { [key: string]: number }, b) => {
@@ -214,6 +222,20 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
 
         const sortedCards = Array.isArray(cardsData) ? [...cardsData].sort((a: any, b: any) => (a.order || 0) - (b.order || 0)) : [];
         setCustomCards(sortedCards);
+
+        // 5. Load Party Configuration
+        let configData: any = {};
+        try {
+          const configRef = doc(db, 'pageConfig', `assemblyOverview_${selectedAssembly}`);
+          const configSnap = await getDoc(configRef);
+          if (configSnap.exists()) configData = configSnap.data();
+        } catch (e) { console.warn('Config fetch error', e); }
+
+        if (configData?.selectedParties) {
+          setPartyConfig({ selectedParties: configData.selectedParties });
+        } else {
+          setPartyConfig(null); // Use default behavior
+        }
 
         setLoading(false);
 
