@@ -158,7 +158,7 @@ export default function PoliticalHistory({ selectedAssembly, previewData }: { se
         if (!previewData) {
           // 3. Load Meta & Config (Firestore)
           const metaRef = doc(db, 'assemblyMeta', selectedAssembly);
-          const configRef = doc(db, 'politicalHistoryConfig', selectedAssembly); // Assuming docID is assemblyId
+          const configRef = doc(db, 'pageConfig', `politicalHistoryConfig_${selectedAssembly}`);
 
           const [metaSnap, configSnap] = await Promise.all([
             getDoc(metaRef),
