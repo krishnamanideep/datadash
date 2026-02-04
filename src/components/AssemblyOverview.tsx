@@ -406,40 +406,45 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
       </div>
 
 
-      {/* Constituency Map Section - Standalone */}
-      {mapUrl && (
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center gap-3 mb-4">
-            <MapIcon className="text-blue-600" size={24} />
-            <h3 className="text-xl font-semibold">Constituency Map</h3>
-          </div>
-          <div className="border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-50">
-            <img
-              src={mapUrl}
-              alt={`${assemblyName} Constituency Map`}
-              className="w-full h-auto object-contain"
-              style={{ maxHeight: '600px' }}
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = "https://via.placeholder.com/800x600?text=Map+Loading+Error";
-              }}
-            />
-          </div>
-          <p className="text-center text-sm text-gray-500 mt-3 italic">
-            {assemblyName} - Assembly Constituency Map
-          </p>
-        </div>
-      )}
-
-      {/* Map Section */}
-      {config.showPollingStationMap && (
-        <div className={mapUrl ? "grid grid-cols-1 lg:grid-cols-2 gap-6" : "bg-white p-6 rounded-lg shadow"}>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-xl font-semibold mb-4">Polling Locations (Interactive)</h3>
-            <MapComponent data={data} />
-          </div>
-
-          {!mapUrl && (
+      {/* Map Section - Combined Layout */}
+      {(mapUrl || config.showPollingStationMap) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Constituency Map */}
+          {mapUrl && (
             <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center gap-3 mb-4">
+                <MapIcon className="text-blue-600" size={24} />
+                <h3 className="text-xl font-semibold">Constituency Map</h3>
+              </div>
+              <div className="border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-50 h-96 flex items-center justify-center">
+                <img
+                  src={mapUrl}
+                  alt={`${assemblyName} Constituency Map`}
+                  className="w-full h-full object-contain p-2"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://via.placeholder.com/800x600?text=Map+Loading+Error";
+                  }}
+                />
+              </div>
+              <p className="text-center text-sm text-gray-500 mt-3 italic">
+                {assemblyName} - Assembly Constituency Map
+              </p>
+            </div>
+          )}
+
+          {/* Polling Locations Map */}
+          {config.showPollingStationMap && (
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-xl font-semibold mb-4">Polling Locations (Interactive)</h3>
+              <div className="h-96">
+                <MapComponent data={data} />
+              </div>
+            </div>
+          )}
+
+          {/* Reference Map (only if no custom map uploaded and polling map is disabled) */}
+          {!mapUrl && !config.showPollingStationMap && (
+            <div className="bg-white p-6 rounded-lg shadow lg:col-span-2">
               <h3 className="text-xl font-semibold mb-4">Constituency Map (Reference)</h3>
               <div className="border rounded-lg overflow-hidden h-96 flex items-center justify-center bg-gray-50">
                 <div className="flex flex-col gap-4 w-full h-full p-2 overflow-auto">
