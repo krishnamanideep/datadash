@@ -34,7 +34,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Enter t
     return (
         <div className="border rounded-lg overflow-hidden bg-white">
             {/* Toolbar */}
-            <div className="flex gap-1 p-2 bg-gray-50 border-b">
+            <div className="flex gap-1 p-2 bg-gray-50 border-b flex-wrap">
                 <button
                     type="button"
                     onClick={() => execCommand('bold')}
@@ -67,6 +67,23 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Enter t
                     title="Numbered List"
                 >
                     <ListOrdered size={16} />
+                </button>
+                <div className="w-px bg-gray-300 mx-1" />
+                <button
+                    type="button"
+                    onClick={() => execCommand('insertParagraph')}
+                    className="p-2 hover:bg-gray-200 rounded transition-colors text-xs font-bold"
+                    title="New Paragraph"
+                >
+                    ¶
+                </button>
+                <button
+                    type="button"
+                    onClick={() => execCommand('insertLineBreak')}
+                    className="p-2 hover:bg-gray-200 rounded transition-colors text-xs font-bold"
+                    title="Line Break"
+                >
+                    ↵
                 </button>
                 <div className="w-px bg-gray-300 mx-1" />
                 <button
@@ -109,11 +126,22 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Enter t
         [contentEditable] li {
           margin-bottom: 0.25rem;
         }
+        [contentEditable] p {
+          margin-bottom: 0.75rem;
+        }
+        [contentEditable] p:last-child {
+          margin-bottom: 0;
+        }
         [contentEditable] strong {
           font-weight: 700;
         }
         [contentEditable] em {
           font-style: italic;
+        }
+        [contentEditable] br {
+          display: block;
+          content: "";
+          margin-top: 0.25rem;
         }
       `}</style>
         </div>
