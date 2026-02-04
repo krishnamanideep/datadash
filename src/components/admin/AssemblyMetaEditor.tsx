@@ -23,7 +23,7 @@ const CARD_ICONS = [
 
 export default function AssemblyMetaEditor() {
     const [assemblyId, setAssemblyId] = useState('1');
-    const [activeTab, setActiveTab] = useState<'scenario' | 'history' | 'cards'>('scenario');
+    const [activeTab, setActiveTab] = useState<'scenario' | 'history' | 'cards' | 'settings'>('scenario');
     const [loading, setLoading] = useState(false);
     const [customCards, setCustomCards] = useState<any[]>([]);
     const [editingCard, setEditingCard] = useState<any | null>(null);
@@ -201,6 +201,12 @@ export default function AssemblyMetaEditor() {
                         </select>
                         <div className="flex bg-gray-200 rounded p-1">
                             <button
+                                onClick={() => setActiveTab('settings')}
+                                className={`px-3 py-1 rounded text-sm font-medium ${activeTab === 'settings' ? 'bg-white shadow text-blue-600' : ''}`}
+                            >
+                                Settings
+                            </button>
+                            <button
                                 onClick={() => setActiveTab('scenario')}
                                 className={`px-3 py-1 rounded text-sm font-medium ${activeTab === 'scenario' ? 'bg-white shadow text-blue-600' : ''}`}
                             >
@@ -240,65 +246,6 @@ export default function AssemblyMetaEditor() {
                                         value={data.headers?.pageTitle || ''}
                                         onChange={e => updateHeader('pageTitle', e.target.value)}
                                     />
-                                </div>
-
-                                {/* Image Upload */}
-                                <div>
-                                    <label className="text-xs font-bold text-blue-800 block mb-1">Assembly Map Image</label>
-                                    <div className="flex gap-2 items-center">
-                                        <input
-                                            type="text"
-                                            className="flex-1 text-sm border-blue-200 rounded p-1"
-                                            value={data.assemblyMapUrl || ''}
-                                            onChange={e => setData({ ...data, assemblyMapUrl: e.target.value })}
-                                            placeholder="Image URL or upload..."
-                                        />
-                                        <label className="cursor-pointer bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700">
-                                            Upload
-                                            <input
-                                                type="file"
-                                                className="hidden"
-                                                accept="image/*"
-                                                onChange={async (e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (!file) return;
-
-                                                    // Upload logic
-                                                    try {
-                                                        const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
-                                                        const { storage } = await import('@/lib/firebase/client');
-
-                                                        const storageRef = ref(storage, `assembly-maps/${assemblyId}/${file.name}`);
-                                                        await uploadBytes(storageRef, file);
-                                                        const url = await getDownloadURL(storageRef);
-
-                                                        setData((prev: any) => ({ ...prev, assemblyMapUrl: url }));
-
-                                                        // Auto-save after upload
-                                                        await setDoc(doc(db, 'assemblyMeta', assemblyId), { ...data, assemblyMapUrl: url });
-                                                        alert('Image uploaded and saved successfully!');
-                                                    } catch (err) {
-                                                        console.error(err);
-                                                        alert('Upload failed. Check console.');
-                                                    }
-                                                }}
-                                            />
-                                        </label>
-                                    </div>
-                                    {data.assemblyMapUrl && (
-                                        <div className="mt-2">
-                                            <div className="text-xs text-blue-800 mb-1">Current Map Preview:</div>
-                                            <img
-                                                src={data.assemblyMapUrl}
-                                                alt="Assembly Map Preview"
-                                                className="w-full max-w-md border rounded shadow-sm"
-                                                onError={(e) => {
-                                                    (e.target as HTMLImageElement).src = "https://via.placeholder.com/400x300?text=Image+Load+Failed";
-                                                }}
-                                            />
-                                            <a href={data.assemblyMapUrl} target="_blank" className="text-xs text-blue-600 underline mt-1 inline-block">Open in new tab</a>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
 
@@ -447,6 +394,133 @@ export default function AssemblyMetaEditor() {
                                 placeholder="<h3>Title</h3><p>Content...</p>"
                             />
                         </div>
+                    ) : activeTab === 'settings' ? (
+                        /* Settings Tab - Assembly Configuration */
+                        <div className="space-y-6">
+                            <div>
+                                <h3 className="font-bold text-gray-700 text-lg mb-2">Assembly Configuration</h3>
+                                <p className="text-sm text-gray-500">Configure assembly-level settings and metadata</p>
+                            </div>
+
+                            {/* Assembly Map Upload */}
+                            <div className="bg-white border-2 border-gray-200 rounded-xl p-6 space-y-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Map size={20} className="text-blue-600" />
+                                    <h4 className="font-bold text-gray-800">Constituency Map</h4>
+                                </div>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    Upload a custom map image for this assembly constituency. This will be displayed in the Assembly Overview section.
+                                </p>
+
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-700 block mb-2">Map Image URL</label>
+                                    <div className="flex gap-2 items-center">
+                                        <input
+                                            type="text"
+                                            className="flex-1 text-sm border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            value={data.assemblyMapUrl || ''}
+                                            onChange={e => setData({ ...data, assemblyMapUrl: e.target.value })}
+                                            placeholder="Enter image URL or upload a file..."
+                                        />
+                                        <label className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                            </svg>
+                                            Upload
+                                            <input
+                                                type="file"
+                                                className="hidden"
+                                                accept="image/*"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+
+                                                    // Show loading state
+                                                    const uploadBtn = e.target.parentElement;
+                                                    if (uploadBtn) uploadBtn.textContent = 'Uploading...';
+
+                                                    try {
+                                                        const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+                                                        const { storage } = await import('@/lib/firebase/client');
+
+                                                        const storageRef = ref(storage, `assembly-maps/${assemblyId}/${Date.now()}_${file.name}`);
+                                                        await uploadBytes(storageRef, file);
+                                                        const url = await getDownloadURL(storageRef);
+
+                                                        setData((prev: any) => ({ ...prev, assemblyMapUrl: url }));
+
+                                                        // Auto-save after upload
+                                                        await setDoc(doc(db, 'assemblyMeta', assemblyId), { ...data, assemblyMapUrl: url });
+
+                                                        alert('✅ Map image uploaded and saved successfully!');
+                                                        refreshPreview();
+                                                    } catch (err) {
+                                                        console.error('Upload error:', err);
+                                                        alert('❌ Upload failed. Please check console for details.');
+                                                    } finally {
+                                                        // Reset button text
+                                                        if (uploadBtn) uploadBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>Upload';
+                                                    }
+                                                }}
+                                            />
+                                        </label>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">Supported formats: JPG, PNG, WebP. Max size: 5MB</p>
+                                </div>
+
+                                {data.assemblyMapUrl && (
+                                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                        <div className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                            <Eye size={16} className="text-green-600" />
+                                            Current Map Preview
+                                        </div>
+                                        <div className="relative">
+                                            <img
+                                                src={data.assemblyMapUrl}
+                                                alt="Assembly Map Preview"
+                                                className="w-full max-w-2xl border-2 border-gray-300 rounded-lg shadow-sm"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = "https://via.placeholder.com/600x400?text=Image+Load+Failed";
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="flex gap-3 mt-3">
+                                            <a
+                                                href={data.assemblyMapUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-xs text-blue-600 hover:text-blue-800 underline font-medium"
+                                            >
+                                                Open in new tab →
+                                            </a>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(data.assemblyMapUrl);
+                                                    alert('✅ URL copied to clipboard!');
+                                                }}
+                                                className="text-xs text-gray-600 hover:text-gray-800 underline"
+                                            >
+                                                Copy URL
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Additional Settings Can Go Here */}
+                            <div className="bg-blue-50 border-2 border-blue-100 rounded-xl p-6">
+                                <div className="flex items-start gap-3">
+                                    <Info size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <h4 className="font-semibold text-blue-900 mb-1">Settings Auto-Save</h4>
+                                        <p className="text-sm text-blue-700">
+                                            Changes to the map URL are automatically saved when you upload a file.
+                                            For manual URL entries, click the "Save" button at the top to persist your changes.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     ) : (
                         /* Overview Cards Editor */
                         <div>
@@ -460,26 +534,63 @@ export default function AssemblyMetaEditor() {
                                 </button>
                             </div>
 
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                                 {customCards.map(card => (
-                                    <div key={card.id} className="flex items-start justify-between p-4 border rounded-lg bg-gray-50">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2">
-                                                {card.icon && CARD_ICONS.find(i => i.id === card.icon) && (() => {
-                                                    const Icon = CARD_ICONS.find(i => i.id === card.icon)!.icon;
-                                                    return <Icon size={16} className="text-gray-500" />;
-                                                })()}
-                                                <div className="font-medium">{card.heading}</div>
+                                    <div key={card.id} className={`border-2 rounded-xl overflow-hidden transition-all hover:shadow-md ${card.cardType === 'note' ? 'bg-yellow-50 border-yellow-200' :
+                                        card.cardType === 'info' ? 'bg-blue-50 border-blue-200' :
+                                            'bg-white border-gray-200'
+                                        }`}>
+                                        <div className="p-5">
+                                            <div className="flex items-start justify-between gap-4 mb-3">
+                                                <div className="flex items-center gap-3 flex-1">
+                                                    {card.icon && CARD_ICONS.find(i => i.id === card.icon) && (() => {
+                                                        const Icon = CARD_ICONS.find(i => i.id === card.icon)!.icon;
+                                                        return (
+                                                            <div className={`p-2 rounded-lg ${card.cardType === 'note' ? 'bg-yellow-100 text-yellow-700' :
+                                                                card.cardType === 'info' ? 'bg-blue-100 text-blue-700' :
+                                                                    'bg-gray-100 text-gray-700'
+                                                                }`}>
+                                                                <Icon size={20} strokeWidth={2.5} />
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                    <div>
+                                                        <div className="font-bold text-gray-900 text-lg">{card.heading}</div>
+                                                        <div className="text-xs text-gray-500 mt-0.5">
+                                                            Order: {card.order} • Type: {card.cardType}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2 flex-shrink-0">
+                                                    <button
+                                                        onClick={() => setEditingCard(card)}
+                                                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                                                        title="Edit card"
+                                                    >
+                                                        <Edit2 size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => deleteCard(card.id!)}
+                                                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                                                        title="Delete card"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className="text-sm text-gray-600 mt-1 truncate max-w-md">{card.content}</div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => setEditingCard(card)} className="p-2 text-blue-600 hover:bg-blue-50 rounded"><Edit2 size={18} /></button>
-                                            <button onClick={() => deleteCard(card.id!)} className="p-2 text-red-600 hover:bg-red-50 rounded"><Trash2 size={18} /></button>
+                                            <div
+                                                className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                                                dangerouslySetInnerHTML={{ __html: card.content || '<em class="text-gray-400">No content</em>' }}
+                                            />
                                         </div>
                                     </div>
                                 ))}
-                                {customCards.length === 0 && <p className="text-gray-500 text-center py-8">No overview cards yet.</p>}
+                                {customCards.length === 0 && (
+                                    <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                                        <p className="text-gray-500 text-lg mb-2">No overview cards yet</p>
+                                        <p className="text-gray-400 text-sm">Click "Add Card" to create your first custom information card</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -565,7 +676,7 @@ export default function AssemblyMetaEditor() {
             {/* Right: Preview Panel */}
             <div className="w-1/2 overflow-y-auto bg-gray-200 p-8">
                 <div className="sticky top-0 bg-gray-200 z-10 pb-4 mb-4 border-b flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-gray-600">Live Preview ({activeTab === 'scenario' ? 'Current Scenario' : activeTab === 'history' ? 'History' : 'Overview'})</h2>
+                    <h2 className="text-xl font-bold text-gray-600">Live Preview ({activeTab === 'scenario' ? 'Current Scenario' : activeTab === 'history' ? 'History' : activeTab === 'settings' ? 'Settings' : 'Overview'})</h2>
                     <div className="flex gap-2">
                         <button onClick={refreshPreview} className="p-1 hover:bg-gray-300 rounded"><RefreshCw size={18} /></button>
                         <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">Live Preview</span>
@@ -577,6 +688,12 @@ export default function AssemblyMetaEditor() {
                     ) : activeTab === 'history' ? (
                         <div className="bg-white p-6 rounded-lg shadow-lg">
                             <PoliticalHistory selectedAssembly={assemblyId} previewData={data} />
+                        </div>
+                    ) : activeTab === 'settings' ? (
+                        <div className="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 className="text-xl font-bold text-gray-800 mb-4">Assembly Overview Preview</h3>
+                            <p className="text-sm text-gray-600 mb-4">The map will appear in the Assembly Overview section below:</p>
+                            <AssemblyOverview key={previewKey} selectedAssembly={assemblyId} />
                         </div>
                     ) : (
                         <AssemblyOverview key={previewKey} selectedAssembly={assemblyId} />
