@@ -315,9 +315,80 @@ export default function AssemblyMetaEditor() {
                                         <div className="flex justify-between mb-2 gap-2">
                                             <input className="border rounded p-1 flex-1" value={r.locality} onChange={e => updateArrayItem('groundReports', i, 'locality', e.target.value)} placeholder="Locality" />
                                             <input type="date" className="border rounded p-1" value={r.date} onChange={e => updateArrayItem('groundReports', i, 'date', e.target.value)} />
-                                            <select className="border rounded p-1" value={r.sentiment} onChange={e => updateArrayItem('groundReports', i, 'sentiment', e.target.value)}>
-                                                <option>Positive for BJP</option><option>Positive for DMK</option><option>Neutral/Swing</option>
-                                            </select>
+                                            <div className="flex gap-2 flex-1">
+                                                {(() => {
+                                                    const parseSentiment = (str: string) => {
+                                                        if (!str) return { type: 'Neutral', party: '' };
+                                                        const lower = str.toLowerCase();
+                                                        let type = 'Neutral';
+                                                        let party = '';
+
+                                                        if (lower.includes('positive') || lower.includes('pro')) type = 'Pro';
+                                                        else if (lower.includes('negative') || lower.includes('anti')) type = 'Anti';
+                                                        else if (lower.includes('neutral')) type = 'Neutral';
+
+                                                        // Extract party
+                                                        const commonParties = ['BJP', 'DMK', 'AIADMK', 'INC', 'PMK', 'NRC', 'AINRC', 'LJK', 'IND'];
+                                                        const foundParty = commonParties.find(p => str.includes(p));
+
+                                                        if (foundParty) party = foundParty;
+                                                        else if (type !== 'Neutral') {
+                                                            // If no common party found but has sentiment, assume the rest is custom party
+                                                            // content after "for" or space
+                                                            party = str.replace(/^(Positive for|Negative for|Pro|Anti)\s*/i, '').trim();
+                                                            if (!commonParties.includes(party)) party = 'Others';
+                                                        }
+
+                                                        return { type, party };
+                                                    };
+
+                                                    const { type, party } = parseSentiment(r.sentiment);
+                                                    const PARTIES = ['BJP', 'DMK', 'AIADMK', 'INC', 'PMK', 'NRC', 'AINRC', 'LJK', 'IND', 'Others'];
+
+                                                    const handleUpdate = (newType: string, newParty: string, customText: string = '') => {
+                                                        let finalSentiment = newType;
+                                                        if (newType !== 'Neutral') {
+                                                            const p = newParty === 'Others' ? customText : newParty;
+                                                            if (p) finalSentiment = `${newType} ${p}`;
+                                                        }
+                                                        updateArrayItem('groundReports', i, 'sentiment', finalSentiment);
+                                                    };
+
+                                                    return (
+                                                        <>
+                                                            <div className="flex gap-1">
+                                                                <select
+                                                                    className={`border rounded p-1 ${type === 'Pro' ? 'bg-green-50 text-green-700 font-bold' : type === 'Anti' ? 'bg-red-50 text-red-700 font-bold' : 'bg-gray-50'}`}
+                                                                    value={type}
+                                                                    onChange={e => handleUpdate(e.target.value, party)}
+                                                                >
+                                                                    <option value="Pro">Pro ( + )</option>
+                                                                    <option value="Anti">Anti ( - )</option>
+                                                                    <option value="Neutral">Neutral</option>
+                                                                </select>
+                                                                {type !== 'Neutral' && (
+                                                                    <select
+                                                                        className="border rounded p-1 font-medium"
+                                                                        value={PARTIES.includes(party) ? party : 'Others'}
+                                                                        onChange={e => handleUpdate(type, e.target.value)}
+                                                                    >
+                                                                        <option value="">Select Party</option>
+                                                                        {PARTIES.map(p => <option key={p} value={p}>{p}</option>)}
+                                                                    </select>
+                                                                )}
+                                                            </div>
+                                                            {type !== 'Neutral' && (!PARTIES.includes(party) || party === 'Others') && (
+                                                                <input
+                                                                    className="border rounded p-1 flex-1 placeholder-gray-400"
+                                                                    placeholder="Custom Party/Entity..."
+                                                                    value={r.sentiment.replace(/^(Positive for|Negative for|Pro|Anti)\s*/i, '')}
+                                                                    onChange={e => handleUpdate(type, 'Others', e.target.value)}
+                                                                />
+                                                            )}
+                                                        </>
+                                                    );
+                                                })()}
+                                            </div>
                                             <button onClick={() => removeArrayItem('groundReports', i)} className="text-red-500"><Trash2 size={16} /></button>
                                         </div>
                                         <RichTextEditor
@@ -586,10 +657,10 @@ export default function AssemblyMetaEditor() {
                                                         const Icon = CARD_ICONS.find(i => i.id === card.icon)!.icon;
                                                         return (
                                                             <div className={`p-2 rounded-lg ${card.cardType === 'note' ? 'bg-yellow-100 text-yellow-700' :
-                                                                    card.cardType === 'info' ? 'bg-blue-100 text-blue-700' :
-                                                                        card.cardType === 'table' ? 'bg-green-100 text-green-700' :
-                                                                            card.cardType === 'small' ? 'bg-purple-100 text-purple-700' :
-                                                                                'bg-gray-100 text-gray-700'
+                                                                card.cardType === 'info' ? 'bg-blue-100 text-blue-700' :
+                                                                    card.cardType === 'table' ? 'bg-green-100 text-green-700' :
+                                                                        card.cardType === 'small' ? 'bg-purple-100 text-purple-700' :
+                                                                            'bg-gray-100 text-gray-700'
                                                                 }`}>
                                                                 <Icon size={20} strokeWidth={2.5} />
                                                             </div>
