@@ -6,6 +6,7 @@ import { ASSEMBLIES } from '@/data/assemblies';
 import { db } from '@/lib/firebase/client';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import dynamic from 'next/dynamic';
+import RichTextEditor from './RichTextEditor';
 
 // Dynamic import for live preview
 const PoliticalHistory = dynamic(() => import('@/components/PoliticalHistory'), { ssr: false });
@@ -471,7 +472,12 @@ export default function PoliticalHistoryEditor() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Content</label>
-                                <textarea value={editingCard.content} onChange={(e) => setEditingCard({ ...editingCard, content: e.target.value })} className="w-full border rounded px-3 py-2 h-24" placeholder="Important information to display..." />
+                                <RichTextEditor
+                                    value={editingCard.content}
+                                    onChange={(html: string) => setEditingCard({ ...editingCard, content: html })}
+                                    placeholder="Important information to display..."
+                                    minHeight="120px"
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Icon</label>
