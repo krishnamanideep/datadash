@@ -266,13 +266,21 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                 <tr className="hover:bg-gray-50">
                   <td className="px-6 py-4 font-medium">Key Strength</td>
                   {candidates.map((c, idx) => (
-                    <td key={idx} className="px-6 py-4 text-green-600">{c.strengths?.[0] || '-'}</td>
+                    <td key={idx} className="px-6 py-4 text-green-600">
+                      {c.strengths?.[0] ? (
+                        <span dangerouslySetInnerHTML={{ __html: c.strengths[0] }} className="break-words" />
+                      ) : '-'}
+                    </td>
                   ))}
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="px-6 py-4 font-medium">Key Advantage</td>
                   {candidates.map((c, idx) => (
-                    <td key={idx} className="px-6 py-4 text-blue-600">{c.advantages?.[0] || '-'}</td>
+                    <td key={idx} className="px-6 py-4 text-blue-600">
+                      {c.advantages?.[0] ? (
+                        <span dangerouslySetInnerHTML={{ __html: c.advantages[0] }} className="break-words" />
+                      ) : '-'}
+                    </td>
                   ))}
                 </tr>
               </tbody>
