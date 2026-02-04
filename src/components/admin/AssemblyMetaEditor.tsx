@@ -273,7 +273,10 @@ export default function AssemblyMetaEditor() {
                                                         const url = await getDownloadURL(storageRef);
 
                                                         setData((prev: any) => ({ ...prev, assemblyMapUrl: url }));
-                                                        alert('Image uploaded successfully!');
+
+                                                        // Auto-save after upload
+                                                        await setDoc(doc(db, 'assemblyMeta', assemblyId), { ...data, assemblyMapUrl: url });
+                                                        alert('Image uploaded and saved successfully!');
                                                     } catch (err) {
                                                         console.error(err);
                                                         alert('Upload failed. Check console.');
@@ -283,8 +286,17 @@ export default function AssemblyMetaEditor() {
                                         </label>
                                     </div>
                                     {data.assemblyMapUrl && (
-                                        <div className="mt-2 text-xs text-blue-800">
-                                            <a href={data.assemblyMapUrl} target="_blank" className="underline">View Current Map</a>
+                                        <div className="mt-2">
+                                            <div className="text-xs text-blue-800 mb-1">Current Map Preview:</div>
+                                            <img
+                                                src={data.assemblyMapUrl}
+                                                alt="Assembly Map Preview"
+                                                className="w-full max-w-md border rounded shadow-sm"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = "https://via.placeholder.com/400x300?text=Image+Load+Failed";
+                                                }}
+                                            />
+                                            <a href={data.assemblyMapUrl} target="_blank" className="text-xs text-blue-600 underline mt-1 inline-block">Open in new tab</a>
                                         </div>
                                     )}
                                 </div>
