@@ -172,6 +172,7 @@ export default function CandidateEditor() {
                                 <option value="IND">Independent</option>
                                 <option value="Others">Others</option>
                             </select>
+                            <input className="border p-2 rounded" placeholder="Age" value={formData.age || ''} onChange={e => setFormData({ ...formData, age: e.target.value })} />
                             <input className="border p-2 rounded" placeholder="Caste" value={formData.caste || ''} onChange={e => setFormData({ ...formData, caste: e.target.value })} />
                             <input className="border p-2 rounded" placeholder="Designation" value={formData.designation || ''} onChange={e => setFormData({ ...formData, designation: e.target.value })} />
                             <select
