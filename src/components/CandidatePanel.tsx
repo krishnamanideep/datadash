@@ -91,12 +91,10 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                   <div className="text-gray-500 text-xs uppercase tracking-wide">Designation</div>
                   <div className="font-bold text-gray-800 text-lg">{candidate.designation || 'N/A'}</div>
                 </div>
-                {candidate.age && (
-                  <div className="bg-gray-50 p-3 rounded-lg col-span-2">
-                    <div className="text-gray-500 text-xs uppercase tracking-wide">Age</div>
-                    <div className="font-bold text-gray-800 text-lg">{candidate.age}</div>
-                  </div>
-                )}
+                <div className="bg-gray-50 p-3 rounded-lg col-span-2">
+                  <div className="text-gray-500 text-xs uppercase tracking-wide">Age</div>
+                  <div className="font-bold text-gray-800 text-lg">{candidate.age || 'N/A'}</div>
+                </div>
               </div>
             </div>
 
