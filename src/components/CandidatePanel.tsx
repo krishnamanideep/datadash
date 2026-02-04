@@ -59,17 +59,17 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
     <div className="p-6 space-y-6">
       <h2 className="text-3xl font-bold text-gray-800">{getAssemblyName(selectedAssembly)} - Candidate Panel</h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="flex flex-col gap-6 max-w-4xl mx-auto">
         {candidates.map((candidate, idx) => (
           <div key={idx} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100">
             {/* Header */}
             <div className={`p-6 ${getPartyColor(candidate.party)} text-white`}>
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-2 border-white/30">
+              <div className="flex items-center gap-6">
+                <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-4 border-white/30 flex-shrink-0">
                   {candidate.image ? (
                     <img src={candidate.image} alt={candidate.name} className="w-full h-full object-cover" />
                   ) : (
-                    <Users size={40} />
+                    <Users size={64} />
                   )}
                 </div>
                 <div>
@@ -125,12 +125,12 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
 
               {/* Modal Header */}
               <div className={`p-6 ${getPartyColor(candidate.party)} text-white flex justify-between items-start`}>
-                <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-2 border-white/30">
+                <div className="flex items-center gap-6">
+                  <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-4 border-white/30 flex-shrink-0">
                     {candidate.image ? (
                       <img src={candidate.image} alt={candidate.name} className="w-full h-full object-cover" />
                     ) : (
-                      <Users size={40} />
+                      <Users size={64} />
                     )}
                   </div>
                   <div>
