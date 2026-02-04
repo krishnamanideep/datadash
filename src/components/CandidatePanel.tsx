@@ -59,7 +59,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
     <div className="p-6 space-y-6">
       <h2 className="text-3xl font-bold text-gray-800">{getAssemblyName(selectedAssembly)} - Candidate Panel</h2>
 
-      <div className="flex flex-col gap-6 max-w-4xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto">
         {candidates.map((candidate, idx) => (
           <div key={idx} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100">
             {/* Header */}
