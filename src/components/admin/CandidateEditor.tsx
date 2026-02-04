@@ -6,8 +6,9 @@ import { Plus, Edit, Trash2, Save, X, CreditCard, ChevronDown, ChevronUp } from 
 import { Candidate, CandidateCard } from '@/types/data';
 import { ASSEMBLIES } from '@/data/assemblies';
 import CandidatePanel from '../CandidatePanel';
-import { db } from '@/lib/firebase/client';
+import { db, storage } from '@/lib/firebase/client';
 import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import RichTextEditor from './RichTextEditor';
 
 export default function CandidateEditor() {
@@ -16,6 +17,7 @@ export default function CandidateEditor() {
     const [formData, setFormData] = useState<Partial<Candidate>>({});
     const [assemblyId, setAssemblyId] = useState('1');
     const [showAdvanced, setShowAdvanced] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [newCard, setNewCard] = useState<Partial<CandidateCard>>({ title: '', content: '', type: 'info' });
 
     useEffect(() => {
@@ -64,6 +66,24 @@ export default function CandidateEditor() {
             customCards: [],
             constituency: getAssemblyName(assemblyId)
         });
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const storageRef = ref(storage, `candidates/${Date.now()}_${file.name}`);
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+            setFormData({ ...formData, image: downloadURL });
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            alert("Failed to upload image");
+        } finally {
+            setUploading(false);
+        }
     };
 
     const saveCandidate = async () => {
@@ -158,6 +178,24 @@ export default function CandidateEditor() {
 
                         {/* Basic Info */}
                         <div className="grid grid-cols-2 gap-4">
+                            <div className="col-span-2">
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">Candidate Image</label>
+                                <div className="flex items-center gap-4">
+                                    {formData.image && (
+                                        <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-300">
+                                            <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                        disabled={uploading}
+                                    />
+                                    {uploading && <span className="text-sm text-blue-600">Uploading...</span>}
+                                </div>
+                            </div>
                             <input className="border p-2 rounded" placeholder="Name" value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                             <select className="border p-2 rounded" value={formData.party || ''} onChange={e => setFormData({ ...formData, party: e.target.value })}>
                                 <option value="">Select Party</option>

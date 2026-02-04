@@ -65,8 +65,12 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
             {/* Header */}
             <div className={`p-6 ${getPartyColor(candidate.party)} text-white`}>
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center">
-                  <Users size={40} />
+                <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-2 border-white/30">
+                  {candidate.image ? (
+                    <img src={candidate.image} alt={candidate.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <Users size={40} />
+                  )}
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold">{candidate.name}</h3>
@@ -122,8 +126,12 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
               {/* Modal Header */}
               <div className={`p-6 ${getPartyColor(candidate.party)} text-white flex justify-between items-start`}>
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center">
-                    <Users size={40} />
+                  <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-2 border-white/30">
+                    {candidate.image ? (
+                      <img src={candidate.image} alt={candidate.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Users size={40} />
+                    )}
                   </div>
                   <div>
                     <h3 className="text-3xl font-bold">{candidate.name}</h3>
