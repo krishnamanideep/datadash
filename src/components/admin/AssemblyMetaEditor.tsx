@@ -435,30 +435,65 @@ export default function AssemblyMetaEditor() {
                                                     const file = e.target.files?.[0];
                                                     if (!file) return;
 
+                                                    // Validate file size (5MB max)
+                                                    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+                                                    if (file.size > maxSize) {
+                                                        alert('❌ File too large! Maximum size is 5MB. Your file is ' + (file.size / 1024 / 1024).toFixed(2) + 'MB');
+                                                        return;
+                                                    }
+
                                                     // Show loading state
                                                     const uploadBtn = e.target.parentElement;
                                                     if (uploadBtn) uploadBtn.textContent = 'Uploading...';
 
                                                     try {
+                                                        console.log('Starting upload for file:', file.name, 'Size:', (file.size / 1024).toFixed(2) + 'KB');
+
                                                         const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
                                                         const { storage } = await import('@/lib/firebase/client');
 
-                                                        const storageRef = ref(storage, `assembly-maps/${assemblyId}/${Date.now()}_${file.name}`);
+                                                        const storagePath = `assembly-maps/${assemblyId}/${Date.now()}_${file.name}`;
+                                                        console.log('Upload path:', storagePath);
+
+                                                        const storageRef = ref(storage, storagePath);
+
+                                                        console.log('Uploading to Firebase Storage...');
                                                         await uploadBytes(storageRef, file);
+
+                                                        console.log('Getting download URL...');
                                                         const url = await getDownloadURL(storageRef);
+                                                        console.log('Download URL:', url);
 
                                                         // Update local state
                                                         setData((prev: any) => ({ ...prev, assemblyMapUrl: url }));
 
                                                         // Auto-save to Firestore - use the fresh URL, not stale data
+                                                        console.log('Saving to Firestore...');
                                                         const docRef = doc(db, 'assemblyMeta', assemblyId);
                                                         await setDoc(docRef, { assemblyMapUrl: url }, { merge: true });
+                                                        console.log('Saved successfully!');
 
                                                         alert('✅ Map image uploaded and saved successfully!');
                                                         refreshPreview();
-                                                    } catch (err) {
+                                                    } catch (err: any) {
                                                         console.error('Upload error:', err);
-                                                        alert('❌ Upload failed. Please check console for details.');
+
+                                                        // Provide specific error messages
+                                                        let errorMessage = '❌ Upload failed: ';
+                                                        if (err.code === 'storage/unauthorized') {
+                                                            errorMessage += 'Permission denied. Please check Firebase Storage rules.';
+                                                        } else if (err.code === 'storage/canceled') {
+                                                            errorMessage += 'Upload was canceled.';
+                                                        } else if (err.code === 'storage/unknown') {
+                                                            errorMessage += 'Unknown error occurred. Check your internet connection.';
+                                                        } else if (err.message) {
+                                                            errorMessage += err.message;
+                                                        } else {
+                                                            errorMessage += 'Unknown error. Check console for details.';
+                                                        }
+
+                                                        alert(errorMessage);
+                                                        console.error('Full error details:', err);
                                                     } finally {
                                                         // Reset button text
                                                         if (uploadBtn) uploadBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>Upload';
