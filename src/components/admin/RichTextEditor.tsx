@@ -14,37 +14,24 @@ interface RichTextEditorProps {
 const cleanHTML = (html: string): string => {
     if (!html) return '';
 
-    // Remove all inline styles
-    let cleaned = html.replace(/\s*style="[^"]*"/gi, '');
+    // Basic security cleaning - only remove dangerous tags
+    let cleaned = html;
 
-    // Remove all class attributes
-    cleaned = cleaned.replace(/\s*class="[^"]*"/gi, '');
+    // Remove script tags and their content
+    cleaned = cleaned.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gim, "");
 
-    // Remove all id attributes except specific ones
-    cleaned = cleaned.replace(/\s*id="[^"]*"/gi, '');
+    // Remove iframes
+    cleaned = cleaned.replace(/<iframe\b[^>]*>([\s\S]*?)<\/iframe>/gim, "");
 
-    // Remove dir attributes
-    cleaned = cleaned.replace(/\s*dir="[^"]*"/gi, '');
+    // Remove event handlers (on* attributes)
+    cleaned = cleaned.replace(/\s+on\w+="[^"]*"/gi, '');
 
-    // Remove aria attributes
-    cleaned = cleaned.replace(/\s*aria-[^=]*="[^"]*"/gi, '');
+    // Normalize divs to p only if they are just wrappers (optional, maybe keep divs for flexibility)
+    // But for better typography transparency, ensuring paragraphs is often good.
+    // However, user said "whatever format we want", so let's keeping standard block elements.
 
-    // Remove data attributes
-    cleaned = cleaned.replace(/\s*data-[^=]*="[^"]*"/gi, '');
-
-    // Remove span tags (keep content)
-    cleaned = cleaned.replace(/<span[^>]*>/gi, '');
-    cleaned = cleaned.replace(/<\/span>/gi, '');
-
-    // Convert divs to paragraphs
-    cleaned = cleaned.replace(/<div>/gi, '<p>');
-    cleaned = cleaned.replace(/<\/div>/gi, '</p>');
-
-    // Remove empty paragraphs
+    // Remove empty paragraphs that have no content (often caused by copy-paste)
     cleaned = cleaned.replace(/<p>\s*<\/p>/gi, '');
-
-    // Clean up multiple spaces
-    cleaned = cleaned.replace(/\s+/g, ' ');
 
     return cleaned.trim();
 };
