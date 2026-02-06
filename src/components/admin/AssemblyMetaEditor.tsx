@@ -419,7 +419,12 @@ export default function AssemblyMetaEditor() {
                                             <input className="font-bold border rounded p-1 flex-1" value={f.title} onChange={e => updateArrayItem('decidingFactors', i, 'title', e.target.value)} placeholder="Title" />
                                             <button onClick={() => removeArrayItem('decidingFactors', i)} className="text-red-500"><Trash2 size={16} /></button>
                                         </div>
-                                        <textarea className="w-full border rounded p-2" rows={2} value={f.description} onChange={e => updateArrayItem('decidingFactors', i, 'description', e.target.value)} placeholder="Description (supports line breaks)..." />
+                                        <RichTextEditor
+                                            value={f.description || ''}
+                                            onChange={(html: string) => updateArrayItem('decidingFactors', i, 'description', html)}
+                                            placeholder="Description (use formatting toolbar)..."
+                                            minHeight="80px"
+                                        />
                                     </div>
                                 ))}
                             </section>
@@ -456,11 +461,11 @@ export default function AssemblyMetaEditor() {
                         <div className="space-y-4">
                             <h3 className="font-bold text-gray-700">Political History & Dynamics</h3>
                             <p className="text-xs text-gray-500">HTML Supported</p>
-                            <textarea
-                                className="w-full h-96 border rounded p-4 font-mono text-sm"
-                                value={data.historyNarrative}
-                                onChange={e => setData({ ...data, historyNarrative: e.target.value })}
-                                placeholder="<h3>Title</h3><p>Content...</p>"
+                            <RichTextEditor
+                                value={data.historyNarrative || ''}
+                                onChange={(html: string) => setData({ ...data, historyNarrative: html })}
+                                placeholder="Write the detailed political history here..."
+                                minHeight="400px"
                             />
                         </div>
                     ) : activeTab === 'settings' ? (
