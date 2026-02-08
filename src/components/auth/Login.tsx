@@ -26,8 +26,13 @@ export default function Login() {
             console.error(err);
             if (err.code === 'auth/invalid-credential') {
                 setError('Invalid email or password');
+            } else if (err.code === 'auth/user-not-found') {
+                setError('User not found. Please create an account via /setup.');
+            } else if (err.code === 'auth/wrong-password') {
+                setError('Invalid password.');
             } else {
-                setError('Failed to log in. Please try again.');
+                // Show the actual error message for debugging
+                setError(`Login failed: ${err.code || err.message}`);
             }
         } finally {
             setIsLoggingIn(false);
