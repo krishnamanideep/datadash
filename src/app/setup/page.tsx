@@ -83,6 +83,12 @@ export default function SetupPage() {
                     </div>
                 )}
 
+                <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded text-xs text-gray-700">
+                    <h3 className="font-bold mb-1">Debug Status:</h3>
+                    <p>API Key: {process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? (process.env.NEXT_PUBLIC_FIREBASE_API_KEY === 'mock-api-key' ? '⚠️ USING MOCK KEY (Secrets Missing)' : '✅ Configured') : '❌ Missing'}</p>
+                    <p>Project ID: {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '❌ Missing'}</p>
+                </div>
+
                 <div className="mt-6 border-t pt-4">
                     <h3 className="font-semibold mb-2">Credentials:</h3>
                     <div className="text-sm text-gray-600 space-y-2">
