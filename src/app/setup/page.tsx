@@ -57,17 +57,13 @@ export default function SetupPage() {
         const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber}`; // Defaulting to +91 if no code
 
         // Whitelist Check
-        // In a real app, do this on server. For this setup page, client-side is "okay" as a gatekeeper.
-        /* 
-           NOTE: For strict security, you should use Firebase Blocking Functions or check this backend side.
-           For this specific "Setup Page" utility, this prevents accidental access.
-        */
-        // const isAllowed = ALLOWED_NUMBERS.includes(formattedPhone);
-        // if (!isAllowed) {
-        //   setStatus("Access Denied: This number is not authorized for setup.");
-        //   setLoading(false);
-        //   return;
-        // }
+        const isAllowed = ALLOWED_NUMBERS.includes(formattedPhone);
+
+        if (!isAllowed) {
+            setStatus("Access Denied: This number is not authorized for setup.");
+            setLoading(false);
+            return;
+        }
 
         try {
             setupRecaptcha();
