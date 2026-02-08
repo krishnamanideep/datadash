@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase/client';
 import { collection, getDocs, doc, updateDoc, query, orderBy } from 'firebase/firestore';
-import { User, Shield, Calendar, Activity, Search, Edit2, X, Check, Save } from 'lucide-react';
+import { User, Users, Shield, Calendar, Activity, Search, Edit2, X, Check, Save } from 'lucide-react';
 import { ASSEMBLIES } from '@/data/assemblies';
 
 interface UserProfile {
