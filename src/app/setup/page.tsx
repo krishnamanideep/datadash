@@ -27,7 +27,8 @@ export default function SetupPage() {
 
     // Whitelist - Replace with your allowed numbers
     const ALLOWED_NUMBERS = [
-        '+919876543210', // Example
+        '+919888348889',
+        '+918008972799', // Example
         // Add more numbers here
     ];
 
