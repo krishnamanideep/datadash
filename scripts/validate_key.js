@@ -1,4 +1,4 @@
-const key = "AIzaSyBuTaqQh7CHKavGuj2aA_eCJeFgdmBNXcE";
+const key = "AIzaSyBJTaqUn7cAKsxGujZwA_eCJeFp6a0XHrE";
 const url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${key}`;
 
 console.log(`Testing API Key: ${key}`);
