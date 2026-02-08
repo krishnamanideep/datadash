@@ -121,7 +121,7 @@ function AdminDashboardContent() {
                     <div className="text-sm font-medium text-white truncate">{user.displayName || 'User'}</div>
                     <div className="text-xs text-slate-400 truncate">{user.email}</div>
                     <div className="text-xs text-blue-400 font-medium mt-0.5">
-                      {user.role === 'super_admin' ? 'Super Admin' : (user.role?.charAt(0).toUpperCase() + user.role?.slice(1))}
+                      {user.role === 'super_admin' ? 'Super Admin' : ((user.role || 'client').charAt(0).toUpperCase() + (user.role || 'client').slice(1))}
                     </div>
                   </div>
                 </div>
