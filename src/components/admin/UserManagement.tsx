@@ -224,10 +224,12 @@ export default function UserManagement() {
                                         <div className="text-xs text-gray-500">{user.email}</div>
                                     </td>
                                     <td className="p-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'super_admin' ? 'bg-red-100 text-red-800' :
+                                                user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                                                    'bg-blue-100 text-blue-800'
                                             }`}>
-                                            {user.role === 'admin' ? <Shield size={12} className="mr-1" /> : <User size={12} className="mr-1" />}
-                                            {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                                            {(user.role === 'admin' || user.role === 'super_admin') ? <Shield size={12} className="mr-1" /> : <User size={12} className="mr-1" />}
+                                            {user.role === 'super_admin' ? 'Super Admin' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                                         </span>
                                     </td>
                                     <td className="p-4 text-sm text-gray-600">
@@ -243,8 +245,8 @@ export default function UserManagement() {
                                         </div>
                                     </td>
                                     <td className="p-4 text-sm text-gray-600">
-                                        {user.role === 'admin' ? (
-                                            <span className="text-gray-400 italic">Global Admin Access</span>
+                                        {(user.role === 'admin' || user.role === 'super_admin') ? (
+                                            <span className="text-gray-400 italic">{user.role === 'super_admin' ? 'Full System Access' : 'Global Admin Access'}</span>
                                         ) : (
                                             <div className="flex flex-col gap-1">
                                                 <div className="flex flex-wrap gap-1 max-w-xs">
