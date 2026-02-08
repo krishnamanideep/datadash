@@ -10,6 +10,12 @@ service firebase.storage {
       allow read: if true; // Public read access
       allow write: if true; // Allow uploads for testing
     }
+
+    // Allow candidates image uploads
+    match /candidates/{fileName} {
+      allow read: if true;
+      allow write: if true;
+    }
     
     // Default: deny all other access
     match /{allPaths=**} {

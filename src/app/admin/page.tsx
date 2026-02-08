@@ -1,10 +1,10 @@
 /* eslint-disable */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, Loader2 } from 'lucide-react';
-import { useAuth } from '../../context/LocalAuthContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -12,23 +12,29 @@ export default function AdminLogin() {
   const [localLoading, setLocalLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+  const isAuthenticated = !!user;
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/admin/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalLoading(true);
     setError('');
 
-    // Simulate network delay for UX
-    setTimeout(() => {
-      const success = login(password);
-      if (success) {
-        router.push('/admin/dashboard');
-      } else {
-        setError('Invalid email or password.');
-        setLocalLoading(false);
-      }
-    }, 800);
+    try {
+      await login(email, password);
+      router.push('/admin/dashboard');
+    } catch (err: any) {
+      console.error(err);
+      setError('Invalid email or password.');
+    } finally {
+      setLocalLoading(false);
+    }
   };
 
   return (

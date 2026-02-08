@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import Navigation from '@/components/Navigation';
 import AssemblyOverview from '@/components/AssemblyOverview';
 import PoliticalHistory from '@/components/PoliticalHistory';
@@ -12,8 +14,24 @@ import PDFDownloader from '@/components/PDFDownloader';
 import { ASSEMBLIES } from '@/data/assemblies';
 
 export default function Dashboard() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState('overview');
   const [selectedAssembly, setSelectedAssembly] = useState('1');
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!user) {
+    return null;
+  }
 
   const renderPage = () => {
     switch (currentPage) {

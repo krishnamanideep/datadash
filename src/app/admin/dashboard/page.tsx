@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../../context/LocalAuthContext';
+import { useAuth } from '@/context/AuthContext';
 import {
   LayoutDashboard,
   Map,
@@ -30,7 +30,8 @@ import PoliticalHistoryEditor from '../../../components/admin/PoliticalHistoryEd
 import AssemblyOverviewEditor from '../../../components/admin/AssemblyOverviewEditor';
 
 function AdminDashboardContent() {
-  const { logout, isAuthenticated, loading } = useAuth();
+  const { logout, user, loading } = useAuth();
+  const isAuthenticated = !!user;
   const [activeTab, setActiveTab] = useState<'stations' | 'survey' | 'widgets' | 'candidates' | 'meta' | 'retrobooths' | 'mlas' | 'elections' | 'politicalhistory' | 'assemblyoverview'>('stations');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
