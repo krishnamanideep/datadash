@@ -217,13 +217,6 @@ export default function SetupPage() {
                         >
                             {loading ? 'Verifying...' : 'Confirm OTP'}
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => setStep('PHONE')}
-                            className="w-full text-sm text-gray-500 hover:text-gray-700 mt-2"
-                        >
-                            Change Number
-                        </button>
                     </form>
                 )}
 
