@@ -1,8 +1,10 @@
 /* eslint-disable */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Edit, Trash2, Save, X, FileText, StickyNote, Info } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { ASSEMBLIES } from '@/data/assemblies';
 
 interface CustomCard {
     id?: string;
@@ -14,10 +16,30 @@ interface CustomCard {
 }
 
 export default function CustomCardsEditor() {
+    const { user } = useAuth();
     const [cards, setCards] = useState<CustomCard[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<CustomCard>>({});
-    const [assemblyId, setAssemblyId] = useState('1');
+    const [assemblyId, setAssemblyId] = useState('');
+
+    // Filter assemblies based on user access
+    const accessibleAssemblies = useMemo(() => {
+        if (!user) return [];
+        if (user.role === 'super_admin') return ASSEMBLIES;
+        if (user.role === 'admin' && user.accessibleAssemblies && user.accessibleAssemblies.length > 0) {
+            return ASSEMBLIES.filter(a => user.accessibleAssemblies?.includes(a.id));
+        }
+        return [];
+    }, [user]);
+
+    // Set initial assembly selection
+    useEffect(() => {
+        if (accessibleAssemblies.length > 0) {
+            if (!assemblyId || !accessibleAssemblies.find(a => a.id === assemblyId)) {
+                setAssemblyId(accessibleAssemblies[0].id);
+            }
+        }
+    }, [accessibleAssemblies, assemblyId]);
 
     useEffect(() => {
         fetchCards();
@@ -108,8 +130,8 @@ export default function CustomCardsEditor() {
                                 onChange={(e) => setAssemblyId(e.target.value)}
                                 className="border rounded px-2 py-1 text-sm"
                             >
-                                {[1, 2, 3, 4, 5].map(id => (
-                                    <option key={id} value={String(id)}>Assembly {id}</option>
+                                {accessibleAssemblies.map(a => (
+                                    <option key={a.id} value={a.id}>{a.id}. {a.name}</option>
                                 ))}
                             </select>
                         </div>

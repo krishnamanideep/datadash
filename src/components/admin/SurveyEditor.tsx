@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { Save, Plus, Trash2, Layout, BarChart, Star, Zap, Award, Info, TrendingUp, FileText, Eye, EyeOff } from 'lucide-react';
 import { db } from '@/lib/firebase/client';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -25,11 +26,31 @@ const COLORS = [
 ];
 
 export default function SurveyEditor() {
+    const { user } = useAuth();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [saved, setSaved] = useState(false);
-    const [selectedAssembly, setSelectedAssembly] = useState('1');
+    const [selectedAssembly, setSelectedAssembly] = useState('');
     const [activeTab, setActiveTab] = useState<'settings' | 'data' | 'cards'>('data');
+
+    // Filter assemblies based on user access
+    const accessibleAssemblies = useMemo(() => {
+        if (!user) return [];
+        if (user.role === 'super_admin') return ASSEMBLIES;
+        if (user.role === 'admin' && user.accessibleAssemblies && user.accessibleAssemblies.length > 0) {
+            return ASSEMBLIES.filter(a => user.accessibleAssemblies?.includes(a.id));
+        }
+        return [];
+    }, [user]);
+
+    // Set initial assembly selection
+    useEffect(() => {
+        if (accessibleAssemblies.length > 0) {
+            if (!selectedAssembly || !accessibleAssemblies.find(a => a.id === selectedAssembly)) {
+                setSelectedAssembly(accessibleAssemblies[0].id);
+            }
+        }
+    }, [accessibleAssemblies, selectedAssembly]);
 
     useEffect(() => {
         const loadData = async () => {
@@ -109,7 +130,7 @@ export default function SurveyEditor() {
                             onChange={(e) => setSelectedAssembly(e.target.value)}
                             className="border p-2 rounded text-sm bg-gray-50 max-w-[150px]"
                         >
-                            {ASSEMBLIES.map(a => (
+                            {accessibleAssemblies.map(a => (
                                 <option key={a.id} value={a.id}>{a.id}. {a.name}</option>
                             ))}
                         </select>

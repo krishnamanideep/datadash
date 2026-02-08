@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { Save, Plus, Trash2, Settings, Edit2, Star, Zap, Award, Info, TrendingUp, FileText, Map, Users, Target, AlertTriangle, Eye, RefreshCw } from 'lucide-react';
 import CurrentScenario from '../CurrentScenario';
 import PoliticalHistory from '../PoliticalHistory';
@@ -22,7 +23,28 @@ const CARD_ICONS = [
 ];
 
 export default function AssemblyMetaEditor() {
-    const [assemblyId, setAssemblyId] = useState('1');
+    const { user } = useAuth();
+    const [assemblyId, setAssemblyId] = useState('');
+
+    // Filter assemblies based on user access
+    const accessibleAssemblies = useMemo(() => {
+        if (!user) return [];
+        if (user.role === 'super_admin') return ASSEMBLIES;
+        if (user.role === 'admin' && user.accessibleAssemblies && user.accessibleAssemblies.length > 0) {
+            return ASSEMBLIES.filter(a => user.accessibleAssemblies?.includes(a.id));
+        }
+        return [];
+    }, [user]);
+
+    // Set initial assembly selection
+    useEffect(() => {
+        if (accessibleAssemblies.length > 0) {
+            if (!assemblyId || !accessibleAssemblies.find(a => a.id === assemblyId)) {
+                setAssemblyId(accessibleAssemblies[0].id);
+            }
+        }
+    }, [accessibleAssemblies, assemblyId]);
+
     const [activeTab, setActiveTab] = useState<'scenario' | 'history' | 'cards' | 'settings'>('scenario');
     const [loading, setLoading] = useState(false);
     const [customCards, setCustomCards] = useState<any[]>([]);
@@ -194,8 +216,9 @@ export default function AssemblyMetaEditor() {
                         <select
                             value={assemblyId}
                             onChange={(e) => setAssemblyId(e.target.value)}
+                            className="bg-white border text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                         >
-                            {ASSEMBLIES.map(a => (
+                            {accessibleAssemblies.map(a => (
                                 <option key={a.id} value={a.id}>{a.id}. {a.name}</option>
                             ))}
                         </select>

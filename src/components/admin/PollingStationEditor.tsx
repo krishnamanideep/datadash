@@ -9,10 +9,13 @@ import dynamic from 'next/dynamic';
 import { ASSEMBLIES } from '@/data/assemblies';
 import { db } from '@/lib/firebase/client';
 
+import { useAuth } from '@/context/AuthContext';
+
 // Dynamic import for Map to avoid SSR issues
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { ssr: false });
 
 export default function PollingStationEditor() {
+    const { user } = useAuth();
     const [stations, setStations] = useState<PollingStation[]>([]);
     const [filtered, setFiltered] = useState<PollingStation[]>([]);
     const [search, setSearch] = useState('');
@@ -20,7 +23,28 @@ export default function PollingStationEditor() {
     const [formState, setFormState] = useState<PollingStation | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const [assemblyId, setAssemblyId] = useState('1'); // Default to Assembly 1
+    // Initial assembly ID - will be updated based on access
+    const [assemblyId, setAssemblyId] = useState('');
+
+    // Filter assemblies based on user access
+    const accessibleAssemblies = useMemo(() => {
+        if (!user) return [];
+        if (user.role === 'super_admin') return ASSEMBLIES;
+        if (user.role === 'admin' && user.accessibleAssemblies && user.accessibleAssemblies.length > 0) {
+            return ASSEMBLIES.filter(a => user.accessibleAssemblies?.includes(a.id));
+        }
+        return []; // No access
+    }, [user]);
+
+    // Set initial assembly selection
+    useEffect(() => {
+        if (accessibleAssemblies.length > 0 && !assemblyId) {
+            setAssemblyId(accessibleAssemblies[0].id);
+        } else if (accessibleAssemblies.length > 0 && !accessibleAssemblies.find(a => a.id === assemblyId)) {
+            // If current selection is no longer accessible, switch to first accessible
+            setAssemblyId(accessibleAssemblies[0].id);
+        }
+    }, [accessibleAssemblies, assemblyId]);
 
     const getAssemblyName = (id: string) => {
         return ASSEMBLIES.find(a => a.id === id)?.name || `Assembly ${id}`;
@@ -133,7 +157,7 @@ export default function PollingStationEditor() {
                                 value={assemblyId}
                                 onChange={(e) => setAssemblyId(e.target.value)}
                             >
-                                {ASSEMBLIES.map(a => (
+                                {accessibleAssemblies.map(a => (
                                     <option key={a.id} value={a.id}>{a.id}. {a.name}</option>
                                 ))}
                             </select>

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Save, RefreshCw, Eye, ChevronUp, ChevronDown, BarChart3 } from 'lucide-react';
 import { ASSEMBLIES } from '@/data/assemblies';
 import { db } from '@/lib/firebase/client';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import dynamic from 'next/dynamic';
+import { useAuth } from '@/context/AuthContext';
 
 // Dynamic import for live preview
 const AssemblyOverview = dynamic(() => import('@/components/AssemblyOverview'), { ssr: false });
@@ -29,11 +30,32 @@ const AVAILABLE_PARTIES = [
 ];
 
 export default function AssemblyOverviewEditor() {
-    const [assemblyId, setAssemblyId] = useState('1');
+    const { user } = useAuth();
+    const [assemblyId, setAssemblyId] = useState('');
     const [config, setConfig] = useState<PartyConfig>({
-        assemblyId: '1',
+        assemblyId: '',
         selectedParties: []
     });
+
+    // Filter assemblies based on user access
+    const accessibleAssemblies = useMemo(() => {
+        if (!user) return [];
+        if (user.role === 'super_admin') return ASSEMBLIES;
+        if (user.role === 'admin' && user.accessibleAssemblies && user.accessibleAssemblies.length > 0) {
+            return ASSEMBLIES.filter(a => user.accessibleAssemblies?.includes(a.id));
+        }
+        return [];
+    }, [user]);
+
+    // Set initial assembly selection
+    useEffect(() => {
+        if (accessibleAssemblies.length > 0) {
+            if (!assemblyId || !accessibleAssemblies.find(a => a.id === assemblyId)) {
+                setAssemblyId(accessibleAssemblies[0].id);
+                setConfig(prev => ({ ...prev, assemblyId: accessibleAssemblies[0].id }));
+            }
+        }
+    }, [accessibleAssemblies, assemblyId]);
     const [saving, setSaving] = useState(false);
     const [previewKey, setPreviewKey] = useState(0);
 
@@ -131,7 +153,7 @@ export default function AssemblyOverviewEditor() {
                             }}
                             className="border rounded px-3 py-2 bg-white flex-1"
                         >
-                            {ASSEMBLIES.map(a => (
+                            {accessibleAssemblies.map(a => (
                                 <option key={a.id} value={a.id}>{a.id}. {a.name}</option>
                             ))}
                         </select>

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Edit2, Trash2, Save, X, User, Trophy } from 'lucide-react';
 import { ASSEMBLIES } from '@/data/assemblies';
 import { db } from '@/lib/firebase/client';
 import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { useAuth } from '@/context/AuthContext';
 
 interface MLA {
     id?: string;
@@ -22,14 +23,34 @@ const ELECTION_YEARS = ['2021', '2016', '2011'];
 const PARTIES = ['BJP', 'DMK', 'AIADMK', 'INC', 'NR Congress', 'PMK', 'VCK', 'CPI', 'CPI(M)', 'LJK', 'IND', 'Others'];
 
 export default function MLAEditor() {
-    const [assemblyId, setAssemblyId] = useState('1');
+    const { user } = useAuth();
+    const [assemblyId, setAssemblyId] = useState('');
     const [selectedYear, setSelectedYear] = useState('2021');
     const [mlas, setMlas] = useState<MLA[]>([]);
     const [editing, setEditing] = useState<MLA | null>(null);
     const [saving, setSaving] = useState(false);
 
+    // Filter assemblies based on user access
+    const accessibleAssemblies = useMemo(() => {
+        if (!user) return [];
+        if (user.role === 'super_admin') return ASSEMBLIES;
+        if (user.role === 'admin' && user.accessibleAssemblies && user.accessibleAssemblies.length > 0) {
+            return ASSEMBLIES.filter(a => user.accessibleAssemblies?.includes(a.id));
+        }
+        return [];
+    }, [user]);
+
+    // Set initial assembly selection
     useEffect(() => {
-        fetchMLAs();
+        if (accessibleAssemblies.length > 0) {
+            if (!assemblyId || !accessibleAssemblies.find(a => a.id === assemblyId)) {
+                setAssemblyId(accessibleAssemblies[0].id);
+            }
+        }
+    }, [accessibleAssemblies, assemblyId]);
+
+    useEffect(() => {
+        if (assemblyId) fetchMLAs();
     }, [assemblyId]);
 
     const fetchMLAs = async () => {
@@ -95,7 +116,7 @@ export default function MLAEditor() {
                             onChange={(e) => setAssemblyId(e.target.value)}
                             className="border rounded px-3 py-2 bg-white"
                         >
-                            {ASSEMBLIES.map(a => (
+                            {accessibleAssemblies.map(a => (
                                 <option key={a.id} value={a.id}>{a.id}. {a.name}</option>
                             ))}
                         </select>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { Plus, Edit2, Trash2, Save, X, RefreshCw, Eye, TrendingUp, AlertTriangle, Info, Lightbulb, FileText, Star, Zap, Award } from 'lucide-react';
 import { ASSEMBLIES } from '@/data/assemblies';
 import { db } from '@/lib/firebase/client';
@@ -65,9 +66,10 @@ const CARD_COLORS = [
 ];
 
 export default function PoliticalHistoryEditor() {
-    const [assemblyId, setAssemblyId] = useState('1');
+    const { user } = useAuth();
+    const [assemblyId, setAssemblyId] = useState('');
     const [config, setConfig] = useState<Config>({
-        assemblyId: '1',
+        assemblyId: '',
         showElectoralTrends: true,
         showVoteSwing: true,
         showInsights: true,
@@ -76,6 +78,26 @@ export default function PoliticalHistoryEditor() {
         insights: [],
         customCards: []
     });
+
+    // Filter assemblies based on user access
+    const accessibleAssemblies = useMemo(() => {
+        if (!user) return [];
+        if (user.role === 'super_admin') return ASSEMBLIES;
+        if (user.role === 'admin' && user.accessibleAssemblies && user.accessibleAssemblies.length > 0) {
+            return ASSEMBLIES.filter(a => user.accessibleAssemblies?.includes(a.id));
+        }
+        return [];
+    }, [user]);
+
+    // Set initial assembly selection
+    useEffect(() => {
+        if (accessibleAssemblies.length > 0) {
+            if (!assemblyId || !accessibleAssemblies.find(a => a.id === assemblyId)) {
+                setAssemblyId(accessibleAssemblies[0].id);
+                setConfig(prev => ({ ...prev, assemblyId: accessibleAssemblies[0].id }));
+            }
+        }
+    }, [accessibleAssemblies, assemblyId]);
     const [editingInsight, setEditingInsight] = useState<Insight | null>(null);
     const [editingInsightIndex, setEditingInsightIndex] = useState<number | null>(null);
     const [editingCard, setEditingCard] = useState<CustomCard | null>(null);
@@ -232,7 +254,7 @@ export default function PoliticalHistoryEditor() {
                             }}
                             className="border rounded px-3 py-2 bg-white flex-1"
                         >
-                            {ASSEMBLIES.map(a => (
+                            {accessibleAssemblies.map(a => (
                                 <option key={a.id} value={a.id}>{a.id}. {a.name}</option>
                             ))}
                         </select>

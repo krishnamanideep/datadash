@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { Plus, Edit2, Trash2, Save, Settings, FileText, AlertTriangle, MapPin, Eye, RefreshCw, Star, Zap, Award, Info, TrendingUp, Map, Users, Target } from 'lucide-react';
 import RetroBoothsAnalysis from '../RetroBoothsAnalysis';
 import { ASSEMBLIES } from '@/data/assemblies';
@@ -71,7 +72,27 @@ interface PageConfig {
 type ActiveTab = 'config' | 'cards' | 'weakBooths' | 'hotspots';
 
 export default function RetroBoothsEditor() {
-    const [assemblyId, setAssemblyId] = useState('1');
+    const { user } = useAuth();
+    const [assemblyId, setAssemblyId] = useState('');
+
+    // Filter assemblies based on user access
+    const accessibleAssemblies = useMemo(() => {
+        if (!user) return [];
+        if (user.role === 'super_admin') return ASSEMBLIES;
+        if (user.role === 'admin' && user.accessibleAssemblies && user.accessibleAssemblies.length > 0) {
+            return ASSEMBLIES.filter(a => user.accessibleAssemblies?.includes(a.id));
+        }
+        return [];
+    }, [user]);
+
+    // Set initial assembly selection
+    useEffect(() => {
+        if (accessibleAssemblies.length > 0) {
+            if (!assemblyId || !accessibleAssemblies.find(a => a.id === assemblyId)) {
+                setAssemblyId(accessibleAssemblies[0].id);
+            }
+        }
+    }, [accessibleAssemblies, assemblyId]);
     const [activeTab, setActiveTab] = useState<ActiveTab>('config');
     const [saving, setSaving] = useState(false);
     const [previewKey, setPreviewKey] = useState(0); // Key to force preview refresh
@@ -295,7 +316,7 @@ export default function RetroBoothsEditor() {
                             onChange={(e) => setAssemblyId(e.target.value)}
                             className="border rounded px-3 py-2 bg-white"
                         >
-                            {ASSEMBLIES.map(a => (
+                            {accessibleAssemblies.map(a => (
                                 <option key={a.id} value={a.id}>{a.id}. {a.name}</option>
                             ))}
                         </select>

@@ -1,7 +1,7 @@
 /* eslint-disable */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Edit, Trash2, Save, X, CreditCard, ChevronDown, ChevronUp } from 'lucide-react';
 import { Candidate, CandidateCard } from '@/types/data';
 import { ASSEMBLIES } from '@/data/assemblies';
@@ -11,17 +11,47 @@ import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc } 
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import RichTextEditor from './RichTextEditor';
 
+import { useAuth } from '@/context/AuthContext';
+
 export default function CandidateEditor() {
+    const { user } = useAuth();
     const [candidates, setCandidates] = useState<Candidate[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<Candidate>>({});
-    const [assemblyId, setAssemblyId] = useState('1');
+
+    // Initial assembly ID - will be updated based on access
+    const [assemblyId, setAssemblyId] = useState('');
+
+    // Filter assemblies based on user access
+    const accessibleAssemblies = useState(() => {
+        // This initial state will be incorrect until effect runs, but we handle it in useEffect below
+        return [];
+    })[0]; // We'll compute this in the component body properly
+
+    const visibleAssemblies = useMemo(() => {
+        if (!user) return [];
+        if (user.role === 'super_admin') return ASSEMBLIES;
+        if (user.role === 'admin' && user.accessibleAssemblies && user.accessibleAssemblies.length > 0) {
+            return ASSEMBLIES.filter(a => user.accessibleAssemblies?.includes(a.id));
+        }
+        return [];
+    }, [user]);
+
+    // Set initial assembly selection
+    useEffect(() => {
+        if (visibleAssemblies.length > 0) {
+            if (!assemblyId || !visibleAssemblies.find(a => a.id === assemblyId)) {
+                setAssemblyId(visibleAssemblies[0].id);
+            }
+        }
+    }, [visibleAssemblies, assemblyId]);
+
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [newCard, setNewCard] = useState<Partial<CandidateCard>>({ title: '', content: '', type: 'info' });
 
     useEffect(() => {
-        fetchCandidates();
+        if (assemblyId) fetchCandidates();
     }, [assemblyId]);
 
     const fetchCandidates = async () => {
@@ -166,7 +196,7 @@ export default function CandidateEditor() {
                         }}
                         className="w-full border border-blue-300 p-3 rounded-lg bg-white text-gray-800 font-medium"
                     >
-                        {ASSEMBLIES.map(a => (
+                        {visibleAssemblies.map(a => (
                             <option key={a.id} value={a.id}>{a.id}. {a.name}</option>
                         ))}
                     </select>
@@ -225,7 +255,7 @@ export default function CandidateEditor() {
                                     });
                                 }}
                             >
-                                {ASSEMBLIES.map(a => (
+                                {visibleAssemblies.map(a => (
                                     <option key={a.id} value={a.id}>{a.id}. {a.name}</option>
                                 ))}
                             </select>
