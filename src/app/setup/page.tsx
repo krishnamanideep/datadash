@@ -21,7 +21,7 @@ export default function SetupPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [displayName, setDisplayName] = useState('');
-    const [role, setRole] = useState<'admin' | 'client'>('client');
+    const [role, setRole] = useState<'super_admin' | 'admin' | 'client'>('client');
 
     const router = useRouter();
 
@@ -273,11 +273,12 @@ export default function SetupPage() {
                             <label className="block text-sm font-medium text-gray-700">Role</label>
                             <select
                                 value={role}
-                                onChange={(e) => setRole(e.target.value as 'admin' | 'client')}
+                                onChange={(e) => setRole(e.target.value as 'super_admin' | 'admin' | 'client')}
                                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                             >
                                 <option value="client">Client</option>
                                 <option value="admin">Admin</option>
+                                <option value="super_admin">Super Admin</option>
                             </select>
                         </div>
 
