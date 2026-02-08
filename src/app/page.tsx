@@ -20,6 +20,9 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState('overview');
   const [selectedAssembly, setSelectedAssembly] = useState('');
 
+  // Import logout from AuthContext
+  const { logout } = useAuth();
+
   // Calculate allowed assemblies based on user role
   const allowedAssemblies = user?.role === 'admin'
     ? ASSEMBLIES
@@ -166,6 +169,15 @@ export default function Dashboard() {
         currentPage={currentPage}
         onPageChange={setCurrentPage}
         allowedPages={allowedPages}
+        user={user ? {
+          displayName: user.displayName || undefined,
+          email: user.email || undefined,
+          role: user.role
+        } : undefined}
+        onLogout={async () => {
+          await logout();
+          router.push('/login');
+        }}
       />
 
       {/* Assembly Selector & Actions */}

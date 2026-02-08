@@ -110,6 +110,24 @@ function AdminDashboardContent() {
           </nav>
 
           <div className="p-4 border-t border-slate-700">
+            {/* User Profile */}
+            {isSidebarOpen && user && (
+              <div className="mb-4 p-3 bg-slate-800 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+                    {user.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-white truncate">{user.displayName || 'User'}</div>
+                    <div className="text-xs text-slate-400 truncate">{user.email}</div>
+                    <div className="text-xs text-blue-400 font-medium mt-0.5">
+                      {user.role === 'super_admin' ? 'Super Admin' : (user.role?.charAt(0).toUpperCase() + user.role?.slice(1))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <button
               onClick={logout}
               className="w-full flex items-center p-3 rounded-lg hover:bg-red-900/50 text-red-300 transition-colors"
@@ -117,11 +135,6 @@ function AdminDashboardContent() {
               <LogOut size={24} />
               {isSidebarOpen && <span className="ml-3">Sign Out</span>}
             </button>
-            {isSidebarOpen && (
-              <div className="mt-4 text-xs text-slate-500 text-center">
-                Logged in as Admin User
-              </div>
-            )}
           </div>
         </aside>
 

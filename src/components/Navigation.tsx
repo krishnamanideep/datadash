@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, User as UserIcon, LogOut } from 'lucide-react';
 
 import { DASHBOARD_PAGES } from '@/data/navigation';
 
@@ -9,9 +9,15 @@ interface NavigationProps {
   currentPage: string;
   onPageChange: (page: string) => void;
   allowedPages?: string[];
+  user?: {
+    displayName?: string;
+    email?: string;
+    role?: string;
+  };
+  onLogout?: () => void;
 }
 
-export default function Navigation({ currentPage, onPageChange, allowedPages }: NavigationProps) {
+export default function Navigation({ currentPage, onPageChange, allowedPages, user, onLogout }: NavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // If allowedPages is provided, filter the pages. Otherwise show all (backward compatibility/admin)
@@ -28,7 +34,7 @@ export default function Navigation({ currentPage, onPageChange, allowedPages }: 
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex space-x-1">
+          <div className="hidden md:flex items-center space-x-1">
             {visiblePages.map((page) => (
               <button
                 key={page.id}
@@ -41,6 +47,30 @@ export default function Navigation({ currentPage, onPageChange, allowedPages }: 
                 {page.label}
               </button>
             ))}
+
+            {/* User Profile */}
+            {user && (
+              <div className="ml-4 flex items-center gap-3 pl-4 border-l border-gray-200">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                    {user.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <div className="text-left">
+                    <div className="text-sm font-medium text-gray-900">{user.displayName || 'User'}</div>
+                    <div className="text-xs text-gray-500">{user.role?.replace('_', ' ').toUpperCase()}</div>
+                  </div>
+                </div>
+                {onLogout && (
+                  <button
+                    onClick={onLogout}
+                    className="p-2 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                    title="Logout"
+                  >
+                    <LogOut size={18} />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
