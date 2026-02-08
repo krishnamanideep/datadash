@@ -49,6 +49,7 @@ export default function Login() {
                     <p className="mt-2 text-sm text-gray-600">
                         Admin & Client Dashboard Access
                     </p>
+                    <p className="text-xs text-gray-400 mt-1">v1.1 (Fixed Config)</p>
                 </div>
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                     <div className="rounded-md shadow-sm -space-y-px">
