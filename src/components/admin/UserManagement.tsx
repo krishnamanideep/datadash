@@ -24,6 +24,7 @@ export default function UserManagement() {
     const { user: currentUser } = useAuth();
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
     const [saving, setSaving] = useState(false);
@@ -35,6 +36,7 @@ export default function UserManagement() {
 
     const fetchUsers = async () => {
         setLoading(true);
+        setError(null);
         try {
             const usersRef = collection(db, 'users');
             const q = query(usersRef);
@@ -42,7 +44,13 @@ export default function UserManagement() {
 
             const fetchedUsers: UserProfile[] = [];
             snapshot.forEach(doc => {
-                fetchedUsers.push({ uid: doc.id, ...doc.data() } as UserProfile);
+                const data = doc.data();
+                // Ensure role has a default value
+                fetchedUsers.push({
+                    uid: doc.id,
+                    role: 'client', // default
+                    ...data
+                } as UserProfile);
             });
 
             // Client-side sort by lastLogin desc
@@ -53,8 +61,9 @@ export default function UserManagement() {
             });
 
             setUsers(fetchedUsers);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching users:", error);
+            setError(error.message || "Failed to load users");
         }
         setLoading(false);
     };
@@ -199,6 +208,14 @@ export default function UserManagement() {
                 </div>
             </div>
 
+            {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                    <p className="text-red-800 text-sm">
+                        <strong>Error:</strong> {error}
+                    </p>
+                </div>
+            )}
+
             {loading ? (
                 <div className="flex justify-center p-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -225,8 +242,8 @@ export default function UserManagement() {
                                     </td>
                                     <td className="p-4">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'super_admin' ? 'bg-red-100 text-red-800' :
-                                                user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                                                    'bg-blue-100 text-blue-800'
+                                            user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                                                'bg-blue-100 text-blue-800'
                                             }`}>
                                             {(user.role === 'admin' || user.role === 'super_admin') ? <Shield size={12} className="mr-1" /> : <User size={12} className="mr-1" />}
                                             {user.role === 'super_admin' ? 'Super Admin' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
