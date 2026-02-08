@@ -13,6 +13,8 @@ import { useRouter } from 'next/navigation';
 
 interface AuthUser extends User {
     role?: 'admin' | 'client';
+    accessibleAssemblies?: string[];
+    accessiblePages?: string[];
 }
 
 interface AuthContextType {
@@ -44,7 +46,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                     const authUser: AuthUser = {
                         ...firebaseUser,
-                        role: userData?.role || 'client' // Default to client if no role specified
+                        role: userData?.role || 'client', // Default to client if no role specified
+                        accessibleAssemblies: userData?.accessibleAssemblies || [],
+                        accessiblePages: userData?.accessiblePages || []
                     };
 
                     setUser(authUser);
@@ -63,7 +67,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const login = async (email: string, password: string) => {
-        await signInWithEmailAndPassword(auth, email, password);
+        const result = await signInWithEmailAndPassword(auth, email, password);
+
+        // Track login activity
+        if (result.user) {
+            const userRef = doc(db, 'users', result.user.uid);
+            // We use setDoc with merge: true to ensure we don't overwrite other fields
+            // but we want to update these specific fields
+            try {
+                // Import these dynamically or ensure they are imported at top
+                // For now, I'll assume I need to add imports to the file header
+                const { serverTimestamp, increment, setDoc } = await import('firebase/firestore');
+
+                await setDoc(userRef, {
+                    lastLogin: new Date().toISOString(),
+                    loginCount: increment(1),
+                    email: result.user.email, // Ensure email is always up to date
+                }, { merge: true });
+            } catch (error) {
+                console.error("Failed to track login activity:", error);
+                // Don't block login if tracking fails
+            }
+        }
     };
 
     const logout = async () => {

@@ -28,11 +28,12 @@ import MLAEditor from '../../../components/admin/MLAEditor';
 import ElectionDataEditor from '../../../components/admin/ElectionDataEditor';
 import PoliticalHistoryEditor from '../../../components/admin/PoliticalHistoryEditor';
 import AssemblyOverviewEditor from '../../../components/admin/AssemblyOverviewEditor';
+import UserManagement from '../../../components/admin/UserManagement';
 
 function AdminDashboardContent() {
   const { logout, user, loading } = useAuth();
   const isAuthenticated = !!user;
-  const [activeTab, setActiveTab] = useState<'stations' | 'survey' | 'widgets' | 'candidates' | 'meta' | 'retrobooths' | 'mlas' | 'elections' | 'politicalhistory' | 'assemblyoverview'>('stations');
+  const [activeTab, setActiveTab] = useState<'stations' | 'survey' | 'widgets' | 'candidates' | 'meta' | 'retrobooths' | 'mlas' | 'elections' | 'politicalhistory' | 'assemblyoverview' | 'users'>('stations');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   return (
@@ -58,6 +59,15 @@ function AdminDashboardContent() {
             >
               <Map size={24} />
               {isSidebarOpen && <span className="ml-3">Polling Stations</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'users' ? 'bg-blue-600' : 'hover:bg-slate-800'
+                }`}
+            >
+              <Users size={24} />
+              {isSidebarOpen && <span className="ml-3">User Management</span>}
             </button>
 
             <button
@@ -162,6 +172,7 @@ function AdminDashboardContent() {
         <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
           <div className="bg-white min-h-screen border border-gray-200 overflow-hidden">
             {activeTab === 'stations' && <PollingStationEditor />}
+            {activeTab === 'users' && <UserManagement />}
             {activeTab === 'survey' && <SurveyEditor />}
             {activeTab === 'widgets' && <WidgetSettings />}
             {activeTab === 'candidates' && <CandidateEditor />}
