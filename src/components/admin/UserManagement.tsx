@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase/client';
 import { collection, getDocs, doc, updateDoc, query, orderBy } from 'firebase/firestore';
-import { User, Users, Shield, Calendar, Activity, Search, Edit2, X, Check, Save, Lock } from 'lucide-react';
+import { User, Users, Shield, Calendar, Activity, Search, Edit2, X, Check, Save, Lock, Trash2, UserPlus } from 'lucide-react';
 import { ASSEMBLIES } from '@/data/assemblies';
 import { DASHBOARD_PAGES } from '@/data/navigation';
 import { ADMIN_SECTIONS } from '@/data/admin-navigation';
@@ -28,6 +28,8 @@ export default function UserManagement() {
     const [searchTerm, setSearchTerm] = useState('');
     const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
     const [saving, setSaving] = useState(false);
+    const [showAddUser, setShowAddUser] = useState(false);
+    const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
     // Fetch Users
     useEffect(() => {
@@ -89,6 +91,30 @@ export default function UserManagement() {
             alert("Failed to update user.");
         }
         setSaving(false);
+    };
+
+    const handleDelete = async (userId: string) => {
+        if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+            return;
+        }
+
+        setDeletingUserId(userId);
+        try {
+            const userRef = doc(db, 'users', userId);
+            await updateDoc(userRef, {
+                deleted: true,
+                deletedAt: new Date().toISOString(),
+                deletedBy: currentUser?.uid
+            });
+
+            // Remove from local state
+            setUsers(users.filter(u => u.uid !== userId));
+            alert("User deleted successfully!");
+        } catch (error: any) {
+            console.error("Error deleting user:", error);
+            alert(`Failed to delete user: ${error.message}`);
+        }
+        setDeletingUserId(null);
     };
 
     const toggleAssemblyAccess = (assemblyId: string) => {
@@ -196,15 +222,38 @@ export default function UserManagement() {
                     </h1>
                     <p className="text-gray-500 text-sm mt-1">Manage user access and view activity logs</p>
                 </div>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search users..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-64"
-                    />
+                <div className="flex items-center gap-4">
+                    {/* Current User Display */}
+                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                            {currentUser?.displayName?.charAt(0).toUpperCase() || currentUser?.email?.charAt(0).toUpperCase() || 'U'}
+                        </div>
+                        <div className="text-left">
+                            <div className="text-sm font-medium text-gray-900">{currentUser?.displayName || 'User'}</div>
+                            <div className="text-xs text-gray-500">{currentUser?.email}</div>
+                        </div>
+                    </div>
+
+                    {/* Add User Button */}
+                    <button
+                        onClick={() => setShowAddUser(true)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
+                    >
+                        <User size={18} />
+                        Add User
+                    </button>
+
+                    {/* Search */}
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Search users..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-64"
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -288,13 +337,23 @@ export default function UserManagement() {
                                         )}
                                     </td>
                                     <td className="p-4 text-right">
-                                        <button
-                                            onClick={() => setEditingUser(user)}
-                                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                            title="Edit Access"
-                                        >
-                                            <Edit2 size={18} />
-                                        </button>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button
+                                                onClick={() => setEditingUser(user)}
+                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                title="Edit Access"
+                                            >
+                                                <Edit2 size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(user.uid)}
+                                                disabled={deletingUserId === user.uid || user.uid === currentUser?.uid}
+                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                title={user.uid === currentUser?.uid ? "Cannot delete yourself" : "Delete User"}
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -540,6 +599,48 @@ export default function UserManagement() {
                                 className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
                             >
                                 {saving ? 'Saving...' : <><Save size={18} /> Save Changes</>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add User Modal */}
+            {showAddUser && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <UserPlus className="text-blue-600" />
+                                Add New User
+                            </h2>
+                            <button
+                                onClick={() => setShowAddUser(false)}
+                                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="text-center py-8">
+                            <p className="text-gray-600 mb-4">
+                                To add a new user, please direct them to the setup page:
+                            </p>
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                                <code className="text-sm text-blue-600 font-mono break-all">
+                                    {window.location.origin}/setup
+                                </code>
+                            </div>
+                            <p className="text-sm text-gray-500 mb-4">
+                                New users must verify their phone number (from the whitelist) before creating an account.
+                            </p>
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(`${window.location.origin}/setup`);
+                                    alert('Setup URL copied to clipboard!');
+                                }}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                Copy Setup URL
                             </button>
                         </div>
                     </div>
