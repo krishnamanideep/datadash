@@ -12,6 +12,7 @@ import CurrentScenario from '@/components/CurrentScenario';
 import Survey from '@/components/Survey';
 import PDFDownloader from '@/components/PDFDownloader';
 import { ASSEMBLIES } from '@/data/assemblies';
+import { DASHBOARD_PAGES } from '@/data/navigation';
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
@@ -23,6 +24,11 @@ export default function Dashboard() {
   const allowedAssemblies = user?.role === 'admin'
     ? ASSEMBLIES
     : ASSEMBLIES.filter(a => user?.accessibleAssemblies?.includes(a.id));
+
+  // Calculate allowed pages based on user role
+  const allowedPages = user?.role === 'admin'
+    ? undefined // Undefined means all pages for admin
+    : user?.accessiblePages;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -45,6 +51,15 @@ export default function Dashboard() {
       setSelectedAssembly('');
     }
   }, [allowedAssemblies, user, loading]);
+
+  // Ensure current page is allowed
+  useEffect(() => {
+    if (allowedPages && allowedPages.length > 0) {
+      if (!allowedPages.includes(currentPage)) {
+        setCurrentPage(allowedPages[0]);
+      }
+    }
+  }, [allowedPages, currentPage]);
 
   const isEmpty = (str: string) => !str || str.length === 0;
 
@@ -89,7 +104,41 @@ export default function Dashboard() {
     );
   }
 
+  // If user has access to assemblies but NO pages allowed
+  if (allowedPages && allowedPages.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h3 className="text-lg leading-6 font-medium text-gray-900">Section Access Restricted</h3>
+          <div className="mt-2">
+            <p className="text-sm text-gray-500">
+              You have access to Assembly data but no specific dashboard sections are enabled for your account. Please contact support.
+            </p>
+          </div>
+          <div className="mt-6">
+            <button
+              onClick={() => router.push('/login')}
+              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+            >
+              Back to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const renderPage = () => {
+    // Extra safety check in case useEffect hasn't redirected yet
+    if (allowedPages && !allowedPages.includes(currentPage)) {
+      return <div className="p-8 text-center text-gray-500">Access Denied to this section.</div>;
+    }
+
     switch (currentPage) {
       case 'overview':
         return <AssemblyOverview selectedAssembly={selectedAssembly} />;
@@ -110,7 +159,11 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
+      <Navigation
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        allowedPages={allowedPages}
+      />
 
       {/* Assembly Selector & Actions */}
       <div className="bg-white shadow-sm border-b">

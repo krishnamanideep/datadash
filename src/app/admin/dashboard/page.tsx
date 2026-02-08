@@ -14,7 +14,8 @@ import {
   Users,
   Trophy,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  Shield
 } from 'lucide-react';
 import { WidgetConfigProvider } from '../../../components/admin/WidgetConfigContext';
 import PollingStationEditor from '../../../components/admin/PollingStationEditor';
@@ -29,12 +30,52 @@ import ElectionDataEditor from '../../../components/admin/ElectionDataEditor';
 import PoliticalHistoryEditor from '../../../components/admin/PoliticalHistoryEditor';
 import AssemblyOverviewEditor from '../../../components/admin/AssemblyOverviewEditor';
 import UserManagement from '../../../components/admin/UserManagement';
+import { ADMIN_SECTIONS } from '@/data/admin-navigation';
+
+const ICONS: Record<string, any> = {
+  stations: Map,
+  users: Users,
+  mlas: Trophy,
+  elections: Calendar,
+  candidates: Users,
+  survey: FileText,
+  meta: FileText,
+  retrobooths: Map,
+  politicalhistory: TrendingUp,
+  assemblyoverview: LayoutDashboard,
+  widgets: Settings
+};
 
 function AdminDashboardContent() {
   const { logout, user, loading } = useAuth();
   const isAuthenticated = !!user;
-  const [activeTab, setActiveTab] = useState<'stations' | 'survey' | 'widgets' | 'candidates' | 'meta' | 'retrobooths' | 'mlas' | 'elections' | 'politicalhistory' | 'assemblyoverview' | 'users'>('stations');
+  const [activeTab, setActiveTab] = useState(ADMIN_SECTIONS[0].id);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Filter sections based on user role
+  const visibleSections = ADMIN_SECTIONS.filter(section => {
+    if (user?.role === 'super_admin') return true;
+    if (user?.role === 'admin') {
+      if (section.superAdminOnly) return false;
+      // If accessibleAdminSections is undefined/empty, maybe default to none or all? 
+      // Let's default to restricting everything if array exists but empty, 
+      // but for backward compatibility if field is missing, maybe show all (except super admin)?
+      // Better secure by default: if array exists, use it. If not, maybe show all for now until migration complete.
+      // Going with: if accessibleAdminSections is defined, use it.
+      if (user.accessibleAdminSections) {
+        return user.accessibleAdminSections.includes(section.id);
+      }
+      return true; // Fallback for existing admins without this field set yet
+    }
+    return false;
+  });
+
+  // Ensure active tab is valid
+  useEffect(() => {
+    if (visibleSections.length > 0 && !visibleSections.find(s => s.id === activeTab)) {
+      setActiveTab(visibleSections[0].id);
+    }
+  }, [visibleSections, activeTab]);
 
   return (
     <WidgetConfigProvider>
@@ -52,104 +93,20 @@ function AdminDashboardContent() {
           </div>
 
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button
-              onClick={() => setActiveTab('stations')}
-              className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'stations' ? 'bg-blue-600' : 'hover:bg-slate-800'
-                }`}
-            >
-              <Map size={24} />
-              {isSidebarOpen && <span className="ml-3">Polling Stations</span>}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'users' ? 'bg-blue-600' : 'hover:bg-slate-800'
-                }`}
-            >
-              <Users size={24} />
-              {isSidebarOpen && <span className="ml-3">User Management</span>}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('mlas')}
-              className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'mlas' ? 'bg-blue-600' : 'hover:bg-slate-800'
-                }`}
-            >
-              <Trophy size={24} />
-              {isSidebarOpen && <span className="ml-3">MLAs / Winners</span>}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('elections')}
-              className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'elections' ? 'bg-blue-600' : 'hover:bg-slate-800'
-                }`}
-            >
-              <Calendar size={24} />
-              {isSidebarOpen && <span className="ml-3">Election Data</span>}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('candidates')}
-              className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'candidates' ? 'bg-blue-600' : 'hover:bg-slate-800'
-                }`}
-            >
-              <Users size={24} />
-              {isSidebarOpen && <span className="ml-3">Candidates</span>}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('survey')}
-              className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'survey' ? 'bg-blue-600' : 'hover:bg-slate-800'
-                }`}
-            >
-              <FileText size={24} />
-              {isSidebarOpen && <span className="ml-3">Survey Data</span>}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('meta')}
-              className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'meta' ? 'bg-blue-600' : 'hover:bg-slate-800'
-                }`}
-            >
-              <FileText size={24} />
-              {isSidebarOpen && <span className="ml-3">Assembly Data</span>}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('retrobooths')}
-              className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'retrobooths' ? 'bg-blue-600' : 'hover:bg-slate-800'
-                }`}
-            >
-              <Map size={24} />
-              {isSidebarOpen && <span className="ml-3">Retro Booths Page</span>}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('politicalhistory')}
-              className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'politicalhistory' ? 'bg-blue-600' : 'hover:bg-slate-800'
-                }`}
-            >
-              <TrendingUp size={24} />
-              {isSidebarOpen && <span className="ml-3">Political History</span>}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('assemblyoverview')}
-              className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'assemblyoverview' ? 'bg-blue-600' : 'hover:bg-slate-800'
-                }`}
-            >
-              <LayoutDashboard size={24} />
-              {isSidebarOpen && <span className="ml-3">Assembly Overview</span>}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('widgets')}
-              className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'widgets' ? 'bg-blue-600' : 'hover:bg-slate-800'
-                }`}
-            >
-              <Settings size={24} />
-              {isSidebarOpen && <span className="ml-3">Widget Config</span>}
-            </button>
+            {visibleSections.map(section => {
+              const Icon = ICONS[section.id] || FileText;
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveTab(section.id)}
+                  className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === section.id ? 'bg-blue-600' : 'hover:bg-slate-800'
+                    }`}
+                >
+                  <Icon size={24} />
+                  {isSidebarOpen && <span className="ml-3">{section.label}</span>}
+                </button>
+              );
+            })}
           </nav>
 
           <div className="p-4 border-t border-slate-700">

@@ -12,9 +12,10 @@ import { auth, db } from '@/lib/firebase/client';
 import { useRouter } from 'next/navigation';
 
 interface AuthUser extends User {
-    role?: 'admin' | 'client';
+    role?: 'super_admin' | 'admin' | 'client';
     accessibleAssemblies?: string[];
     accessiblePages?: string[];
+    accessibleAdminSections?: string[];
 }
 
 interface AuthContextType {
@@ -48,7 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         ...firebaseUser,
                         role: userData?.role || 'client', // Default to client if no role specified
                         accessibleAssemblies: userData?.accessibleAssemblies || [],
-                        accessiblePages: userData?.accessiblePages || []
+                        accessiblePages: userData?.accessiblePages || [],
+                        accessibleAdminSections: userData?.accessibleAdminSections || []
                     };
 
                     setUser(authUser);

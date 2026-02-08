@@ -1,21 +1,27 @@
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase/client';
 import { collection, getDocs, doc, updateDoc, query, orderBy } from 'firebase/firestore';
-import { User, Users, Shield, Calendar, Activity, Search, Edit2, X, Check, Save } from 'lucide-react';
+import { User, Users, Shield, Calendar, Activity, Search, Edit2, X, Check, Save, Lock } from 'lucide-react';
 import { ASSEMBLIES } from '@/data/assemblies';
+import { DASHBOARD_PAGES } from '@/data/navigation';
+import { ADMIN_SECTIONS } from '@/data/admin-navigation';
+import { useAuth } from '@/context/AuthContext';
 
 interface UserProfile {
     uid: string;
     email: string;
     displayName: string;
-    role: 'admin' | 'client';
+    role: 'super_admin' | 'admin' | 'client';
     lastLogin?: string;
     loginCount?: number;
     accessibleAssemblies?: string[]; // Array of Assembly IDs
+    accessiblePages?: string[]; // Array of Page IDs (Client)
+    accessibleAdminSections?: string[]; // Array of Admin Section IDs (Admin)
     createdAt?: string;
 }
 
 export default function UserManagement() {
+    const { user: currentUser } = useAuth();
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -31,8 +37,6 @@ export default function UserManagement() {
         setLoading(true);
         try {
             const usersRef = collection(db, 'users');
-            // Note: orderBy might require an index if mixed with where clauses, 
-            // but fetching all users for admin panel is usually okay for small-medium apps.
             const q = query(usersRef);
             const snapshot = await getDocs(q);
 
@@ -62,7 +66,9 @@ export default function UserManagement() {
             const userRef = doc(db, 'users', editingUser.uid);
             await updateDoc(userRef, {
                 role: editingUser.role,
-                accessibleAssemblies: editingUser.accessibleAssemblies || []
+                accessibleAssemblies: editingUser.accessibleAssemblies || [],
+                accessiblePages: editingUser.accessiblePages || [],
+                accessibleAdminSections: editingUser.accessibleAdminSections || []
             });
 
             // Update local state
@@ -103,6 +109,62 @@ export default function UserManagement() {
         } else {
             // Select all
             setEditingUser({ ...editingUser, accessibleAssemblies: allIds });
+        }
+    };
+
+    const togglePageAccess = (pageId: string) => {
+        if (!editingUser) return;
+
+        const currentAccess = editingUser.accessiblePages || [];
+        let newAccess;
+
+        if (currentAccess.includes(pageId)) {
+            newAccess = currentAccess.filter(id => id !== pageId);
+        } else {
+            newAccess = [...currentAccess, pageId];
+        }
+
+        setEditingUser({ ...editingUser, accessiblePages: newAccess });
+    };
+
+    const toggleAllPages = () => {
+        if (!editingUser) return;
+
+        const allIds = DASHBOARD_PAGES.map(p => p.id);
+        const currentAccess = editingUser.accessiblePages || [];
+
+        if (currentAccess.length === allIds.length) {
+            setEditingUser({ ...editingUser, accessiblePages: [] });
+        } else {
+            setEditingUser({ ...editingUser, accessiblePages: allIds });
+        }
+    };
+
+    const toggleAdminSectionAccess = (sectionId: string) => {
+        if (!editingUser) return;
+
+        const currentAccess = editingUser.accessibleAdminSections || [];
+        let newAccess;
+
+        if (currentAccess.includes(sectionId)) {
+            newAccess = currentAccess.filter(id => id !== sectionId);
+        } else {
+            newAccess = [...currentAccess, sectionId];
+        }
+
+        setEditingUser({ ...editingUser, accessibleAdminSections: newAccess });
+    };
+
+    const toggleAllAdminSections = () => {
+        if (!editingUser) return;
+
+        const allIds = ADMIN_SECTIONS.map(s => s.id);
+        const currentAccess = editingUser.accessibleAdminSections || [];
+
+        if (currentAccess.length === allIds.length) {
+            setEditingUser({ ...editingUser, accessibleAdminSections: [] });
+        } else {
+            setEditingUser({ ...editingUser, accessibleAdminSections: allIds });
         }
     };
 
@@ -184,16 +246,25 @@ export default function UserManagement() {
                                         {user.role === 'admin' ? (
                                             <span className="text-gray-400 italic">Global Admin Access</span>
                                         ) : (
-                                            <div className="flex flex-wrap gap-1 max-w-xs">
-                                                {(user.accessibleAssemblies?.length || 0) === 0 ? (
-                                                    <span className="text-red-500 text-xs">No Access</span>
-                                                ) : (
-                                                    <>
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex flex-wrap gap-1 max-w-xs">
+                                                    {(user.accessibleAssemblies?.length || 0) === 0 ? (
+                                                        <span className="text-red-500 text-xs">No Assemblies</span>
+                                                    ) : (
                                                         <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
                                                             {user.accessibleAssemblies?.length} Assemblies
                                                         </span>
-                                                    </>
-                                                )}
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-wrap gap-1 max-w-xs">
+                                                    {(user.accessiblePages?.length || 0) === 0 ? (
+                                                        <span className="text-red-500 text-xs">No Pages</span>
+                                                    ) : (
+                                                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
+                                                            {user.accessiblePages?.length} Pages
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         )}
                                     </td>
@@ -244,56 +315,195 @@ export default function UserManagement() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                                     <select
                                         value={editingUser.role}
-                                        onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as 'admin' | 'client' })}
+                                        onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as any })}
                                         className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        disabled={editingUser.uid === currentUser?.uid} // Cannot change own role
                                     >
                                         <option value="client">Client</option>
                                         <option value="admin">Admin</option>
+                                        {currentUser?.role === 'super_admin' && <option value="super_admin">Super Admin</option>}
                                     </select>
-                                    <p className="text-xs text-gray-500 mt-1">Admins have full access to all assemblies automatically.</p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {editingUser.role === 'admin' ? 'Admins can edit data for assigned Assemblies.' :
+                                            editingUser.role === 'super_admin' ? 'Super Admins have full access.' :
+                                                'Clients have read-only access.'}
+                                    </p>
                                 </div>
                             </div>
 
-                            {editingUser.role === 'client' && (
-                                <div>
-                                    <div className="flex justify-between items-center mb-3">
-                                        <label className="block text-sm font-medium text-gray-700">Access Control ({editingUser.accessibleAssemblies?.length || 0} Selected)</label>
-                                        <button
-                                            onClick={toggleAllAssemblies}
-                                            className="text-xs text-blue-600 font-medium hover:underline"
-                                        >
-                                            {editingUser.accessibleAssemblies?.length === ASSEMBLIES.length ? 'Deselect All' : 'Select All'}
-                                        </button>
+                            {/* Admin Access Control */}
+                            {editingUser.role === 'admin' && (
+                                <div className="space-y-6">
+                                    {/* Admin Section Access */}
+                                    <div>
+                                        <div className="flex justify-between items-center mb-3">
+                                            <label className="block text-sm font-medium text-gray-700">Admin Sections ({editingUser.accessibleAdminSections?.length || 0})</label>
+                                            <button
+                                                onClick={toggleAllAdminSections}
+                                                className="text-xs text-blue-600 font-medium hover:underline"
+                                            >
+                                                {editingUser.accessibleAdminSections?.length === ADMIN_SECTIONS.length ? 'Deselect All' : 'Select All'}
+                                            </button>
+                                        </div>
+
+                                        <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                            <div className="max-h-40 overflow-y-auto bg-gray-50 p-2 grid grid-cols-2 gap-2">
+                                                {ADMIN_SECTIONS.map(section => {
+                                                    if (section.superAdminOnly) return null; // Skip super admin only sections for regular admins
+
+                                                    const isSelected = editingUser.accessibleAdminSections?.includes(section.id);
+                                                    return (
+                                                        <label
+                                                            key={section.id}
+                                                            className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${isSelected ? 'bg-indigo-50 border-indigo-300' : 'bg-white border-gray-200 hover:border-indigo-200'
+                                                                }`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected || false}
+                                                                onChange={() => toggleAdminSectionAccess(section.id)}
+                                                                className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 mr-3"
+                                                            />
+                                                            <span className={`text-sm ${isSelected ? 'font-semibold text-indigo-900' : 'text-gray-700'}`}>
+                                                                {section.label}
+                                                            </span>
+                                                            {isSelected && <Check size={14} className="ml-auto text-indigo-600" />}
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            Admins will only see these tabs in their dashboard.
+                                        </p>
                                     </div>
 
-                                    <div className="border border-gray-200 rounded-lg overflow-hidden">
-                                        <div className="max-h-60 overflow-y-auto bg-gray-50 p-2 grid grid-cols-2 gap-2">
-                                            {ASSEMBLIES.map(assembly => {
-                                                const isSelected = editingUser.accessibleAssemblies?.includes(assembly.id);
-                                                return (
-                                                    <label
-                                                        key={assembly.id}
-                                                        className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200 hover:border-blue-200'
-                                                            }`}
-                                                    >
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isSelected || false}
-                                                            onChange={() => toggleAssemblyAccess(assembly.id)}
-                                                            className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-3"
-                                                        />
-                                                        <span className={`text-sm ${isSelected ? 'font-semibold text-blue-900' : 'text-gray-700'}`}>
-                                                            {assembly.name} <span className="text-xs text-gray-400">({assembly.id})</span>
-                                                        </span>
-                                                        {isSelected && <Check size={14} className="ml-auto text-blue-600" />}
-                                                    </label>
-                                                );
-                                            })}
+                                    {/* Assembly Scope for Admins */}
+                                    <div>
+                                        <div className="flex justify-between items-center mb-3">
+                                            <label className="block text-sm font-medium text-gray-700">Assembly Scope ({editingUser.accessibleAssemblies?.length || 0})</label>
+                                            <button
+                                                onClick={toggleAllAssemblies}
+                                                className="text-xs text-blue-600 font-medium hover:underline"
+                                            >
+                                                {editingUser.accessibleAssemblies?.length === ASSEMBLIES.length ? 'Deselect All' : 'Select All'}
+                                            </button>
+                                        </div>
+
+                                        <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                            <div className="max-h-40 overflow-y-auto bg-gray-50 p-2 grid grid-cols-2 gap-2">
+                                                {ASSEMBLIES.map(assembly => {
+                                                    const isSelected = editingUser.accessibleAssemblies?.includes(assembly.id);
+                                                    return (
+                                                        <label
+                                                            key={assembly.id}
+                                                            className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200 hover:border-blue-200'
+                                                                }`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected || false}
+                                                                onChange={() => toggleAssemblyAccess(assembly.id)}
+                                                                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-3"
+                                                            />
+                                                            <span className={`text-sm ${isSelected ? 'font-semibold text-blue-900' : 'text-gray-700'}`}>
+                                                                {assembly.name} <span className="text-xs text-gray-400">({assembly.id})</span>
+                                                            </span>
+                                                            {isSelected && <Check size={14} className="ml-auto text-blue-600" />}
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            Admins can only edit data for these assemblies.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {editingUser.role === 'client' && (
+                                <div className="space-y-6">
+                                    {/* Assembly Access */}
+                                    <div>
+                                        <div className="flex justify-between items-center mb-3">
+                                            <label className="block text-sm font-medium text-gray-700">Assembly Access ({editingUser.accessibleAssemblies?.length || 0})</label>
+                                            <button
+                                                onClick={toggleAllAssemblies}
+                                                className="text-xs text-blue-600 font-medium hover:underline"
+                                            >
+                                                {editingUser.accessibleAssemblies?.length === ASSEMBLIES.length ? 'Deselect All' : 'Select All'}
+                                            </button>
+                                        </div>
+
+                                        <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                            <div className="max-h-40 overflow-y-auto bg-gray-50 p-2 grid grid-cols-2 gap-2">
+                                                {ASSEMBLIES.map(assembly => {
+                                                    const isSelected = editingUser.accessibleAssemblies?.includes(assembly.id);
+                                                    return (
+                                                        <label
+                                                            key={assembly.id}
+                                                            className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200 hover:border-blue-200'
+                                                                }`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected || false}
+                                                                onChange={() => toggleAssemblyAccess(assembly.id)}
+                                                                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-3"
+                                                            />
+                                                            <span className={`text-sm ${isSelected ? 'font-semibold text-blue-900' : 'text-gray-700'}`}>
+                                                                {assembly.name} <span className="text-xs text-gray-400">({assembly.id})</span>
+                                                            </span>
+                                                            {isSelected && <Check size={14} className="ml-auto text-blue-600" />}
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-2">
-                                        Users will only see data for selected assemblies in their dashboard.
-                                    </p>
+
+                                    {/* Page Access */}
+                                    <div>
+                                        <div className="flex justify-between items-center mb-3">
+                                            <label className="block text-sm font-medium text-gray-700">Page/Section Access ({editingUser.accessiblePages?.length || 0})</label>
+                                            <button
+                                                onClick={toggleAllPages}
+                                                className="text-xs text-blue-600 font-medium hover:underline"
+                                            >
+                                                {editingUser.accessiblePages?.length === DASHBOARD_PAGES.length ? 'Deselect All' : 'Select All'}
+                                            </button>
+                                        </div>
+
+                                        <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                            <div className="max-h-40 overflow-y-auto bg-gray-50 p-2 grid grid-cols-2 gap-2">
+                                                {DASHBOARD_PAGES.map(page => {
+                                                    const isSelected = editingUser.accessiblePages?.includes(page.id);
+                                                    return (
+                                                        <label
+                                                            key={page.id}
+                                                            className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${isSelected ? 'bg-purple-50 border-purple-300' : 'bg-white border-gray-200 hover:border-purple-200'
+                                                                }`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected || false}
+                                                                onChange={() => togglePageAccess(page.id)}
+                                                                className="h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 mr-3"
+                                                            />
+                                                            <span className={`text-sm ${isSelected ? 'font-semibold text-purple-900' : 'text-gray-700'}`}>
+                                                                {page.label}
+                                                            </span>
+                                                            {isSelected && <Check size={14} className="ml-auto text-purple-600" />}
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            Users will only see selected sections in their dashboard navigation.
+                                        </p>
+                                    </div>
                                 </div>
                             )}
                         </div>

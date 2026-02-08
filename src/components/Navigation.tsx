@@ -3,22 +3,21 @@
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
+import { DASHBOARD_PAGES } from '@/data/navigation';
+
 interface NavigationProps {
   currentPage: string;
   onPageChange: (page: string) => void;
+  allowedPages?: string[];
 }
 
-const pages = [
-  { id: 'overview', label: 'Assembly Overview' },
-  { id: 'political-history', label: 'Political History & Dynamics' },
-  { id: 'retro-booths', label: 'Retro-Booths & Heat Maps' },
-  { id: 'candidates', label: 'Candidate Panel' },
-  { id: 'current-scenario', label: 'Current Political Scenario' },
-  { id: 'survey', label: 'Survey' },
-];
-
-export default function Navigation({ currentPage, onPageChange }: NavigationProps) {
+export default function Navigation({ currentPage, onPageChange, allowedPages }: NavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // If allowedPages is provided, filter the pages. Otherwise show all (backward compatibility/admin)
+  const visiblePages = allowedPages
+    ? DASHBOARD_PAGES.filter(page => allowedPages.includes(page.id))
+    : DASHBOARD_PAGES;
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -30,15 +29,14 @@ export default function Navigation({ currentPage, onPageChange }: NavigationProp
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-1">
-            {pages.map((page) => (
+            {visiblePages.map((page) => (
               <button
                 key={page.id}
                 onClick={() => onPageChange(page.id)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  currentPage === page.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-blue-50'
-                }`}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${currentPage === page.id
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-blue-50'
+                  }`}
               >
                 {page.label}
               </button>
@@ -59,18 +57,17 @@ export default function Navigation({ currentPage, onPageChange }: NavigationProp
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden pb-4">
-            {pages.map((page) => (
+            {visiblePages.map((page) => (
               <button
                 key={page.id}
                 onClick={() => {
                   onPageChange(page.id);
                   setIsOpen(false);
                 }}
-                className={`block w-full text-left px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  currentPage === page.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-blue-50'
-                }`}
+                className={`block w-full text-left px-4 py-2 rounded-md text-sm font-medium transition-colors ${currentPage === page.id
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-blue-50'
+                  }`}
               >
                 {page.label}
               </button>
