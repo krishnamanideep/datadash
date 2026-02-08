@@ -33,6 +33,9 @@ export default function Dashboard() {
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
+    } else if (!loading && user && (user.role === 'admin' || user.role === 'super_admin')) {
+      // Redirect admins to admin dashboard
+      router.push('/admin');
     }
   }, [user, loading, router]);
 

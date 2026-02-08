@@ -19,9 +19,13 @@ export default function Login() {
 
         try {
             await login(email, password);
-            // Router functionality is handled by AuthContext or protected routes
-            // but we can force a redirect here if needed
-            router.push('/');
+
+            // Wait a moment for auth state to update
+            setTimeout(() => {
+                // This will be handled by the auth context, but we can help by checking localStorage
+                // The actual redirect will happen via the protected route logic
+                window.location.href = '/';
+            }, 100);
         } catch (err: any) {
             console.error(err);
             if (err.code === 'auth/invalid-credential') {

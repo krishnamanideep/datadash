@@ -12,7 +12,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (!loading) {
             if (!user) {
                 router.push('/login');
-            } else if (user.role !== 'admin') {
+            } else if (user.role !== 'admin' && user.role !== 'super_admin') {
                 router.push('/'); // Redirect non-admins to client dashboard
             }
         }
@@ -22,7 +22,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
     }
 
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
         return null; // Don't render protected content while redirecting
     }
 
