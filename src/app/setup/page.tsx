@@ -28,7 +28,10 @@ export default function SetupPage() {
     // Whitelist - Replace with your allowed numbers
     const ALLOWED_NUMBERS = [
         '+919888348889',
-        '+918008972799', // Example
+        '+918008972799',
+        '+918897041626',
+        '+919390780847',
+        '+919121069594',   // Example
         // Add more numbers here
     ];
 
@@ -158,8 +161,14 @@ export default function SetupPage() {
                 setDisplayName('');
             }
         } catch (error: any) {
-            console.error(error);
-            setStatus(`Error: ${error.message}`);
+            console.error("Setup Error:", error);
+            if (error.code === 'permission-denied') {
+                setStatus(`Error: Missing or insufficient permissions in Firestore. Please ensure firestore.rules are deployed.`);
+            } else if (error.code === 'auth/email-already-in-use') {
+                setStatus(`Error: The email ${email} is already in use.`);
+            } else {
+                setStatus(`Error: ${error.message}`);
+            }
         } finally {
             setLoading(false);
         }
