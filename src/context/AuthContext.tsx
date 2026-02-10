@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
+                setLoading(true);
                 try {
                     // Fetch user role from Firestore
                     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
@@ -69,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const login = async (email: string, password: string) => {
+        setLoading(true);
         const result = await signInWithEmailAndPassword(auth, email, password);
 
         // Track login activity

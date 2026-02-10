@@ -16,17 +16,20 @@ import rawPollingData from '@/data/Form20_Localities_Pct.json';
 // Dynamically import Leaflet components (client-side only)
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-const CircleMarker = dynamic(() => import('react-leaflet').then(mod => mod.CircleMarker), { ssr: false });
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
+const CircleMarker = dynamic(() => import('react-leaflet').then(mod => mod.CircleMarker), { ssr: false });
 
-const CARD_ICONS: Record<string, any> = {
+// Valid political parties to filter out fields like NOTA, VOTERS, etc.
+const VALID_CANDIDATES = ['BJP', 'DMK', 'AIADMK', 'INC', 'NRC', 'NR Congress', 'PMK', 'VCK', 'CPI', 'CPI(M)', 'IND', 'OTHERS'];
+
+const CARD_ICONS: Record<string, React.ComponentType<any>> = {
   star: Star,
   zap: Zap,
   award: Award,
   info: Info,
   trending: TrendingUp,
   file: FileText,
-  map: Map,
+  map: MapIcon,
   users: Users,
   target: Target,
   alert: AlertTriangle
@@ -102,9 +105,12 @@ const processLocalPollingData = (targetAssemblyId: string | null, jsonData: any)
         const candidates2011: Record<string, number> = {};
 
         Object.keys(station).forEach(k => {
-          if (k.endsWith('_2021_pct')) candidates2021[k.replace('_2021_pct', '')] = station[k];
-          else if (k.endsWith('_2016_pct')) candidates2016[k.replace('_2016_pct', '')] = station[k];
-          else if (k.endsWith('_2011_pct')) candidates2011[k.replace('_2011_pct', '')] = station[k];
+          const partyName = k.split('_')[0];
+          if (!VALID_CANDIDATES.includes(partyName)) return;
+
+          if (k.endsWith('_2021_pct')) candidates2021[partyName] = station[k];
+          else if (k.endsWith('_2016_pct')) candidates2016[partyName] = station[k];
+          else if (k.endsWith('_2011_pct')) candidates2011[partyName] = station[k];
         });
 
         return {
@@ -135,8 +141,8 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
   const [customCards, setCustomCards] = useState<CustomCard[]>([]);
   const [pageConfig, setPageConfig] = useState<PageConfig>(defaultConfig);
   const [retroBooths, setRetroBooths] = useState<PollingStation[]>([]);
-  const [weakBooths, setWeakBooths] = useState<{ [party: string]: any[] }>({});
-  const [independentHotspots, setIndependentHotspots] = useState<any[]>([]);
+  const [weakBooths, setWeakBooths] = useState<{ [party: string]: PollingStation[] }>({});
+  const [independentHotspots, setIndependentHotspots] = useState<ManualHotspot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -171,41 +177,12 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
         setCandidates(candidatesList);
         setCustomCards(cardsList.filter(c => c.section === 'retro').sort((a, b) => (a.order || 0) - (b.order || 0)));
 
-        // 3. Fallbacks / Calculations (Weak Booths & Hotspots)
-        // Auto-calc logic moved here since API is gone
-        const parties = ['BJP', 'DMK', 'AIADMK'];
-        const weak: { [party: string]: any[] } = {};
-        parties.forEach((party) => {
-          weak[party] = assemblyData
-            .map((b) => ({
-              locality: b.locality,
-              score: b.election2021?.candidates[party] || b.election2016?.candidates[party] || 0
-            }))
-            .sort((a, b) => a.score - b.score)
-            .slice(0, 5);
-        });
-        setWeakBooths(weak);
-
-        const indHotspots = assemblyData
-          .filter((b) => (b.election2011?.candidates['IND'] || 0) > 0.1)
-          .slice(0, 6)
-          .map((booth) => ({
-            locality: booth.locality,
-            psName: booth.ps_name,
-            candidateName: 'Independent Candidate',
-            bestPerformance: booth.election2011?.candidates['IND'] || 0,
-            bestYear: '2011',
-            perf2021: booth.election2021?.candidates['IND'] || 0,
-            perf2016: booth.election2016?.candidates['IND'] || 0,
-            perf2011: booth.election2011?.candidates['IND'] || 0,
-          }));
-        setIndependentHotspots(indHotspots);
-
         setLoading(false);
 
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
         console.error('Error loading data:', err);
-        setError(err.message);
+        setError(errorMsg);
         setLoading(false);
       }
     };
@@ -227,9 +204,51 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
       'CPI': '#FF006E',
       'CPI(M)': '#D62828',
       'IND': '#6C757D',
+      'OTHERS': '#9CA3AF',
     };
     return colors[party] || '#9CA3AF';
   };
+
+  // Compute Weak Booths - REACTIVE to year
+  const computedWeakBooths = useMemo(() => {
+    if (!data.length) return {};
+    const parties = ['BJP', 'DMK', 'AIADMK'];
+    const weak: { [party: string]: { locality: string; score: number }[] } = {};
+    const yearKey = `election${selectedYear}` as 'election2021' | 'election2016' | 'election2011';
+
+    parties.forEach((party) => {
+      weak[party] = data
+        .map((b) => ({
+          locality: b.locality,
+          score: (b[yearKey]?.candidates[party] || 0) * 100
+        }))
+        .filter(b => b.score > 0)
+        .sort((a, b) => a.score - b.score)
+        .slice(0, 5);
+    });
+    return weak;
+  }, [data, selectedYear]);
+
+  // Compute Independent Hotspots - REACTIVE to year
+  const computedIndependentHotspots = useMemo(() => {
+    if (!data.length) return [];
+    const yearKey = `election${selectedYear}` as 'election2021' | 'election2016' | 'election2011';
+
+    return data
+      .filter((b) => (b[yearKey]?.candidates['IND'] || 0) > 0.05)
+      .map((booth) => ({
+        locality: booth.locality,
+        psName: booth.ps_name,
+        candidateName: 'Independent Candidate',
+        bestPerformance: booth[yearKey]?.candidates['IND'] || 0,
+        bestYear: selectedYear,
+        perf2021: booth.election2021?.candidates['IND'] || 0,
+        perf2016: booth.election2016?.candidates['IND'] || 0,
+        perf2011: booth.election2011?.candidates['IND'] || 0,
+      }))
+      .sort((a, b) => b.bestPerformance - a.bestPerformance)
+      .slice(0, 6);
+  }, [data, selectedYear]);
 
 
   // Compute party heatmap data - BOOTH LEVEL for selected assembly
@@ -462,7 +481,7 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
                     </tr>
                   </thead>
                   <tbody>
-                    {partyHeatmapData.map((row: any, idx) => (
+                    {partyHeatmapData.map((row: Record<string, string | number>, idx) => (
                       <tr key={row.boothId} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                         <td className="sticky left-0 bg-inherit px-4 py-3 text-sm font-semibold text-gray-700 border-r border-gray-200 z-10">
                           PS {row.boothId} - {row.boothName}
@@ -470,7 +489,7 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
                         {['BJP', 'DMK', 'AIADMK', 'INC', 'NR Congress', 'PMK', 'VCK', 'CPI', 'CPI(M)', 'IND']
                           .filter(party => selectedPartyFilter === 'All' || party === selectedPartyFilter)
                           .map(party => {
-                            const voteShare = row[party] || 0;
+                            const voteShare = row[party] as number || 0;
                             const intensity = Math.min(voteShare / 60, 1); // Normalize to 0-1 (60% = max intensity)
                             const bgColor = voteShare === 0 ? '#f3f4f6' :
                               `rgba(${voteShare > 40 ? '16, 185, 129' : voteShare > 20 ? '251, 191, 36' : '239, 68, 68'}, ${0.2 + intensity * 0.6})`;
@@ -607,7 +626,7 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
 
                               <div className="border-t pt-2">
                                 <p className="text-xs font-semibold text-gray-700 mb-2">Top 3 Parties:</p>
-                                {marker.topParties.map((p: any, idx: number) => (
+                                {marker.topParties.map((p: { party: string; share: number }, idx: number) => (
                                   <div key={idx} className="flex items-center justify-between text-sm mb-1">
                                     <span style={{ color: getPartyColor(p.party) }} className="font-semibold">
                                       {idx + 1}. {p.party}
@@ -690,20 +709,28 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
               <tbody className="bg-white divide-y divide-gray-200">
                 {[...data].sort((a, b) => parseInt(a.ps_no) - parseInt(b.ps_no)).map((booth, idx) => {
 
-                  const getWinner = (electionData: any) => {
+                  const getWinner = (electionData: PollingStation['election2021']) => {
                     if (!electionData?.candidates) return { winner: "-", margin: "" };
+
+                    // Filter out non-candidate fields just in case and sort
                     const sorted = Object.entries(electionData.candidates)
+                      .filter(([party]) => party !== 'OTHERS' && party !== 'NOTA')
                       .sort(([, a], [, b]) => (b as number) - (a as number));
+
                     if (sorted.length > 0) {
                       const winner = sorted[0][0];
                       const winnerShare = (sorted[0][1] as number);
-                      const runnerShare = sorted[1] ? (sorted[1][1] as number) : 0;
+
+                      // Find next best for margin (can be OTHERS or another party)
+                      const allSorted = Object.entries(electionData.candidates)
+                        .sort(([, a], [, b]) => (b as number) - (a as number));
+                      const runnerShare = allSorted[1] ? (allSorted[1][1] as number) : 0;
 
                       const wVal = winnerShare <= 1 ? winnerShare * 100 : winnerShare;
                       const rVal = runnerShare <= 1 ? runnerShare * 100 : runnerShare;
 
                       return {
-                        winner,
+                        winner: winner === 'NRC' ? 'NR Congress' : winner,
                         margin: (wVal - rVal).toFixed(1) + '%'
                       };
                     }
@@ -853,59 +880,64 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
         </div>
       </div>
 
-      {/* Weak Booths by Party */}
+      {/* Weak Booths Section */}
       {pageConfig.showWeakBooths && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {Object.entries(weakBooths).map(([party, booths]: [string, any]) => (
-            <div key={party} className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4 text-red-600">{party} - Weak Booths</h3>
-              <div className="space-y-2">
-                {booths.slice(0, 5).map((booth: any, idx: number) => (
-                  <div key={idx} className="p-3 bg-red-50 rounded">
-                    <div className="text-sm font-medium">{booth.locality || booth.LOCALITY_EXTRACTED}</div>
-                    <div className="text-xs text-gray-600">Score: {(booth.score * 100).toFixed(1)}%</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {Object.keys(computedWeakBooths).map((party) => (
+            <div key={party} className="bg-white p-6 rounded-lg shadow border-t-4" style={{ borderTopColor: getPartyColor(party) }}>
+              <h4 className="text-lg font-bold mb-4" style={{ color: getPartyColor(party) }}>{party === 'NRC' ? 'NR Congress' : party} - Weak Booths</h4>
+              <div className="space-y-4">
+                {computedWeakBooths[party].map((booth: any, idx: number) => (
+                  <div key={idx} className="bg-gray-50 p-3 rounded border border-gray-100">
+                    <p className="font-bold text-gray-800 uppercase text-sm">{booth.locality}</p>
+                    <p className="text-xs text-gray-500">Score: {booth.score.toFixed(1)}%</p>
                   </div>
                 ))}
+                {computedWeakBooths[party].length === 0 && (
+                  <p className="text-sm text-gray-400 italic">No low performance data for this year.</p>
+                )}
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Independent Hotspots */}
+      {/* Independent Hotspots Section */}
       {pageConfig.showIndependentHotspots && (
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-xl font-semibold mb-4">Independent Candidate Hotspots</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {independentHotspots.map((hotspot, idx) => {
-              // Handle both manual entry format and auto-analyzed format
-              const ind2021 = hotspot.perf2021 ?? hotspot.election2021?.candidates['IND'] ?? 0;
-              const ind2016 = hotspot.perf2016 ?? hotspot.election2016?.candidates['IND'] ?? 0;
-              const ind2011 = hotspot.perf2011 ?? hotspot.election2011?.candidates['IND'] ?? 0;
-              const bestYear = hotspot.bestYear || (ind2021 >= ind2016 && ind2021 >= ind2011 ? '2021' :
-                ind2016 >= ind2011 ? '2016' : '2011');
-              const bestShare = hotspot.bestPerformance ?? Math.max(ind2021, ind2016, ind2011);
-              const candidateName = hotspot.candidateName ||
-                (candidates.filter(c => c.party === 'IND' || c.party === 'Independent')[0]?.name || 'Independent Candidate');
-
-              return (
-                <div key={hotspot.id || idx} className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <div className="font-semibold text-gray-800">{hotspot.locality}</div>
-                  <div className="text-xs text-gray-500 mb-2">{hotspot.psName || hotspot.ps_name}</div>
-                  <div className="text-sm font-medium text-yellow-700">
-                    {candidateName}
+          <h3 className="text-xl font-bold mb-6 text-gray-800">Independent Candidate Hotspots</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {computedIndependentHotspots.map((hotspot, idx: number) => (
+              <div key={idx} className="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-100 hover:shadow-md transition-shadow">
+                <div className="mb-2">
+                  <h5 className="font-bold text-gray-800 uppercase">{hotspot.locality}</h5>
+                  <p className="text-xs text-gray-500 truncate">{hotspot.psName}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-yellow-700">Independent Candidate</p>
+                  <p className="text-xs text-gray-600">Best Performance: {(hotspot.bestPerformance * 100).toFixed(1)}% ({hotspot.bestYear})</p>
+                </div>
+                <div className="mt-3 pt-3 border-t border-yellow-200 grid grid-cols-3 gap-2">
+                  <div className="text-center">
+                    <p className="text-[10px] text-gray-500">2021</p>
+                    <p className="text-xs font-bold text-gray-700">{(hotspot.perf2021 * 100).toFixed(1)}%</p>
                   </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    Best Performance: {(bestShare * 100).toFixed(1)}% ({bestYear})
+                  <div className="text-center">
+                    <p className="text-[10px] text-gray-500">2016</p>
+                    <p className="text-xs font-bold text-gray-700">{(hotspot.perf2016 * 100).toFixed(1)}%</p>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-2 text-xs">
-                    {ind2021 > 0 && <span className="px-2 py-1 bg-blue-100 rounded">2021: {(ind2021 * 100).toFixed(1)}%</span>}
-                    {ind2016 > 0 && <span className="px-2 py-1 bg-gray-100 rounded">2016: {(ind2016 * 100).toFixed(1)}%</span>}
-                    {ind2011 > 0 && <span className="px-2 py-1 bg-gray-100 rounded">2011: {(ind2011 * 100).toFixed(1)}%</span>}
+                  <div className="text-center">
+                    <p className="text-[10px] text-gray-500">2011</p>
+                    <p className="text-xs font-bold text-gray-700">{(hotspot.perf2011 * 100).toFixed(1)}%</p>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
+            {computedIndependentHotspots.length === 0 && (
+              <div className="col-span-full py-8 text-center text-gray-400 italic">
+                No significant independent candidate performance found for {selectedYear}.
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -913,28 +945,31 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
       {/* Custom Information Cards */}
       {pageConfig.showCustomCards && customCards.length > 0 && (
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-xl font-semibold mb-4">Additional Information</h3>
+          <h3 className="text-xl font-semibold mb-4 text-gray-800">Additional Information</h3>
           <div className="space-y-6">
-            {customCards.sort((a, b) => a.order - b.order).map((card) => (
+            {customCards.sort((a, b) => (a.order || 0) - (b.order || 0)).map((card) => (
               <div
-                key={card.id}
-                className={`p-8 rounded-2xl border-2 transition-all hover:shadow-lg ${card.cardType === 'note' ? 'bg-yellow-50 border-yellow-100 shadow-yellow-100/30' :
-                  card.cardType === 'info' ? 'bg-blue-50 border-blue-100 shadow-blue-100/30' :
-                    'bg-white border-gray-100 shadow-gray-100/30'
+                key={card.id || card.heading}
+                className={`p-6 rounded-xl border-2 transition-all hover:shadow-md ${card.cardType === 'note' ? 'bg-yellow-50 border-yellow-100' :
+                  card.cardType === 'info' ? 'bg-blue-50 border-blue-100' :
+                    'bg-white border-gray-100'
                   }`}
               >
                 <div className="flex items-center gap-4 mb-4">
                   {card.icon && CARD_ICONS[card.icon] && (
-                    <div className={`p-4 rounded-xl ${card.cardType === 'note' ? 'bg-yellow-100 text-yellow-700' : card.cardType === 'info' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                    <div className={`p-3 rounded-lg ${card.cardType === 'note' ? 'bg-yellow-100 text-yellow-700' : card.cardType === 'info' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
                       {(() => {
                         const Icon = CARD_ICONS[card.icon];
-                        return <Icon size={28} strokeWidth={2.5} />;
+                        return <Icon size={24} />;
                       })()}
                     </div>
                   )}
-                  <h4 className="font-extrabold text-gray-900 text-2xl tracking-tight leading-tight">{card.heading}</h4>
+                  <h4 className="font-bold text-gray-900 text-xl">{card.heading}</h4>
                 </div>
-                <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap break-words pl-1" dangerouslySetInnerHTML={{ __html: card.content }} />
+                <div
+                  className="text-gray-700 leading-relaxed whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{ __html: card.content }}
+                />
               </div>
             ))}
           </div>
