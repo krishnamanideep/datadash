@@ -182,7 +182,7 @@ export default function Dashboard() {
 
       {/* Assembly Selector & Actions */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="w-full px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <label className="font-semibold text-gray-700">Select Assembly:</label>
@@ -208,7 +208,7 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto">
+      <main className="w-full px-6">
         {renderPage()}
       </main>
     </div>
