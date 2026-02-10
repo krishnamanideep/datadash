@@ -91,8 +91,10 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
   const assemblyName = ASSEMBLIES.find(a => a.id === selectedAssembly)?.name || `Assembly ${selectedAssembly}`;
   const [partyConfig, setPartyConfig] = useState<{ selectedParties: string[] } | null>(null);
 
-  // Get current MLA for selected year
-  const currentMLA = mlas.find(m => m.year === selectedYear);
+  // Get current MLA for selected year — pick the one with the highest vote share (the winner)
+  const currentMLA = [...mlas]
+    .filter(m => m.year === selectedYear)
+    .sort((a, b) => (b.voteShare || 0) - (a.voteShare || 0))[0] || null;
 
   // Helper to get election data for selected year
   const getElectionData = (booth: PollingStation, year: string) => {
@@ -104,11 +106,16 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
     }
   };
 
+  // Keys that should NOT appear as parties in the vote share chart
+  const NON_CANDIDATE_KEYS = ['VOTERS', 'NOTA', 'PS_NO', 'POLLED'];
+  const isCandidateParty = (party: string) => !NON_CANDIDATE_KEYS.some(k => party.startsWith(k));
+
   const calculateStats = (booths: PollingStation[], year: string) => {
     // 1. Calculate Total Polled for selected year
     const totalPolled = booths.reduce((sum, b) => {
       const election = getElectionData(b, year);
-      return sum + (election?.total_votes || 0);
+      const votes = election?.total_votes;
+      return sum + (typeof votes === 'number' && !isNaN(votes) ? votes : 0);
     }, 0);
 
     // 2. Estimate Total Voters (Turnout ~83%)
@@ -119,9 +126,12 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
     const partyVotesRaw: { [key: string]: number } = {};
     booths.forEach((booth) => {
       const election = getElectionData(booth, year);
-      if (election?.candidates && election.total_votes) {
+      const totalVotesNum = typeof election?.total_votes === 'number' && !isNaN(election.total_votes) ? election.total_votes : 0;
+      if (election?.candidates && totalVotesNum > 0) {
         Object.entries(election.candidates).forEach(([party, share]) => {
-          const votes = election.total_votes! * share;
+          if (!isCandidateParty(party)) return; // Skip non-candidate keys
+          const shareNum = typeof share === 'number' && !isNaN(share) ? share : 0;
+          const votes = totalVotesNum * shareNum;
           partyVotesRaw[party] = (partyVotesRaw[party] || 0) + votes;
         });
       }
@@ -136,12 +146,12 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
       }))
       .sort((a, b) => b.share - a.share);
 
-    // Filter based on party configuration or default to top 5 (excluding VOTERS)
+    // Filter based on party configuration or default to top 5
     if (partyConfig?.selectedParties && partyConfig.selectedParties.length > 0) {
       partyData = partyData.filter(p => partyConfig.selectedParties.includes(p.party));
     } else {
-      // Default: top 5 parties, excluding VOTERS
-      partyData = partyData.filter(p => p.party !== 'VOTERS').slice(0, 5);
+      // Default: top 5 parties (non-candidates already filtered above)
+      partyData = partyData.slice(0, 5);
     }
 
     // 4. Category Distribution
