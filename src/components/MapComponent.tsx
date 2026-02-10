@@ -66,19 +66,24 @@ export default function MapComponent({ data }: MapComponentProps) {
     return { center: [11.9416, 79.8083] as [number, number], zoom: 11 };
   }, [data]);
 
+  // Keys that should NOT be treated as candidate parties
+  const NON_CANDIDATE_KEYS = ['VOTERS', 'NOTA', 'PS_NO', 'POLLED'];
+  const isCandidateKey = (key: string): boolean => {
+    return !NON_CANDIDATE_KEYS.some(nonCandidate => key.startsWith(nonCandidate));
+  };
+
   const getWinnerForYear = (booth: PollingStation, year: string) => {
-    if (year === '2021') return booth.strongestParty;
+    // Calculate winner for the given year from candidate data
+    const electionData = year === '2021' ? booth.election2021 : year === '2016' ? booth.election2016 : booth.election2011;
+    if (!electionData || !electionData.candidates) return booth.strongestParty || null;
 
-    // Calculate for other years
-    const electionData = year === '2016' ? booth.election2016 : booth.election2011;
-    if (!electionData || !electionData.candidates) return null;
-
-    let winner = 'OTHERS';
+    let winner = 'Unknown';
     let maxVotes = -1;
 
     Object.entries(electionData.candidates).forEach(([party, votes]) => {
+      if (!isCandidateKey(party)) return; // Skip VOTERS, NOTA, PS_NO, POLLED
       const v = typeof votes === 'string' ? parseFloat(votes) : votes;
-      if (v > maxVotes) {
+      if (!isNaN(v) && v > maxVotes) {
         maxVotes = v;
         winner = party;
       }
@@ -185,16 +190,18 @@ export default function MapComponent({ data }: MapComponentProps) {
                   <div className="border-t pt-2 mt-3">
                     <p className="text-xs font-semibold text-blue-700 mb-2">{selectedYear} Results (%):</p>
                     <div className="space-y-1">
-                      {electionData?.candidates && Object.entries(electionData.candidates).map(([party, votes]) => (
-                        <div key={party} className="flex justify-between">
-                          <span className="text-xs text-gray-700">{party}:</span>
-                          <span className="text-xs font-semibold text-blue-600">
-                            {typeof votes === 'number'
-                              ? (votes <= 1 ? Math.round(votes * 100) : Math.round(votes))
-                              : votes}%
-                          </span>
-                        </div>
-                      ))}
+                      {electionData?.candidates && Object.entries(electionData.candidates)
+                        .filter(([party]) => isCandidateKey(party))
+                        .map(([party, votes]) => (
+                          <div key={party} className="flex justify-between">
+                            <span className="text-xs text-gray-700">{party}:</span>
+                            <span className="text-xs font-semibold text-blue-600">
+                              {typeof votes === 'number'
+                                ? (votes <= 1 ? Math.round(votes * 100) : Math.round(votes))
+                                : votes}%
+                            </span>
+                          </div>
+                        ))}
                       {!electionData?.candidates && <p className="text-xs text-gray-500">No data available</p>}
                     </div>
                   </div>

@@ -315,6 +315,7 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
     return data.map(booth => {
       const candidates = booth[yearKey]?.candidates || {};
       const partyShares = Object.entries(candidates)
+        .filter(([party]) => isCandidateKey(party))
         .map(([party, share]) => ({ party, share: (share as number) * 100 }))
         .sort((a, b) => b.share - a.share);
 
@@ -341,6 +342,7 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
     return data.map((booth) => {
       const candidates = booth[yearKey]?.candidates || {};
       const partyShares = Object.entries(candidates)
+        .filter(([party]) => isCandidateKey(party))
         .map(([party, share]) => ({ party, share: (share as number) * 100 }))
         .filter(p => p.share > 0)
         .sort((a, b) => b.share - a.share);
@@ -742,19 +744,15 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
                   const getWinner = (electionData: PollingStation['election2021']) => {
                     if (!electionData?.candidates) return { winner: "-", margin: "" };
 
-                    // Filter out non-candidate fields just in case and sort
+                    // Filter out ALL non-candidate fields (VOTERS, NOTA, PS_NO, POLLED, OTHERS)
                     const sorted = Object.entries(electionData.candidates)
-                      .filter(([party]) => party !== 'OTHERS' && party !== 'NOTA')
+                      .filter(([party]) => isCandidateKey(party) && party !== 'OTHERS')
                       .sort(([, a], [, b]) => (b as number) - (a as number));
 
                     if (sorted.length > 0) {
                       const winner = sorted[0][0];
                       const winnerShare = (sorted[0][1] as number);
-
-                      // Find next best for margin (can be OTHERS or another party)
-                      const allSorted = Object.entries(electionData.candidates)
-                        .sort(([, a], [, b]) => (b as number) - (a as number));
-                      const runnerShare = allSorted[1] ? (allSorted[1][1] as number) : 0;
+                      const runnerShare = sorted[1] ? (sorted[1][1] as number) : 0;
 
                       const wVal = winnerShare <= 1 ? winnerShare * 100 : winnerShare;
                       const rVal = runnerShare <= 1 ? runnerShare * 100 : runnerShare;
