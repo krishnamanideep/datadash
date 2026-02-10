@@ -30,7 +30,7 @@ export default function Navigation({ currentPage, onPageChange, allowedPages, us
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <h1 className="text-xl font-bold text-blue-600">DataDash</h1>
+            <h1 className="text-xl font-bold text-blue-600">DataBoard</h1>
           </div>
 
           {/* Desktop Navigation */}
