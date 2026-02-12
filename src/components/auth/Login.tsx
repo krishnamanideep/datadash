@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
@@ -9,8 +9,20 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoggingIn, setIsLoggingIn] = useState(false);
-    const { login } = useAuth();
+    const { login, user } = useAuth();
     const router = useRouter();
+
+    useEffect(() => {
+        if (user) {
+            if (user.role === 'admin' || user.role === 'super_admin') {
+                router.push('/admin/dashboard');
+            } else {
+                router.push('/');
+            }
+        }
+    }, [user, router]);
+
+    if (user) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
