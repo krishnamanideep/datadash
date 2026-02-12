@@ -69,7 +69,7 @@ export default function Dashboard() {
 
   const isEmpty = (str: string) => !str || str.length === 0;
 
-  if (!user) {
+  if (!user || user.role === 'admin' || user.role === 'super_admin') {
     return null;
   }
 

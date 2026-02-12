@@ -18,11 +18,14 @@ export default function Login() {
         setIsLoggingIn(true);
 
         try {
-            await login(email, password);
+            const userData = await login(email, password);
 
-            // Wait a moment for auth state to update
-            // Use router.push to respect Next.js basePath
-            router.push('/');
+            // Direct role-based redirection
+            if (userData.role === 'admin' || userData.role === 'super_admin') {
+                router.push('/admin/dashboard');
+            } else {
+                router.push('/');
+            }
         } catch (err: any) {
             console.error(err);
             if (err.code === 'auth/invalid-credential') {

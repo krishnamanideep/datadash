@@ -21,6 +21,8 @@ export default function AdminLogin() {
     }
   }, [isAuthenticated, router]);
 
+  if (isAuthenticated) return null;
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalLoading(true);

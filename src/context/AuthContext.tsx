@@ -21,14 +21,26 @@ interface AuthUser extends User {
 interface AuthContextType {
     user: AuthUser | null;
     loading: boolean;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<{
+        uid: string;
+        role: 'super_admin' | 'admin' | 'client' | string;
+        accessibleAssemblies: string[];
+        accessiblePages: string[];
+        accessibleAdminSections: string[];
+    }>;
     logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
     loading: true,
-    login: async () => { },
+    login: async () => ({
+        uid: '',
+        role: 'client',
+        accessibleAssemblies: [],
+        accessiblePages: [],
+        accessibleAdminSections: []
+    }),
     logout: async () => { },
 });
 
@@ -71,27 +83,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (email: string, password: string) => {
         setLoading(true);
-        const result = await signInWithEmailAndPassword(auth, email, password);
+        try {
+            const result = await signInWithEmailAndPassword(auth, email, password);
 
-        // Track login activity
-        if (result.user) {
+            // Fetch user role from Firestore immediately
+            const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+            const userData = userDoc.data();
+
+            // Track login activity
             const userRef = doc(db, 'users', result.user.uid);
-            // We use setDoc with merge: true to ensure we don't overwrite other fields
-            // but we want to update these specific fields
-            try {
-                // Import these dynamically or ensure they are imported at top
-                // For now, I'll assume I need to add imports to the file header
-                const { serverTimestamp, increment, setDoc } = await import('firebase/firestore');
+            const { increment, setDoc } = await import('firebase/firestore');
 
-                await setDoc(userRef, {
-                    lastLogin: new Date().toISOString(),
-                    loginCount: increment(1),
-                    email: result.user.email, // Ensure email is always up to date
-                }, { merge: true });
-            } catch (error) {
-                console.error("Failed to track login activity:", error);
-                // Don't block login if tracking fails
-            }
+            await setDoc(userRef, {
+                lastLogin: new Date().toISOString(),
+                loginCount: increment(1),
+                email: result.user.email,
+            }, { merge: true });
+
+            return {
+                uid: result.user.uid,
+                role: userData?.role || 'client',
+                accessibleAssemblies: userData?.accessibleAssemblies || [],
+                accessiblePages: userData?.accessiblePages || [],
+                accessibleAdminSections: userData?.accessibleAdminSections || []
+            };
+        } catch (error) {
+            setLoading(false);
+            throw error;
         }
     };
 
