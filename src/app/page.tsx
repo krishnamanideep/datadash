@@ -24,12 +24,12 @@ export default function Dashboard() {
   const { logout } = useAuth();
 
   // Calculate allowed assemblies based on user role
-  const allowedAssemblies = user?.role === 'admin'
+  const allowedAssemblies = (user?.role === 'admin' || user?.role === 'super_admin')
     ? ASSEMBLIES
     : ASSEMBLIES.filter(a => user?.accessibleAssemblies?.includes(a.id));
 
   // Calculate allowed pages based on user role
-  const allowedPages = user?.role === 'admin'
+  const allowedPages = (user?.role === 'admin' || user?.role === 'super_admin')
     ? undefined // Undefined means all pages for admin
     : user?.accessiblePages;
 
@@ -71,8 +71,9 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-gray-500 font-medium animate-pulse">Verifying permissions...</p>
       </div>
     );
   }

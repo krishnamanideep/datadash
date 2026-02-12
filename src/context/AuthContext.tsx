@@ -39,8 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            setLoading(true);
             if (firebaseUser) {
-                setLoading(true);
                 try {
                     // Fetch user role from Firestore
                     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
