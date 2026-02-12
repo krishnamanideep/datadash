@@ -102,7 +102,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <AuthContext.Provider value={{ user, loading, login, logout }}>
-            {!loading && children}
+            {loading ? (
+                <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+                    <div className="flex flex-col items-center space-y-4">
+                        <div className="relative">
+                            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-blue-600 font-bold text-xl uppercase tracking-tighter">D</span>
+                            </div>
+                        </div>
+                        <div className="text-center">
+                            <h2 className="text-2xl font-bold text-gray-800 tracking-tight">DataBoard</h2>
+                            <p className="text-sm text-gray-500 font-medium animate-pulse mt-1">
+                                Securely loading your workspace...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                children
+            )}
         </AuthContext.Provider>
     );
 }

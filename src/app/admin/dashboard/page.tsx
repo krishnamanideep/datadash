@@ -78,15 +78,6 @@ function AdminDashboardContent() {
     }
   }, [visibleSections, activeTab]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-900">
-        <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-        <p className="text-slate-400 font-medium animate-pulse">Initializing Admin Workspace...</p>
-      </div>
-    );
-  }
-
   return (
     <WidgetConfigProvider>
       <div className="min-h-screen bg-gray-100 flex">
