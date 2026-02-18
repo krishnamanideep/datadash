@@ -3,8 +3,8 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { PollingStation } from '@/types/data';
-import { collection, query, where, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { Plus, Search, Edit2, Save, X, ArrowLeft, MapPin, Trash2 } from 'lucide-react';
+import { collection, query, where, getDocs, doc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { Plus, Search, Edit2, Save, X, ArrowLeft, MapPin, Trash2, Database } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { ASSEMBLIES } from '@/data/assemblies';
 import { db } from '@/lib/firebase/client';
@@ -111,6 +111,94 @@ export default function PollingStationEditor() {
         } catch (e) {
             alert('Failed to save changes');
             console.error(e);
+        }
+    };
+
+    const handleSeedData = async () => {
+        if (!confirm(`Are you sure you want to seed data for Assembly ${assemblyId}? This will overwrite existing data if any match IDs.`)) return;
+
+        setLoading(true);
+        try {
+            // Dynamically import the JSON data
+            const module = await import('@/data/Form20_Localities_Pct.json');
+            const jsonData = module.default as any;
+
+            const key = `AC_${assemblyId}_FINAL`;
+            const stationsList = jsonData[key];
+
+            if (!stationsList || !Array.isArray(stationsList)) {
+                alert(`No data found in JSON for key: ${key}`);
+                setLoading(false);
+                return;
+            }
+
+            const batch = writeBatch(db);
+            const newStations: PollingStation[] = [];
+            let count = 0;
+
+            for (let i = 0; i < stationsList.length; i++) {
+                const item = stationsList[i];
+                const psNo = (i + 1).toString();
+                const id = `${assemblyId}-${psNo}`;
+
+                const newStation: PollingStation = {
+                    id: id,
+                    ac_id: assemblyId,
+                    ac_name: getAssemblyName(assemblyId),
+                    ps_no: psNo,
+                    ps_name: item.PS_NO_2021 || `Station ${psNo}`,
+                    locality: item.LOCALITY_EXTRACTED || '',
+                    latitude: item.Latitude || 0,
+                    longitude: item.Longitude || 0,
+                    category: item.TOP_SCORE_CATEGORY || 'C',
+                    strongestParty: item.TOP_SCORE_PARTY || '',
+
+                    // Add election data if needed, matching the schema
+                    election2021: {
+                        year: 2021,
+                        candidates: {
+                            BJP: item.BJP_2021_pct || 0,
+                            DMK: item.DMK_2021_pct || 0,
+                            NRC: item.NRC_2021_pct || 0,
+                            OTHERS: item.OTHERS_2021_pct || 0
+                        }
+                    },
+                    election2016: {
+                        year: 2016,
+                        candidates: {
+                            NRC: item.NRC_2016_pct || 0,
+                            DMK: item.DMK_2016_pct || 0,
+                            AIADMK: item.AIADMK_2016_pct || 0,
+                            OTHERS: item.OTHERS_2016_pct || 0
+                        }
+                    },
+                    election2011: {
+                        year: 2011,
+                        candidates: {
+                            NRC: item.NRC_2011_pct || 0,
+                            PMK: item.PMK_2011_pct || 0,
+                            IND: item.IND_2011_pct || 0,
+                            OTHERS: item.OTHERS_2011_pct || 0
+                        }
+                    }
+                };
+
+                const docRef = doc(db, 'pollingStations', id);
+                batch.set(docRef, newStation);
+                newStations.push(newStation);
+                count++;
+            }
+
+            await batch.commit();
+            setStations(newStations);
+            setFiltered(newStations);
+            alert(`Successfully seeded ${count} stations for Assembly ${assemblyId}`);
+
+        } catch (error) {
+            console.error("Seeding failed:", error);
+            alert("Failed to seed data. Check console for details.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -252,6 +340,20 @@ export default function PollingStationEditor() {
                         </div>
                     ) : (
                         <div className="space-y-2">
+                            {/* Seed Data Option if Empty */}
+                            {filtered.length === 0 && !loading && (
+                                <div className="text-center py-10">
+                                    <p className="text-gray-500 mb-4">No stations found for this assembly.</p>
+                                    <button
+                                        onClick={handleSeedData}
+                                        className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2 mx-auto"
+                                    >
+                                        <Database size={18} />
+                                        Seed Data for {getAssemblyName(assemblyId)}
+                                    </button>
+                                </div>
+                            )}
+
                             {filtered.slice(0, 50).map(s => (
                                 <div
                                     key={s.id}
@@ -290,7 +392,7 @@ export default function PollingStationEditor() {
                                     </div>
                                 </div>
                             ))}
-                            {filtered.length === 0 && <div className="text-center text-gray-500 py-10">No stations found</div>}
+                            {filtered.length === 0 && loading && <div className="text-center text-gray-500 py-10">Loading...</div>}
                         </div>
                     )}
                 </div>
