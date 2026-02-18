@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            setLoading(true);
+            // setLoading(true); // Don't reset loading on auth state change to prevent UI flash/unmount
             if (firebaseUser) {
                 try {
                     // Fetch user role from Firestore

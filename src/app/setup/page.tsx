@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { createUserWithEmailAndPassword, updateProfile, signOut, signInWithEmailAndPassword } from 'firebase/auth';
+import { useState, useEffect } from 'react';
+import { createUserWithEmailAndPassword, updateProfile, signOut, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/client';
 import { useRouter } from 'next/navigation';
@@ -24,6 +24,23 @@ export default function SetupPage() {
     const [role, setRole] = useState<'super_admin' | 'admin' | 'client'>('client');
 
     const router = useRouter();
+
+    // Auto-detect if user is already verified (Phone Auth persistence)
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // If user is logged in, they passed the phone check
+                // However, we need to be careful not to redirect valid logged-in users who revisit this page
+                // But for the setup flow, if they are here and logged in, we assume they are continuing setup
+                setStep('FORM');
+                // Only set status if we are moving to form from initial load, to avoid overwriting error messages
+                if (step === 'PHONE') {
+                    setStatus('Session restored. Please complete setup.');
+                }
+            }
+        });
+        return () => unsubscribe();
+    }, [step]);
 
     // Whitelist - Replace with your allowed numbers
     const ALLOWED_NUMBERS = [
@@ -118,8 +135,13 @@ export default function SetupPage() {
 
             // Optional: Sign out immediately so we don't accidentally link the "Phone User" to the "Email User" 
             // if we want them to be separate. But actually, `createUserWithEmailAndPassword` will sign in the NEW user anyway.
-            // Let's just proceed. The "Phone Auth" session served its purpose as a gatekeeper.
-            await signOut(auth);
+            // Do NOT sign out. Keep the user logged in so we can proceed to creating the account/updating profile.
+            // await signOut(auth); 
+
+            // Check if user is already logged in (which they are now)
+            if (auth.currentUser) {
+                setStep('FORM');
+            }
 
         } catch (error: any) {
             console.error(error);
