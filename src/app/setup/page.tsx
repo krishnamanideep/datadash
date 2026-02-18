@@ -81,7 +81,19 @@ export default function SetupPage() {
             setStatus(`OTP sent to ${formattedPhone}`);
         } catch (error: any) {
             console.error(error);
-            setStatus(`Error sending OTP: ${error.message}. Ensure "Phone" is enabled in Firebase Console.`);
+
+            let errorMessage = `Error sending OTP: ${error.message}`;
+
+            if (error.code === 'auth/captcha-check-failed') {
+                errorMessage = "reCAPTCHA check failed. This usually happens if the domain is not authorized in Firebase Console > Authentication > Settings > Authorized Domains.";
+            } else if (error.code === 'auth/network-request-failed') {
+                errorMessage = "Network error. Please check your internet connection or if the domain is authorized.";
+            } else if (error.message && error.message.includes('Hostname match not found')) {
+                errorMessage = "Domain not authorized: Go to Firebase Console > Authentication > Settings > Authorized Domains and add this domain.";
+            }
+
+            setStatus(errorMessage);
+
             if ((window as any).recaptchaVerifier) {
                 (window as any).recaptchaVerifier.clear();
                 (window as any).recaptchaVerifier = null;
