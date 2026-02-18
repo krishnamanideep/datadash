@@ -66,11 +66,11 @@ export default function SurveyEditor() {
                     votingIntention: [],
                     issuesPriority: [],
                     leaderApproval: [],
-                    demographicBreakdown: { age: [], gender: [] },
+                    surveyInsights: [],
                     showVotingIntention: true,
                     showIssues: true,
                     showLeaderApproval: true,
-                    showDemographics: true,
+                    showDemographics: false,
                     showKeyFindings: true,
                     customCards: []
                 };
@@ -175,8 +175,10 @@ export default function SurveyEditor() {
                                         { key: 'showVotingIntention', label: 'Voting Intention' },
                                         { key: 'showIssues', label: 'Top Issues' },
                                         { key: 'showLeaderApproval', label: 'Leader Approval' },
-                                        { key: 'showDemographics', label: 'Demographics' },
-                                        { key: 'showKeyFindings', label: 'Key Findings' }
+                                        { key: 'showVotingIntention', label: 'Voting Intention' },
+                                        { key: 'showIssues', label: 'Top Issues' },
+                                        { key: 'showLeaderApproval', label: 'Leader Approval' },
+                                        { key: 'showKeyFindings', label: 'Key Survey Insights' }
                                     ].map(toggle => (
                                         <div key={toggle.key} className="flex items-center justify-between p-2 bg-white rounded border">
                                             <span className="text-sm font-medium">{toggle.label}</span>
@@ -239,12 +241,27 @@ export default function SurveyEditor() {
                             <section className="space-y-4 border p-4 rounded bg-gray-50">
                                 <div className="flex justify-between items-center">
                                     <h3 className="font-semibold text-gray-700">Top Issues</h3>
-                                    <button onClick={() => addArrayItem('issuesPriority', { issue: 'New Issue', score: 0 })} className="text-xs text-blue-600 flex items-center gap-1"><Plus size={14} /> Add Issue</button>
+                                    <button onClick={() => addArrayItem('issuesPriority', { issue: 'New Issue', icon: 'info' })} className="text-xs text-blue-600 flex items-center gap-1"><Plus size={14} /> Add Issue</button>
                                 </div>
                                 {data.issuesPriority?.map((item: any, idx: number) => (
                                     <div key={idx} className="flex gap-2 items-center">
-                                        <input className="border p-2 rounded w-2/3 text-sm" placeholder="Issue" value={item.issue} onChange={e => updateArrayItem('issuesPriority', idx, 'issue', e.target.value)} />
-                                        <input type="number" className="border p-2 rounded w-1/4 text-sm" placeholder="Score" value={item.score} onChange={e => updateArrayItem('issuesPriority', idx, 'score', Number(e.target.value))} />
+                                        <div className="relative group">
+                                            <button className="p-2 border rounded bg-white hover:bg-gray-50">
+                                                {ICONS.find(i => i.name === item.icon)?.icon || <Info size={16} />}
+                                            </button>
+                                            <div className="absolute top-full left-0 z-10 bg-white border shadow-lg rounded p-2 hidden group-hover:grid grid-cols-3 gap-1 w-24">
+                                                {ICONS.map(icon => (
+                                                    <button
+                                                        key={icon.name}
+                                                        onClick={() => updateArrayItem('issuesPriority', idx, 'icon', icon.name)}
+                                                        className={`p-1 rounded hover:bg-blue-50 ${item.icon === icon.name ? 'text-blue-600' : 'text-gray-500'}`}
+                                                    >
+                                                        {icon.icon}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <input className="border p-2 rounded w-full text-sm" placeholder="Issue Description" value={item.issue} onChange={e => updateArrayItem('issuesPriority', idx, 'issue', e.target.value)} />
                                         <button onClick={() => removeArrayItem('issuesPriority', idx)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={16} /></button>
                                     </div>
                                 ))}
@@ -276,6 +293,21 @@ export default function SurveyEditor() {
                                                 <input type="number" className="w-full border rounded p-1" value={item.disapproval} onChange={e => updateArrayItem('leaderApproval', idx, 'disapproval', Number(e.target.value))} />
                                             </div>
                                         </div>
+                                    </div>
+                                ))}
+                            </section>
+
+                            {/* Survey Insights */}
+                            <section className="space-y-4 border p-4 rounded bg-gray-50">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="font-semibold text-gray-700">Key Survey Insights</h3>
+                                    <button onClick={() => addArrayItem('surveyInsights', { text: 'New Insight...' })} className="text-xs text-blue-600 flex items-center gap-1"><Plus size={14} /> Add Insight</button>
+                                </div>
+                                {data.surveyInsights?.map((item: any, idx: number) => (
+                                    <div key={idx} className="flex gap-2 items-center">
+                                        <span className="text-blue-500 font-bold">•</span>
+                                        <input className="border p-2 rounded w-full text-sm" placeholder="Insight text..." value={item.text} onChange={e => updateArrayItem('surveyInsights', idx, 'text', e.target.value)} />
+                                        <button onClick={() => removeArrayItem('surveyInsights', idx)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={16} /></button>
                                     </div>
                                 ))}
                             </section>

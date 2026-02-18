@@ -179,7 +179,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                           <div className="p-2 bg-green-100 text-green-600 rounded-lg">
                             <TrendingUp size={20} />
                           </div>
-                          <h4 className="font-bold text-green-900 text-lg">Strengths</h4>
+                          <h4 className="font-bold text-green-900 text-lg">{candidate.headers?.strengths || 'Strengths'}</h4>
                         </div>
                         <ul className="space-y-3">
                           {candidate.strengths.map((strength, i) => (
@@ -199,7 +199,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                           <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
                             <Target size={20} />
                           </div>
-                          <h4 className="font-bold text-purple-900 text-lg">Opportunities</h4>
+                          <h4 className="font-bold text-purple-900 text-lg">{candidate.headers?.opportunities || 'Opportunities'}</h4>
                         </div>
                         <ul className="space-y-3">
                           {candidate.opportunities.map((opportunity, i) => (
@@ -222,7 +222,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                           <div className="p-2 bg-red-100 text-red-600 rounded-lg">
                             <Award size={20} />
                           </div>
-                          <h4 className="font-bold text-red-900 text-lg">Challenges</h4>
+                          <h4 className="font-bold text-red-900 text-lg">{candidate.headers?.weaknesses || 'Challenges'}</h4>
                         </div>
                         <ul className="space-y-3">
                           {candidate.weaknesses.map((weakness, i) => (
@@ -242,7 +242,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                           <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
                             <AlertTriangle size={20} />
                           </div>
-                          <h4 className="font-bold text-orange-900 text-lg">Threats</h4>
+                          <h4 className="font-bold text-orange-900 text-lg">{candidate.headers?.threats || 'Threats'}</h4>
                         </div>
                         <ul className="space-y-3">
                           {candidate.threats.map((threat, i) => (
@@ -264,7 +264,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                       <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
                         <Shield size={20} />
                       </div>
-                      <h4 className="font-bold text-blue-900 text-lg">Key Advantages</h4>
+                      <h4 className="font-bold text-blue-900 text-lg">{candidate.headers?.advantages || 'Key Advantages'}</h4>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {candidate.advantages.map((advantage, i) => (

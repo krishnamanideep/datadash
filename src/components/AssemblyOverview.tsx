@@ -360,7 +360,7 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
             </div>
           </div>
         </div>
-      ) : stats?.partyData && stats.partyData.length > 0 ? (
+      ) : (stats?.partyData && stats.partyData.length > 0 && stats.partyData[0]) ? (
         // Fallback to calculated data if no MLA record exists
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 rounded-lg shadow-lg text-white">
           <div className="flex items-center gap-6">

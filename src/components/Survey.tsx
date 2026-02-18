@@ -120,15 +120,16 @@ export default function Survey({ selectedAssembly, previewData }: { selectedAsse
       {showIssues && (
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-xl font-semibold mb-4">Top Issues for Voters</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={surveyData.issuesPriority || []} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" domain={[0, 100]} />
-              <YAxis dataKey="issue" type="category" width={120} />
-              <Tooltip />
-              <Bar dataKey="score" fill="#10b981" />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {surveyData.issuesPriority?.map((item: any, idx: number) => (
+              <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                <div className="p-2 bg-white rounded-full shadow-sm text-blue-600">
+                  {getCardIcon(item.icon)}
+                </div>
+                <span className="font-medium text-gray-700">{item.issue}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -168,70 +169,23 @@ export default function Survey({ selectedAssembly, previewData }: { selectedAsse
         </div>
       )}
 
-      {/* Demographic Breakdown */}
-      {showDemographics && surveyData.demographicBreakdown && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-xl font-semibold mb-4">Age-wise Voting Pattern</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={surveyData.demographicBreakdown?.age || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="group" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="BJP" fill="#FF6B35" />
-                <Bar dataKey="DMK" fill="#E63946" />
-                <Bar dataKey="AIADMK" fill="#06A77D" />
-                <Bar dataKey="Others" fill="#94A3B8" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-xl font-semibold mb-4">Gender-wise Voting Pattern</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={surveyData.demographicBreakdown?.gender || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="category" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="BJP" fill="#FF6B35" />
-                <Bar dataKey="DMK" fill="#E63946" />
-                <Bar dataKey="AIADMK" fill="#06A77D" />
-                <Bar dataKey="Others" fill="#94A3B8" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
 
       {/* Key Findings */}
       {showKeyFindings && (
         <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
           <h3 className="text-xl font-semibold mb-4 text-blue-900">Key Survey Findings</h3>
           <ul className="space-y-2 text-gray-800">
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
-              <span>BJP leads with 38% vote intention, followed by DMK at 32%</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
-              <span>Employment emerges as the top priority issue (85% importance)</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
-              <span>Youth voters (18-25) show stronger preference for BJP (42%)</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
-              <span>Gender gap is minimal, with women voters slightly favoring DMK</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
-              <span>4% voters remain undecided - could be decisive in close contest</span>
-            </li>
+            {surveyData.surveyInsights?.length > 0 ? (
+              surveyData.surveyInsights.map((insight: any, idx: number) => (
+                <li key={idx} className="flex items-start gap-2">
+                  <span className="text-blue-600 font-bold">•</span>
+                  <span>{insight.text}</span>
+                </li>
+              ))
+            ) : (
+              <li className="text-gray-500 italic">No insights added yet.</li>
+            )}
           </ul>
         </div>
       )}

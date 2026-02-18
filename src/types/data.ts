@@ -145,5 +145,12 @@ export interface Candidate {
   threats: string[];
   constituency: string;
   customCards: CandidateCard[];
+  headers?: {
+    strengths?: string;
+    weaknesses?: string;
+    advantages?: string;
+    opportunities?: string;
+    threats?: string;
+  };
 }
 

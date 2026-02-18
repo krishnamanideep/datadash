@@ -23,10 +23,7 @@ export default function CandidateEditor() {
     const [assemblyId, setAssemblyId] = useState('');
 
     // Filter assemblies based on user access
-    const accessibleAssemblies = useState(() => {
-        // This initial state will be incorrect until effect runs, but we handle it in useEffect below
-        return [];
-    })[0]; // We'll compute this in the component body properly
+
 
     const visibleAssemblies = useMemo(() => {
         if (!user) return [];
@@ -76,7 +73,14 @@ export default function CandidateEditor() {
             advantages: candidate.advantages || [],
             opportunities: candidate.opportunities || [],
             threats: candidate.threats || [],
-            customCards: candidate.customCards || []
+            customCards: candidate.customCards || [],
+            headers: candidate.headers || {
+                strengths: 'Strengths',
+                weaknesses: 'Weaknesses/Challenges',
+                advantages: 'Advantages',
+                opportunities: 'Opportunities',
+                threats: 'Threats'
+            }
         });
     };
 
@@ -94,7 +98,14 @@ export default function CandidateEditor() {
             opportunities: [],
             threats: [],
             customCards: [],
-            constituency: getAssemblyName(assemblyId)
+            constituency: getAssemblyName(assemblyId),
+            headers: {
+                strengths: 'Strengths',
+                weaknesses: 'Weaknesses/Challenges',
+                advantages: 'Advantages',
+                opportunities: 'Opportunities',
+                threats: 'Threats'
+            }
         });
     };
 
@@ -263,7 +274,11 @@ export default function CandidateEditor() {
 
                         {/* Strengths */}
                         <div>
-                            <label className="block text-sm font-bold text-green-700 mb-1">Strengths</label>
+                            <input
+                                className="block text-sm font-bold text-green-700 mb-1 border-b border-transparent hover:border-gray-300 focus:border-green-500 outline-none bg-transparent w-full"
+                                value={formData.headers?.strengths || 'Strengths'}
+                                onChange={e => setFormData({ ...formData, headers: { ...formData.headers, strengths: e.target.value } })}
+                            />
                             <RichTextEditor
                                 value={formData.strengths?.join('<br>') || ''}
                                 onChange={(html: string) => {
@@ -277,7 +292,11 @@ export default function CandidateEditor() {
 
                         {/* Weaknesses */}
                         <div>
-                            <label className="block text-sm font-bold text-red-700 mb-1">Weaknesses/Challenges</label>
+                            <input
+                                className="block text-sm font-bold text-red-700 mb-1 border-b border-transparent hover:border-gray-300 focus:border-red-500 outline-none bg-transparent w-full"
+                                value={formData.headers?.weaknesses || 'Weaknesses/Challenges'}
+                                onChange={e => setFormData({ ...formData, headers: { ...formData.headers, weaknesses: e.target.value } })}
+                            />
                             <RichTextEditor
                                 value={formData.weaknesses?.join('<br>') || ''}
                                 onChange={(html: string) => {
@@ -291,7 +310,11 @@ export default function CandidateEditor() {
 
                         {/* Advantages */}
                         <div>
-                            <label className="block text-sm font-bold text-blue-700 mb-1">Advantages</label>
+                            <input
+                                className="block text-sm font-bold text-blue-700 mb-1 border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none bg-transparent w-full"
+                                value={formData.headers?.advantages || 'Advantages'}
+                                onChange={e => setFormData({ ...formData, headers: { ...formData.headers, advantages: e.target.value } })}
+                            />
                             <RichTextEditor
                                 value={formData.advantages?.join('<br>') || ''}
                                 onChange={(html: string) => {
@@ -316,7 +339,11 @@ export default function CandidateEditor() {
                             <div className="space-y-4 p-4 bg-gray-100 rounded-lg border">
                                 {/* Opportunities */}
                                 <div>
-                                    <label className="block text-sm font-bold text-purple-700 mb-1">Opportunities</label>
+                                    <input
+                                        className="block text-sm font-bold text-purple-700 mb-1 border-b border-transparent hover:border-gray-300 focus:border-purple-500 outline-none bg-transparent w-full"
+                                        value={formData.headers?.opportunities || 'Opportunities'}
+                                        onChange={e => setFormData({ ...formData, headers: { ...formData.headers, opportunities: e.target.value } })}
+                                    />
                                     <RichTextEditor
                                         value={formData.opportunities?.join('<br>') || ''}
                                         onChange={(html: string) => {
@@ -330,7 +357,11 @@ export default function CandidateEditor() {
 
                                 {/* Threats */}
                                 <div>
-                                    <label className="block text-sm font-bold text-orange-700 mb-1">Threats</label>
+                                    <input
+                                        className="block text-sm font-bold text-orange-700 mb-1 border-b border-transparent hover:border-gray-300 focus:border-orange-500 outline-none bg-transparent w-full"
+                                        value={formData.headers?.threats || 'Threats'}
+                                        onChange={e => setFormData({ ...formData, headers: { ...formData.headers, threats: e.target.value } })}
+                                    />
                                     <RichTextEditor
                                         value={formData.threats?.join('<br>') || ''}
                                         onChange={(html: string) => {
