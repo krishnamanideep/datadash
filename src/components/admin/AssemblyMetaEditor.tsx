@@ -45,7 +45,7 @@ export default function AssemblyMetaEditor() {
         }
     }, [accessibleAssemblies, assemblyId]);
 
-    const [activeTab, setActiveTab] = useState<'scenario' | 'history' | 'cards' | 'settings'>('scenario');
+    const [activeTab, setActiveTab] = useState<'scenario' | 'history' | 'cards' | 'survey' | 'settings'>('scenario');
     const [loading, setLoading] = useState(false);
     const [customCards, setCustomCards] = useState<any[]>([]);
     const [editingCard, setEditingCard] = useState<any | null>(null);
@@ -63,7 +63,14 @@ export default function AssemblyMetaEditor() {
         groundReports: [],
         decidingFactors: [],
         electoralOutlook: [],
-        historyNarrative: ''
+        historyNarrative: '',
+        surveyData: {
+            cmRating: { approve: 0, disapprove: 0, noOpinion: 0 },
+            oppositionRating: { name: '', approve: 0, disapprove: 0, noOpinion: 0 },
+            agePattern: [],
+            genderPattern: [],
+            keyFindings: []
+        }
     });
     const [saved, setSaved] = useState(false);
 
@@ -119,7 +126,22 @@ export default function AssemblyMetaEditor() {
                         { party: 'AIADMK', range: '0-0%', value: 0, color: 'green' },
                         { party: 'Others', range: '0-0%', value: 0, color: 'gray' }
                     ],
-                    historyNarrative: '<h3>Political History</h3><p>Enter history details here...</p>'
+                    historyNarrative: '<h3>Political History</h3><p>Enter history details here...</p>',
+                    surveyData: {
+                        cmRating: { approve: 0, disapprove: 0, noOpinion: 0 },
+                        oppositionRating: { name: 'Opposition Leader', approve: 0, disapprove: 0, noOpinion: 0 },
+                        agePattern: [
+                            { ageGroup: '18-25', bjp: 0, dmk: 0, aiadmk: 0, others: 0 },
+                            { ageGroup: '26-40', bjp: 0, dmk: 0, aiadmk: 0, others: 0 },
+                            { ageGroup: '41-60', bjp: 0, dmk: 0, aiadmk: 0, others: 0 },
+                            { ageGroup: '60+', bjp: 0, dmk: 0, aiadmk: 0, others: 0 }
+                        ],
+                        genderPattern: [
+                            { gender: 'Male', bjp: 0, dmk: 0, aiadmk: 0, others: 0 },
+                            { gender: 'Female', bjp: 0, dmk: 0, aiadmk: 0, others: 0 }
+                        ],
+                        keyFindings: []
+                    }
                 });
             }
         } catch (e) {
@@ -247,6 +269,12 @@ export default function AssemblyMetaEditor() {
                             >
                                 Overview Cards
                             </button>
+                            <button
+                                onClick={() => setActiveTab('survey')}
+                                className={`px-3 py-1 rounded text-sm font-medium ${activeTab === 'survey' ? 'bg-white shadow text-blue-600' : ''}`}
+                            >
+                                Survey Data
+                            </button>
                         </div>
                     </div>
                     <button
@@ -255,7 +283,7 @@ export default function AssemblyMetaEditor() {
                     >
                         <Save size={18} /> {saved ? 'Saved!' : 'Save'}
                     </button>
-                </div>
+                </div >
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-8">
                     {activeTab === 'scenario' ? (
@@ -490,6 +518,195 @@ export default function AssemblyMetaEditor() {
                                 placeholder="Write the detailed political history here..."
                                 minHeight="400px"
                             />
+                        </div>
+                    ) : activeTab === 'survey' ? (
+                        /* Survey Data Editor */
+                        <div className="space-y-8">
+                            {/* Leader Ratings */}
+                            <section className="bg-white p-4 rounded-xl border space-y-4">
+                                <h3 className="font-bold text-gray-700 border-b pb-2">Leader Approval Ratings</h3>
+
+                                <div className="grid grid-cols-2 gap-8">
+                                    {/* CM Rating */}
+                                    <div className="space-y-3">
+                                        <h4 className="font-semibold text-sm text-blue-800">Chief Minister Rating</h4>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div>
+                                                <label className="text-xs font-bold text-green-600 block">Approve %</label>
+                                                <input type="number" className="w-full border rounded p-1" value={data.surveyData?.cmRating?.approve || 0} onChange={e => setData({ ...data, surveyData: { ...data.surveyData, cmRating: { ...data.surveyData?.cmRating, approve: Number(e.target.value) } } })} />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-red-600 block">Disapprove %</label>
+                                                <input type="number" className="w-full border rounded p-1" value={data.surveyData?.cmRating?.disapprove || 0} onChange={e => setData({ ...data, surveyData: { ...data.surveyData, cmRating: { ...data.surveyData?.cmRating, disapprove: Number(e.target.value) } } })} />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-600 block">No Opinion %</label>
+                                                <input type="number" className="w-full border rounded p-1" value={data.surveyData?.cmRating?.noOpinion || 0} onChange={e => setData({ ...data, surveyData: { ...data.surveyData, cmRating: { ...data.surveyData?.cmRating, noOpinion: Number(e.target.value) } } })} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Opposition Rating */}
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between">
+                                            <h4 className="font-semibold text-sm text-red-800">Opposition Leader Rating</h4>
+                                        </div>
+                                        <input className="w-full border rounded p-1 text-sm mb-2" placeholder="Leader Name" value={data.surveyData?.oppositionRating?.name || ''} onChange={e => setData({ ...data, surveyData: { ...data.surveyData, oppositionRating: { ...data.surveyData?.oppositionRating, name: e.target.value } } })} />
+
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div>
+                                                <label className="text-xs font-bold text-green-600 block">Approve %</label>
+                                                <input type="number" className="w-full border rounded p-1" value={data.surveyData?.oppositionRating?.approve || 0} onChange={e => setData({ ...data, surveyData: { ...data.surveyData, oppositionRating: { ...data.surveyData?.oppositionRating, approve: Number(e.target.value) } } })} />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-red-600 block">Disapprove %</label>
+                                                <input type="number" className="w-full border rounded p-1" value={data.surveyData?.oppositionRating?.disapprove || 0} onChange={e => setData({ ...data, surveyData: { ...data.surveyData, oppositionRating: { ...data.surveyData?.oppositionRating, disapprove: Number(e.target.value) } } })} />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-600 block">No Opinion %</label>
+                                                <input type="number" className="w-full border rounded p-1" value={data.surveyData?.oppositionRating?.noOpinion || 0} onChange={e => setData({ ...data, surveyData: { ...data.surveyData, oppositionRating: { ...data.surveyData?.oppositionRating, noOpinion: Number(e.target.value) } } })} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* Voting Patterns */}
+                            <div className="grid grid-cols-2 gap-6">
+                                {/* Age Wise */}
+                                <section className="bg-white p-4 rounded-xl border space-y-4">
+                                    <div className="flex justify-between items-center border-b pb-2">
+                                        <h3 className="font-bold text-gray-700">Age-wise Voting Pattern</h3>
+                                        <button onClick={() => {
+                                            const current = data.surveyData?.agePattern || [];
+                                            setData({ ...data, surveyData: { ...data.surveyData, agePattern: [...current, { ageGroup: 'New', bjp: 0, dmk: 0, aiadmk: 0, others: 0 }] } });
+                                        }} className="text-xs text-blue-600 flex items-center gap-1"><Plus size={14} /> Add Group</button>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="grid grid-cols-5 gap-2 text-xs font-bold text-gray-500">
+                                            <div>Group</div><div>BJP %</div><div>DMK %</div><div>ADMK %</div><div>Oth %</div>
+                                        </div>
+                                        {data.surveyData?.agePattern?.map((item: any, i: number) => (
+                                            <div key={i} className="grid grid-cols-5 gap-2 items-center">
+                                                <input className="border rounded p-1 text-sm font-bold" value={item.ageGroup} onChange={e => {
+                                                    const newArr = [...data.surveyData.agePattern];
+                                                    newArr[i] = { ...newArr[i], ageGroup: e.target.value };
+                                                    setData({ ...data, surveyData: { ...data.surveyData, agePattern: newArr } });
+                                                }} />
+                                                <input type="number" className="border rounded p-1 text-sm" value={item.bjp} onChange={e => {
+                                                    const newArr = [...data.surveyData.agePattern];
+                                                    newArr[i] = { ...newArr[i], bjp: Number(e.target.value) };
+                                                    setData({ ...data, surveyData: { ...data.surveyData, agePattern: newArr } });
+                                                }} />
+                                                <input type="number" className="border rounded p-1 text-sm" value={item.dmk} onChange={e => {
+                                                    const newArr = [...data.surveyData.agePattern];
+                                                    newArr[i] = { ...newArr[i], dmk: Number(e.target.value) };
+                                                    setData({ ...data, surveyData: { ...data.surveyData, agePattern: newArr } });
+                                                }} />
+                                                <input type="number" className="border rounded p-1 text-sm" value={item.aiadmk} onChange={e => {
+                                                    const newArr = [...data.surveyData.agePattern];
+                                                    newArr[i] = { ...newArr[i], aiadmk: Number(e.target.value) };
+                                                    setData({ ...data, surveyData: { ...data.surveyData, agePattern: newArr } });
+                                                }} />
+                                                <div className="flex gap-1">
+                                                    <input type="number" className="border rounded p-1 text-sm w-full" value={item.others} onChange={e => {
+                                                        const newArr = [...data.surveyData.agePattern];
+                                                        newArr[i] = { ...newArr[i], others: Number(e.target.value) };
+                                                        setData({ ...data, surveyData: { ...data.surveyData, agePattern: newArr } });
+                                                    }} />
+                                                    <button onClick={() => {
+                                                        const newArr = [...data.surveyData.agePattern];
+                                                        newArr.splice(i, 1);
+                                                        setData({ ...data, surveyData: { ...data.surveyData, agePattern: newArr } });
+                                                    }} className="text-red-500"><Trash2 size={14} /></button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                {/* Gender Wise */}
+                                <section className="bg-white p-4 rounded-xl border space-y-4">
+                                    <div className="flex justify-between items-center border-b pb-2">
+                                        <h3 className="font-bold text-gray-700">Gender-wise Voting Pattern</h3>
+                                        <button onClick={() => {
+                                            const current = data.surveyData?.genderPattern || [];
+                                            setData({ ...data, surveyData: { ...data.surveyData, genderPattern: [...current, { gender: 'New', bjp: 0, dmk: 0, aiadmk: 0, others: 0 }] } });
+                                        }} className="text-xs text-blue-600 flex items-center gap-1"><Plus size={14} /> Add Group</button>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="grid grid-cols-5 gap-2 text-xs font-bold text-gray-500">
+                                            <div>Group</div><div>BJP %</div><div>DMK %</div><div>ADMK %</div><div>Oth %</div>
+                                        </div>
+                                        {data.surveyData?.genderPattern?.map((item: any, i: number) => (
+                                            <div key={i} className="grid grid-cols-5 gap-2 items-center">
+                                                <input className="border rounded p-1 text-sm font-bold" value={item.gender} onChange={e => {
+                                                    const newArr = [...data.surveyData.genderPattern];
+                                                    newArr[i] = { ...newArr[i], gender: e.target.value };
+                                                    setData({ ...data, surveyData: { ...data.surveyData, genderPattern: newArr } });
+                                                }} />
+                                                <input type="number" className="border rounded p-1 text-sm" value={item.bjp} onChange={e => {
+                                                    const newArr = [...data.surveyData.genderPattern];
+                                                    newArr[i] = { ...newArr[i], bjp: Number(e.target.value) };
+                                                    setData({ ...data, surveyData: { ...data.surveyData, genderPattern: newArr } });
+                                                }} />
+                                                <input type="number" className="border rounded p-1 text-sm" value={item.dmk} onChange={e => {
+                                                    const newArr = [...data.surveyData.genderPattern];
+                                                    newArr[i] = { ...newArr[i], dmk: Number(e.target.value) };
+                                                    setData({ ...data, surveyData: { ...data.surveyData, genderPattern: newArr } });
+                                                }} />
+                                                <input type="number" className="border rounded p-1 text-sm" value={item.aiadmk} onChange={e => {
+                                                    const newArr = [...data.surveyData.genderPattern];
+                                                    newArr[i] = { ...newArr[i], aiadmk: Number(e.target.value) };
+                                                    setData({ ...data, surveyData: { ...data.surveyData, genderPattern: newArr } });
+                                                }} />
+                                                <div className="flex gap-1">
+                                                    <input type="number" className="border rounded p-1 text-sm w-full" value={item.others} onChange={e => {
+                                                        const newArr = [...data.surveyData.genderPattern];
+                                                        newArr[i] = { ...newArr[i], others: Number(e.target.value) };
+                                                        setData({ ...data, surveyData: { ...data.surveyData, genderPattern: newArr } });
+                                                    }} />
+                                                    <button onClick={() => {
+                                                        const newArr = [...data.surveyData.genderPattern];
+                                                        newArr.splice(i, 1);
+                                                        setData({ ...data, surveyData: { ...data.surveyData, genderPattern: newArr } });
+                                                    }} className="text-red-500"><Trash2 size={14} /></button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            </div>
+
+                            {/* Key Findings */}
+                            <section className="bg-white p-4 rounded-xl border space-y-4">
+                                <div className="flex justify-between items-center border-b pb-2">
+                                    <h3 className="font-bold text-gray-700">Key Survey Findings</h3>
+                                    <button onClick={() => {
+                                        const current = data.surveyData?.keyFindings || [];
+                                        setData({ ...data, surveyData: { ...data.surveyData, keyFindings: [...current, ""] } });
+                                    }} className="text-xs text-blue-600 flex items-center gap-1"><Plus size={14} /> Add Finding</button>
+                                </div>
+                                <div className="space-y-2">
+                                    {data.surveyData?.keyFindings?.map((text: string, i: number) => (
+                                        <div key={i} className="flex gap-2">
+                                            <div className="bg-blue-100 text-blue-600 font-bold px-2 py-1 rounded flex items-center">{i + 1}</div>
+                                            <input className="flex-1 border rounded p-2 text-sm" value={text} onChange={e => {
+                                                const newArr = [...data.surveyData.keyFindings];
+                                                newArr[i] = e.target.value;
+                                                setData({ ...data, surveyData: { ...data.surveyData, keyFindings: newArr } });
+                                            }} placeholder="Enter finding..." />
+                                            <button onClick={() => {
+                                                const newArr = [...data.surveyData.keyFindings];
+                                                newArr.splice(i, 1);
+                                                setData({ ...data, surveyData: { ...data.surveyData, keyFindings: newArr } });
+                                            }} className="text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
                         </div>
                     ) : activeTab === 'settings' ? (
                         /* Settings Tab - Assembly Configuration */
@@ -733,85 +950,87 @@ export default function AssemblyMetaEditor() {
                         </div>
                     )}
                 </div>
-            </div>
+            </div >
 
             {/* Modals */}
-            {editingCard && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[110]">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-xl overflow-y-auto max-h-[90vh]">
-                        <h3 className="text-lg font-semibold mb-4">{editingCard.id ? 'Edit Card' : 'New Card'}</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Heading</label>
-                                <input
-                                    type="text"
-                                    value={editingCard.heading}
-                                    onChange={(e) => setEditingCard({ ...editingCard, heading: e.target.value })}
-                                    className="w-full border rounded px-3 py-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Content</label>
-                                <RichTextEditor
-                                    value={editingCard.content || ''}
-                                    onChange={(html: string) => setEditingCard({ ...editingCard, content: html })}
-                                    placeholder="Card content (use formatting toolbar)..."
-                                    minHeight="80px"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Select Icon</label>
-                                <div className="grid grid-cols-5 gap-2">
-                                    {CARD_ICONS.map(item => {
-                                        const Icon = item.icon;
-                                        return (
-                                            <button
-                                                key={item.id}
-                                                onClick={() => setEditingCard({ ...editingCard, icon: item.id })}
-                                                className={`p-2 border rounded-lg flex flex-col items-center gap-1 transition-colors ${editingCard.icon === item.id ? 'bg-blue-600 border-blue-600 text-white' : 'hover:bg-gray-100 border-gray-200'}`}
-                                            >
-                                                <Icon size={20} />
-                                                <span className="text-[10px] uppercase font-bold">{item.label}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
+            {
+                editingCard && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[110]">
+                        <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-xl overflow-y-auto max-h-[90vh]">
+                            <h3 className="text-lg font-semibold mb-4">{editingCard.id ? 'Edit Card' : 'New Card'}</h3>
+                            <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Type</label>
-                                    <select
-                                        value={editingCard.cardType}
-                                        onChange={(e) => setEditingCard({ ...editingCard, cardType: e.target.value as any })}
-                                        className="w-full border rounded px-3 py-2"
-                                    >
-                                        <option value="text">Text</option>
-                                        <option value="note">Note (Yellow)</option>
-                                        <option value="info">Info (Blue)</option>
-                                        <option value="table">Table</option>
-                                        <option value="small">Small Card</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Order</label>
+                                    <label className="block text-sm font-medium mb-1">Heading</label>
                                     <input
-                                        type="number"
-                                        value={editingCard.order}
-                                        onChange={(e) => setEditingCard({ ...editingCard, order: parseInt(e.target.value) || 1 })}
+                                        type="text"
+                                        value={editingCard.heading}
+                                        onChange={(e) => setEditingCard({ ...editingCard, heading: e.target.value })}
                                         className="w-full border rounded px-3 py-2"
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Content</label>
+                                    <RichTextEditor
+                                        value={editingCard.content || ''}
+                                        onChange={(html: string) => setEditingCard({ ...editingCard, content: html })}
+                                        placeholder="Card content (use formatting toolbar)..."
+                                        minHeight="80px"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Select Icon</label>
+                                    <div className="grid grid-cols-5 gap-2">
+                                        {CARD_ICONS.map(item => {
+                                            const Icon = item.icon;
+                                            return (
+                                                <button
+                                                    key={item.id}
+                                                    onClick={() => setEditingCard({ ...editingCard, icon: item.id })}
+                                                    className={`p-2 border rounded-lg flex flex-col items-center gap-1 transition-colors ${editingCard.icon === item.id ? 'bg-blue-600 border-blue-600 text-white' : 'hover:bg-gray-100 border-gray-200'}`}
+                                                >
+                                                    <Icon size={20} />
+                                                    <span className="text-[10px] uppercase font-bold">{item.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Type</label>
+                                        <select
+                                            value={editingCard.cardType}
+                                            onChange={(e) => setEditingCard({ ...editingCard, cardType: e.target.value as any })}
+                                            className="w-full border rounded px-3 py-2"
+                                        >
+                                            <option value="text">Text</option>
+                                            <option value="note">Note (Yellow)</option>
+                                            <option value="info">Info (Blue)</option>
+                                            <option value="table">Table</option>
+                                            <option value="small">Small Card</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Order</label>
+                                        <input
+                                            type="number"
+                                            value={editingCard.order}
+                                            onChange={(e) => setEditingCard({ ...editingCard, order: parseInt(e.target.value) || 1 })}
+                                            className="w-full border rounded px-3 py-2"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex justify-end gap-3 mt-6 sticky bottom-0 bg-white pt-2 border-t">
+                                <button onClick={() => setEditingCard(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                                <button onClick={saveCard} disabled={savingCard} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                    {savingCard ? 'Saving...' : 'Save'}
+                                </button>
                             </div>
                         </div>
-                        <div className="flex justify-end gap-3 mt-6 sticky bottom-0 bg-white pt-2 border-t">
-                            <button onClick={() => setEditingCard(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
-                            <button onClick={saveCard} disabled={savingCard} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                                {savingCard ? 'Saving...' : 'Save'}
-                            </button>
-                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Right: Preview Panel */}
             <div className="w-1/2 overflow-y-auto bg-gray-200 p-8">
@@ -840,6 +1059,6 @@ export default function AssemblyMetaEditor() {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
