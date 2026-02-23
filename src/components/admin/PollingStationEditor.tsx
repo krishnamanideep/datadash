@@ -76,9 +76,9 @@ export default function PollingStationEditor() {
     useEffect(() => {
         const lower = search.toLowerCase();
         setFiltered(stations.filter(s =>
-            s.ps_name?.toLowerCase().includes(lower) ||
-            s.locality?.toLowerCase().includes(lower) ||
-            s.ps_no?.toString().includes(lower)
+            String(s.ps_name || '').toLowerCase().includes(lower) ||
+            String(s.locality || '').toLowerCase().includes(lower) ||
+            String(s.ps_no || '').includes(lower)
         ));
     }, [search, stations]);
 

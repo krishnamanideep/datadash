@@ -67,10 +67,12 @@ export default function SurveyEditor() {
                     issuesPriority: [],
                     leaderApproval: [],
                     surveyInsights: [],
+                    ageWiseVoting: [],
+                    genderWiseVoting: [],
                     showVotingIntention: true,
                     showIssues: true,
                     showLeaderApproval: true,
-                    showDemographics: false,
+                    showDemographics: true,
                     showKeyFindings: true,
                     customCards: []
                 };
@@ -175,9 +177,7 @@ export default function SurveyEditor() {
                                         { key: 'showVotingIntention', label: 'Voting Intention' },
                                         { key: 'showIssues', label: 'Top Issues' },
                                         { key: 'showLeaderApproval', label: 'Leader Approval' },
-                                        { key: 'showVotingIntention', label: 'Voting Intention' },
-                                        { key: 'showIssues', label: 'Top Issues' },
-                                        { key: 'showLeaderApproval', label: 'Leader Approval' },
+                                        { key: 'showDemographics', label: 'Age & Gender Charts' },
                                         { key: 'showKeyFindings', label: 'Key Survey Insights' }
                                     ].map(toggle => (
                                         <div key={toggle.key} className="flex items-center justify-between p-2 bg-white rounded border">
@@ -293,6 +293,38 @@ export default function SurveyEditor() {
                                                 <input type="number" className="w-full border rounded p-1" value={item.disapproval} onChange={e => updateArrayItem('leaderApproval', idx, 'disapproval', Number(e.target.value))} />
                                             </div>
                                         </div>
+                                    </div>
+                                ))}
+                            </section>
+
+                            {/* Age-wise Voting */}
+                            <section className="space-y-4 border p-4 rounded bg-gray-50">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="font-semibold text-gray-700">Age-wise Voting Pattern</h3>
+                                    <button onClick={() => addArrayItem('ageWiseVoting', { group: '18-25', percentage: 0, party: '' })} className="text-xs text-blue-600 flex items-center gap-1"><Plus size={14} /> Add Group</button>
+                                </div>
+                                {data.ageWiseVoting?.map((item: any, idx: number) => (
+                                    <div key={idx} className="flex gap-2 items-center">
+                                        <input className="border p-2 rounded w-1/3 text-sm" placeholder="Age Group" value={item.group} onChange={e => updateArrayItem('ageWiseVoting', idx, 'group', e.target.value)} />
+                                        <input type="number" className="border p-2 rounded w-1/4 text-sm" placeholder="%" value={item.percentage} onChange={e => updateArrayItem('ageWiseVoting', idx, 'percentage', Number(e.target.value))} />
+                                        <input className="border p-2 rounded w-1/3 text-sm" placeholder="Leaning Party" value={item.party} onChange={e => updateArrayItem('ageWiseVoting', idx, 'party', e.target.value)} />
+                                        <button onClick={() => removeArrayItem('ageWiseVoting', idx)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={16} /></button>
+                                    </div>
+                                ))}
+                            </section>
+
+                            {/* Gender-wise Voting */}
+                            <section className="space-y-4 border p-4 rounded bg-gray-50">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="font-semibold text-gray-700">Gender-wise Voting Pattern</h3>
+                                    <button onClick={() => addArrayItem('genderWiseVoting', { gender: 'Male', percentage: 0, party: '' })} className="text-xs text-blue-600 flex items-center gap-1"><Plus size={14} /> Add Group</button>
+                                </div>
+                                {data.genderWiseVoting?.map((item: any, idx: number) => (
+                                    <div key={idx} className="flex gap-2 items-center">
+                                        <input className="border p-2 rounded w-1/3 text-sm" placeholder="Gender" value={item.gender} onChange={e => updateArrayItem('genderWiseVoting', idx, 'gender', e.target.value)} />
+                                        <input type="number" className="border p-2 rounded w-1/4 text-sm" placeholder="%" value={item.percentage} onChange={e => updateArrayItem('genderWiseVoting', idx, 'percentage', Number(e.target.value))} />
+                                        <input className="border p-2 rounded w-1/3 text-sm" placeholder="Leaning Party" value={item.party} onChange={e => updateArrayItem('genderWiseVoting', idx, 'party', e.target.value)} />
+                                        <button onClick={() => removeArrayItem('genderWiseVoting', idx)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={16} /></button>
                                     </div>
                                 ))}
                             </section>

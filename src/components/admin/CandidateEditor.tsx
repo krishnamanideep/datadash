@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Edit, Trash2, Save, X, CreditCard, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, CreditCard, ChevronDown, ChevronUp, Palette } from 'lucide-react';
 import { Candidate, CandidateCard } from '@/types/data';
 import { ASSEMBLIES } from '@/data/assemblies';
 import CandidatePanel from '../CandidatePanel';
@@ -79,7 +79,12 @@ export default function CandidateEditor() {
                 weaknesses: 'Weaknesses/Challenges',
                 advantages: 'Advantages',
                 opportunities: 'Opportunities',
-                threats: 'Threats'
+                threats: 'Threats',
+                strengthsColor: '#15803d',
+                weaknessesColor: '#b91c1c',
+                advantagesColor: '#1d4ed8',
+                opportunitiesColor: '#7e22ce',
+                threatsColor: '#c2410c'
             }
         });
     };
@@ -104,7 +109,12 @@ export default function CandidateEditor() {
                 weaknesses: 'Weaknesses/Challenges',
                 advantages: 'Advantages',
                 opportunities: 'Opportunities',
-                threats: 'Threats'
+                threats: 'Threats',
+                strengthsColor: '#15803d',
+                weaknessesColor: '#b91c1c',
+                advantagesColor: '#1d4ed8',
+                opportunitiesColor: '#7e22ce',
+                threatsColor: '#c2410c'
             }
         });
     };
@@ -274,11 +284,18 @@ export default function CandidateEditor() {
 
                         {/* Strengths */}
                         <div>
-                            <input
-                                className="block text-sm font-bold text-green-700 mb-1 border-b border-transparent hover:border-gray-300 focus:border-green-500 outline-none bg-transparent w-full"
-                                value={formData.headers?.strengths || 'Strengths'}
-                                onChange={e => setFormData({ ...formData, headers: { ...formData.headers, strengths: e.target.value } })}
-                            />
+                            <div className="flex items-center gap-2 mb-1">
+                                <input
+                                    className="text-sm font-bold border-b border-transparent hover:border-gray-300 focus:border-green-500 outline-none bg-transparent flex-1"
+                                    style={{ color: formData.headers?.strengthsColor || '#15803d' }}
+                                    value={formData.headers?.strengths || 'Strengths'}
+                                    onChange={e => setFormData({ ...formData, headers: { ...formData.headers, strengths: e.target.value } })}
+                                />
+                                <label className="flex items-center gap-1 cursor-pointer" title="Change heading color">
+                                    <Palette size={14} className="text-gray-400" />
+                                    <input type="color" className="w-6 h-6 rounded cursor-pointer border-0 p-0" value={formData.headers?.strengthsColor || '#15803d'} onChange={e => setFormData({ ...formData, headers: { ...formData.headers, strengthsColor: e.target.value } })} />
+                                </label>
+                            </div>
                             <RichTextEditor
                                 value={formData.strengths?.join('<br>') || ''}
                                 onChange={(html: string) => {
@@ -292,11 +309,18 @@ export default function CandidateEditor() {
 
                         {/* Weaknesses */}
                         <div>
-                            <input
-                                className="block text-sm font-bold text-red-700 mb-1 border-b border-transparent hover:border-gray-300 focus:border-red-500 outline-none bg-transparent w-full"
-                                value={formData.headers?.weaknesses || 'Weaknesses/Challenges'}
-                                onChange={e => setFormData({ ...formData, headers: { ...formData.headers, weaknesses: e.target.value } })}
-                            />
+                            <div className="flex items-center gap-2 mb-1">
+                                <input
+                                    className="text-sm font-bold border-b border-transparent hover:border-gray-300 focus:border-red-500 outline-none bg-transparent flex-1"
+                                    style={{ color: formData.headers?.weaknessesColor || '#b91c1c' }}
+                                    value={formData.headers?.weaknesses || 'Weaknesses/Challenges'}
+                                    onChange={e => setFormData({ ...formData, headers: { ...formData.headers, weaknesses: e.target.value } })}
+                                />
+                                <label className="flex items-center gap-1 cursor-pointer" title="Change heading color">
+                                    <Palette size={14} className="text-gray-400" />
+                                    <input type="color" className="w-6 h-6 rounded cursor-pointer border-0 p-0" value={formData.headers?.weaknessesColor || '#b91c1c'} onChange={e => setFormData({ ...formData, headers: { ...formData.headers, weaknessesColor: e.target.value } })} />
+                                </label>
+                            </div>
                             <RichTextEditor
                                 value={formData.weaknesses?.join('<br>') || ''}
                                 onChange={(html: string) => {
@@ -310,11 +334,18 @@ export default function CandidateEditor() {
 
                         {/* Advantages */}
                         <div>
-                            <input
-                                className="block text-sm font-bold text-blue-700 mb-1 border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none bg-transparent w-full"
-                                value={formData.headers?.advantages || 'Advantages'}
-                                onChange={e => setFormData({ ...formData, headers: { ...formData.headers, advantages: e.target.value } })}
-                            />
+                            <div className="flex items-center gap-2 mb-1">
+                                <input
+                                    className="text-sm font-bold border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none bg-transparent flex-1"
+                                    style={{ color: formData.headers?.advantagesColor || '#1d4ed8' }}
+                                    value={formData.headers?.advantages || 'Advantages'}
+                                    onChange={e => setFormData({ ...formData, headers: { ...formData.headers, advantages: e.target.value } })}
+                                />
+                                <label className="flex items-center gap-1 cursor-pointer" title="Change heading color">
+                                    <Palette size={14} className="text-gray-400" />
+                                    <input type="color" className="w-6 h-6 rounded cursor-pointer border-0 p-0" value={formData.headers?.advantagesColor || '#1d4ed8'} onChange={e => setFormData({ ...formData, headers: { ...formData.headers, advantagesColor: e.target.value } })} />
+                                </label>
+                            </div>
                             <RichTextEditor
                                 value={formData.advantages?.join('<br>') || ''}
                                 onChange={(html: string) => {
@@ -339,11 +370,18 @@ export default function CandidateEditor() {
                             <div className="space-y-4 p-4 bg-gray-100 rounded-lg border">
                                 {/* Opportunities */}
                                 <div>
-                                    <input
-                                        className="block text-sm font-bold text-purple-700 mb-1 border-b border-transparent hover:border-gray-300 focus:border-purple-500 outline-none bg-transparent w-full"
-                                        value={formData.headers?.opportunities || 'Opportunities'}
-                                        onChange={e => setFormData({ ...formData, headers: { ...formData.headers, opportunities: e.target.value } })}
-                                    />
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <input
+                                            className="text-sm font-bold border-b border-transparent hover:border-gray-300 focus:border-purple-500 outline-none bg-transparent flex-1"
+                                            style={{ color: formData.headers?.opportunitiesColor || '#7e22ce' }}
+                                            value={formData.headers?.opportunities || 'Opportunities'}
+                                            onChange={e => setFormData({ ...formData, headers: { ...formData.headers, opportunities: e.target.value } })}
+                                        />
+                                        <label className="flex items-center gap-1 cursor-pointer" title="Change heading color">
+                                            <Palette size={14} className="text-gray-400" />
+                                            <input type="color" className="w-6 h-6 rounded cursor-pointer border-0 p-0" value={formData.headers?.opportunitiesColor || '#7e22ce'} onChange={e => setFormData({ ...formData, headers: { ...formData.headers, opportunitiesColor: e.target.value } })} />
+                                        </label>
+                                    </div>
                                     <RichTextEditor
                                         value={formData.opportunities?.join('<br>') || ''}
                                         onChange={(html: string) => {
@@ -357,11 +395,18 @@ export default function CandidateEditor() {
 
                                 {/* Threats */}
                                 <div>
-                                    <input
-                                        className="block text-sm font-bold text-orange-700 mb-1 border-b border-transparent hover:border-gray-300 focus:border-orange-500 outline-none bg-transparent w-full"
-                                        value={formData.headers?.threats || 'Threats'}
-                                        onChange={e => setFormData({ ...formData, headers: { ...formData.headers, threats: e.target.value } })}
-                                    />
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <input
+                                            className="text-sm font-bold border-b border-transparent hover:border-gray-300 focus:border-orange-500 outline-none bg-transparent flex-1"
+                                            style={{ color: formData.headers?.threatsColor || '#c2410c' }}
+                                            value={formData.headers?.threats || 'Threats'}
+                                            onChange={e => setFormData({ ...formData, headers: { ...formData.headers, threats: e.target.value } })}
+                                        />
+                                        <label className="flex items-center gap-1 cursor-pointer" title="Change heading color">
+                                            <Palette size={14} className="text-gray-400" />
+                                            <input type="color" className="w-6 h-6 rounded cursor-pointer border-0 p-0" value={formData.headers?.threatsColor || '#c2410c'} onChange={e => setFormData({ ...formData, headers: { ...formData.headers, threatsColor: e.target.value } })} />
+                                        </label>
+                                    </div>
                                     <RichTextEditor
                                         value={formData.threats?.join('<br>') || ''}
                                         onChange={(html: string) => {

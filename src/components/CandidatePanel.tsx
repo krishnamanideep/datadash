@@ -11,6 +11,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string | null>(null);
+  const [photoLightbox, setPhotoLightbox] = useState<string | null>(null);
 
   const getAssemblyName = (id: string) => {
     return ASSEMBLIES.find(a => a.id === id)?.name || `Assembly ${id}`;
@@ -59,55 +60,63 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
     <div className="p-6 space-y-6">
       <h2 className="text-3xl font-bold text-gray-800">{getAssemblyName(selectedAssembly)} - Candidate Panel</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 max-w-7xl mx-auto">
         {candidates.map((candidate, idx) => (
-          <div key={idx} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100">
-            {/* Header */}
-            <div className={`p-6 ${getPartyColor(candidate.party)} text-white`}>
-              <div className="flex items-center gap-6">
-                <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-4 border-white/30 flex-shrink-0">
-                  {candidate.image ? (
-                    <img src={candidate.image} alt={candidate.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <Users size={64} />
-                  )}
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold">{candidate.name}</h3>
-                  <p className="text-lg opacity-90">{candidate.party}</p>
-                </div>
-              </div>
-            </div>
+          <div key={idx} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 flex flex-col cursor-pointer" onClick={() => setExpandedCandidateId(candidate.id || idx.toString())}>
+            {/* Header — colored band with centered photo */}
+            <div className={`relative ${getPartyColor(candidate.party)} pt-8 pb-14 flex flex-col items-center text-white`}>
+              {/* Party badge */}
+              <span className="absolute top-3 right-3 bg-white/25 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full tracking-wide">
+                {candidate.party}
+              </span>
 
-            {/* Basic Info */}
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-3 text-gray-700">
-                <MapPin size={20} className="text-gray-400" />
-                <span>{candidate.constituency?.startsWith('Assembly') ? getAssemblyName(candidate.assemblyId || selectedAssembly) : (candidate.constituency || getAssemblyName(candidate.assemblyId || selectedAssembly))}</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 text-sm relative">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-gray-500 text-xs uppercase tracking-wide">Caste</div>
-                  <div className="font-bold text-gray-800 text-lg">{candidate.caste || 'N/A'}</div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-gray-500 text-xs uppercase tracking-wide">Designation</div>
-                  <div className="font-bold text-gray-800 text-lg">{candidate.designation || 'N/A'}</div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg col-span-2">
-                  <div className="text-gray-500 text-xs uppercase tracking-wide">Age</div>
-                  <div className="font-bold text-gray-800 text-lg">{candidate.age || 'N/A'}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="px-6 py-4 bg-gray-50 border-t">
-              <button
-                onClick={() => setExpandedCandidateId(candidate.id || '')}
-                className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
+              {/* Photo — clickable for lightbox */}
+              <div
+                className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-4 border-white/50 shadow-lg cursor-zoom-in"
+                onClick={(e) => { e.stopPropagation(); if (candidate.image) setPhotoLightbox(candidate.image); }}
               >
-                View Detailed Profile
+                {candidate.image ? (
+                  <img src={candidate.image} alt={candidate.name} className="w-full h-full object-cover" />
+                ) : (
+                  <Users size={44} />
+                )}
+              </div>
+
+              {/* Name */}
+              <h3 className="mt-3 text-xl font-bold text-center px-4 leading-tight break-words w-full">{candidate.name}</h3>
+            </div>
+
+            {/* Info cards — overlap the header slightly */}
+            <div className="px-5 -mt-8 relative z-10">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 grid grid-cols-3 divide-x divide-gray-100 text-center">
+                <div className="px-2">
+                  <div className="text-gray-400 text-[10px] uppercase tracking-widest mb-1">Age</div>
+                  <div className="font-bold text-gray-800 text-base truncate">{candidate.age || '—'}</div>
+                </div>
+                <div className="px-2">
+                  <div className="text-gray-400 text-[10px] uppercase tracking-widest mb-1">Caste</div>
+                  <div className="font-bold text-gray-800 text-base truncate">{candidate.caste || '—'}</div>
+                </div>
+                <div className="px-2">
+                  <div className="text-gray-400 text-[10px] uppercase tracking-widest mb-1">Role</div>
+                  <div className="font-bold text-gray-800 text-base truncate">{candidate.designation || '—'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Constituency */}
+            <div className="px-5 pt-3 pb-1 flex items-center gap-2 text-sm text-gray-500">
+              <MapPin size={14} className="flex-shrink-0 text-gray-400" />
+              <span className="truncate">{candidate.constituency?.startsWith('Assembly') ? getAssemblyName(candidate.assemblyId || selectedAssembly) : (candidate.constituency || getAssemblyName(candidate.assemblyId || selectedAssembly))}</span>
+            </div>
+
+            {/* Action button */}
+            <div className="px-5 py-4 mt-auto">
+              <button
+                onClick={(e) => { e.stopPropagation(); setExpandedCandidateId(candidate.id || idx.toString()); }}
+                className={`w-full py-2.5 px-4 ${getPartyColor(candidate.party)} text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer shadow-sm`}
+              >
+                View Full Profile →
               </button>
             </div>
           </div>
@@ -116,7 +125,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
 
       {/* Candidate Details Modal */}
       {expandedCandidateId && (() => {
-        const candidate = candidates.find(c => c.id === expandedCandidateId);
+        const candidate = candidates.find((c, i) => c.id === expandedCandidateId || i.toString() === expandedCandidateId);
         if (!candidate) return null;
 
         return (
@@ -124,34 +133,37 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300">
 
               {/* Modal Header */}
-              <div className={`p-6 ${getPartyColor(candidate.party)} text-white flex justify-between items-start`}>
-                <div className="flex items-center gap-6">
-                  <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-4 border-white/30 flex-shrink-0">
+              <div className={`p-6 ${getPartyColor(candidate.party)} text-white flex justify-between items-start gap-4`}>
+                <div className="flex items-center gap-4 min-w-0">
+                  <div
+                    className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-4 border-white/30 flex-shrink-0 cursor-zoom-in"
+                    onClick={(e) => { e.stopPropagation(); if (candidate.image) setPhotoLightbox(candidate.image); }}
+                  >
                     {candidate.image ? (
                       <img src={candidate.image} alt={candidate.name} className="w-full h-full object-cover" />
                     ) : (
-                      <Users size={64} />
+                      <Users size={44} />
                     )}
                   </div>
-                  <div>
-                    <h3 className="text-3xl font-bold">{candidate.name}</h3>
-                    <div className="flex items-center gap-3 opacity-90 mt-1">
-                      <span className="text-xl font-medium">{candidate.party}</span>
-                      <span>•</span>
-                      <span className="text-lg">{candidate.constituency || getAssemblyName(candidate.assemblyId || selectedAssembly)}</span>
+                  <div className="min-w-0">
+                    <h3 className="text-2xl font-bold break-words leading-tight">{candidate.name}</h3>
+                    <div className="flex items-center flex-wrap gap-x-2 gap-y-1 opacity-90 mt-1">
+                      <span className="text-base font-semibold">{candidate.party}</span>
+                      <span className="opacity-60">•</span>
+                      <span className="text-sm break-words">{candidate.constituency || getAssemblyName(candidate.assemblyId || selectedAssembly)}</span>
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={() => setExpandedCandidateId(null)}
-                  className="bg-white/20 hover:bg-white/30 p-2 rounded-full transition-colors text-white"
+                  className="bg-white/20 hover:bg-white/30 p-2 rounded-full transition-colors text-white flex-shrink-0"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
               </div>
 
               {/* Modal Content */}
-              <div className="p-8 overflow-y-auto space-y-8 custom-scrollbar">
+              <div className="p-6 overflow-y-auto space-y-6 custom-scrollbar">
 
                 {/* Info Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -179,13 +191,13 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                           <div className="p-2 bg-green-100 text-green-600 rounded-lg">
                             <TrendingUp size={20} />
                           </div>
-                          <h4 className="font-bold text-green-900 text-lg">{candidate.headers?.strengths || 'Strengths'}</h4>
+                          <h4 className="font-bold text-lg" style={{ color: candidate.headers?.strengthsColor || '#14532d' }}>{candidate.headers?.strengths || 'Strengths'}</h4>
                         </div>
                         <ul className="space-y-3">
                           {candidate.strengths.map((strength, i) => (
-                            <li key={i} className="text-green-800 flex items-start gap-3">
-                              <span className="text-green-600 font-bold mt-1">✓</span>
-                              <span dangerouslySetInnerHTML={{ __html: strength }} className="leading-relaxed" />
+                            <li key={i} className="text-green-800 flex items-start gap-3 min-w-0">
+                              <span className="text-green-600 font-bold mt-1 flex-shrink-0">✓</span>
+                              <span dangerouslySetInnerHTML={{ __html: strength }} className="leading-relaxed break-words overflow-hidden min-w-0" />
                             </li>
                           ))}
                         </ul>
@@ -199,13 +211,13 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                           <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
                             <Target size={20} />
                           </div>
-                          <h4 className="font-bold text-purple-900 text-lg">{candidate.headers?.opportunities || 'Opportunities'}</h4>
+                          <h4 className="font-bold text-lg" style={{ color: candidate.headers?.opportunitiesColor || '#581c87' }}>{candidate.headers?.opportunities || 'Opportunities'}</h4>
                         </div>
                         <ul className="space-y-3">
                           {candidate.opportunities.map((opportunity, i) => (
-                            <li key={i} className="text-purple-800 flex items-start gap-3">
-                              <span className="text-purple-600 font-bold mt-1">→</span>
-                              <span dangerouslySetInnerHTML={{ __html: opportunity }} className="leading-relaxed" />
+                            <li key={i} className="text-purple-800 flex items-start gap-3 min-w-0">
+                              <span className="text-purple-600 font-bold mt-1 flex-shrink-0">→</span>
+                              <span dangerouslySetInnerHTML={{ __html: opportunity }} className="leading-relaxed break-words overflow-hidden min-w-0" />
                             </li>
                           ))}
                         </ul>
@@ -222,13 +234,13 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                           <div className="p-2 bg-red-100 text-red-600 rounded-lg">
                             <Award size={20} />
                           </div>
-                          <h4 className="font-bold text-red-900 text-lg">{candidate.headers?.weaknesses || 'Challenges'}</h4>
+                          <h4 className="font-bold text-lg" style={{ color: candidate.headers?.weaknessesColor || '#7f1d1d' }}>{candidate.headers?.weaknesses || 'Challenges'}</h4>
                         </div>
                         <ul className="space-y-3">
                           {candidate.weaknesses.map((weakness, i) => (
-                            <li key={i} className="text-red-800 flex items-start gap-3">
-                              <span className="text-red-600 font-bold mt-1">!</span>
-                              <span dangerouslySetInnerHTML={{ __html: weakness }} className="leading-relaxed" />
+                            <li key={i} className="text-red-800 flex items-start gap-3 min-w-0">
+                              <span className="text-red-600 font-bold mt-1 flex-shrink-0">!</span>
+                              <span dangerouslySetInnerHTML={{ __html: weakness }} className="leading-relaxed break-words overflow-hidden min-w-0" />
                             </li>
                           ))}
                         </ul>
@@ -242,13 +254,13 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                           <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
                             <AlertTriangle size={20} />
                           </div>
-                          <h4 className="font-bold text-orange-900 text-lg">{candidate.headers?.threats || 'Threats'}</h4>
+                          <h4 className="font-bold text-lg" style={{ color: candidate.headers?.threatsColor || '#7c2d12' }}>{candidate.headers?.threats || 'Threats'}</h4>
                         </div>
                         <ul className="space-y-3">
                           {candidate.threats.map((threat, i) => (
-                            <li key={i} className="text-orange-800 flex items-start gap-3">
-                              <span className="text-orange-600 font-bold mt-1">⚠</span>
-                              <span dangerouslySetInnerHTML={{ __html: threat }} className="leading-relaxed" />
+                            <li key={i} className="text-orange-800 flex items-start gap-3 min-w-0">
+                              <span className="text-orange-600 font-bold mt-1 flex-shrink-0">⚠</span>
+                              <span dangerouslySetInnerHTML={{ __html: threat }} className="leading-relaxed break-words overflow-hidden min-w-0" />
                             </li>
                           ))}
                         </ul>
@@ -264,13 +276,13 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                       <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
                         <Shield size={20} />
                       </div>
-                      <h4 className="font-bold text-blue-900 text-lg">{candidate.headers?.advantages || 'Key Advantages'}</h4>
+                      <h4 className="font-bold text-lg" style={{ color: candidate.headers?.advantagesColor || '#1e3a8a' }}>{candidate.headers?.advantages || 'Key Advantages'}</h4>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {candidate.advantages.map((advantage, i) => (
-                        <div key={i} className="flex items-start gap-3 bg-white/60 p-3 rounded-lg border border-blue-100/50">
-                          <span className="text-blue-600 font-bold mt-1">★</span>
-                          <span dangerouslySetInnerHTML={{ __html: advantage }} className="text-blue-800 leading-relaxed" />
+                        <div key={i} className="flex items-start gap-3 bg-white/60 p-3 rounded-lg border border-blue-100/50 min-w-0">
+                          <span className="text-blue-600 font-bold mt-1 flex-shrink-0">★</span>
+                          <span dangerouslySetInnerHTML={{ __html: advantage }} className="text-blue-800 leading-relaxed break-words overflow-hidden min-w-0" />
                         </div>
                       ))}
                     </div>
@@ -290,11 +302,11 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
                           card.type === 'warning' ? 'bg-amber-50 border-amber-200' :
                             'bg-indigo-50 border-indigo-200'
                           }`}>
-                          <div className={`font-bold text-lg mb-2 ${card.type === 'highlight' ? 'text-emerald-900' :
+                          <div className={`font-bold text-lg mb-2 break-words ${card.type === 'highlight' ? 'text-emerald-900' :
                             card.type === 'warning' ? 'text-amber-900' :
                               'text-indigo-900'
                             }`}>{card.title}</div>
-                          <div className={`leading-relaxed ${card.type === 'highlight' ? 'text-emerald-800' :
+                          <div className={`leading-relaxed break-words overflow-x-hidden ${card.type === 'highlight' ? 'text-emerald-800' :
                             card.type === 'warning' ? 'text-amber-800' :
                               'text-indigo-800'
                             }`} dangerouslySetInnerHTML={{ __html: card.content }} />
@@ -384,6 +396,30 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
           </div>
         )
       }
+      {/* Photo Lightbox */}
+      {photoLightbox && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md"
+          onClick={() => setPhotoLightbox(null)}
+        >
+          <div className="relative max-w-lg w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setPhotoLightbox(null)}
+              className="absolute -top-10 right-0 text-white/80 hover:text-white text-3xl font-light leading-none"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+            <img
+              src={photoLightbox}
+              alt="Candidate"
+              className="w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl"
+              style={{ animation: 'scale-in 0.18s ease-out' }}
+            />
+          </div>
+          <style>{`@keyframes scale-in { from { transform: scale(0.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }`}</style>
+        </div>
+      )}
     </div >
   );
 }

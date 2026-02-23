@@ -1,5 +1,6 @@
 /* eslint-disable */
 'use client';
+import ErrorBoundary from '../../../components/ErrorBoundary';
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -80,82 +81,86 @@ function AdminDashboardContent() {
 
   return (
     <WidgetConfigProvider>
-      <div className="min-h-screen bg-gray-100 flex">
-        {/* Sidebar */}
-        <aside
-          className={`bg-slate-900 text-white transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'
-            } flex flex-col fixed h-full z-20`}
-        >
-          <div className="p-4 flex items-center justify-between border-b border-slate-700">
-            {isSidebarOpen && <span className="font-bold text-xl">AdminPortal</span>}
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-800 rounded">
-              {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
+      <ErrorBoundary componentName="AdminDashboard Content">
+        <div className="min-h-screen bg-gray-100 flex">
+          {/* Sidebar */}
+          <aside
+            className={`bg-slate-900 text-white transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'
+              } flex flex-col fixed h-full z-20`}
+          >
+            <div className="p-4 flex items-center justify-between border-b border-slate-700">
+              {isSidebarOpen && <span className="font-bold text-xl">AdminPortal</span>}
+              <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-800 rounded">
+                {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+            </div>
 
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            {visibleSections.map(section => {
-              const Icon = ICONS[section.id] || FileText;
-              return (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveTab(section.id)}
-                  className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === section.id ? 'bg-blue-600' : 'hover:bg-slate-800'
-                    }`}
-                >
-                  <Icon size={24} />
-                  {isSidebarOpen && <span className="ml-3">{section.label}</span>}
-                </button>
-              );
-            })}
-          </nav>
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+              {visibleSections.map(section => {
+                const Icon = ICONS[section.id] || FileText;
+                return (
+                  <button
+                    key={section.id}
+                    onClick={() => setActiveTab(section.id)}
+                    className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === section.id ? 'bg-blue-600' : 'hover:bg-slate-800'
+                      }`}
+                  >
+                    <Icon size={24} />
+                    {isSidebarOpen && <span className="ml-3">{section.label}</span>}
+                  </button>
+                );
+              })}
+            </nav>
 
-          <div className="p-4 border-t border-slate-700">
-            {/* User Profile */}
-            {isSidebarOpen && user && (
-              <div className="mb-4 p-3 bg-slate-800 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-                    {user.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-white truncate">{user.displayName || 'User'}</div>
-                    <div className="text-xs text-slate-400 truncate">{user.email}</div>
-                    <div className="text-xs text-blue-400 font-medium mt-0.5">
-                      {user.role === 'super_admin' ? 'Super Admin' : ((user.role || 'client').charAt(0).toUpperCase() + (user.role || 'client').slice(1))}
+            <div className="p-4 border-t border-slate-700">
+              {/* User Profile */}
+              {isSidebarOpen && user && (
+                <div className="mb-4 p-3 bg-slate-800 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+                      {user.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-white truncate">{user.displayName || 'User'}</div>
+                      <div className="text-xs text-slate-400 truncate">{user.email}</div>
+                      <div className="text-xs text-blue-400 font-medium mt-0.5">
+                        {user.role === 'super_admin' ? 'Super Admin' : ((user.role || 'client').charAt(0).toUpperCase() + (user.role || 'client').slice(1))}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <button
-              onClick={logout}
-              className="w-full flex items-center p-3 rounded-lg hover:bg-red-900/50 text-red-300 transition-colors"
-            >
-              <LogOut size={24} />
-              {isSidebarOpen && <span className="ml-3">Sign Out</span>}
-            </button>
-          </div>
-        </aside>
+              <button
+                onClick={logout}
+                className="w-full flex items-center p-3 rounded-lg hover:bg-red-900/50 text-red-300 transition-colors"
+              >
+                <LogOut size={24} />
+                {isSidebarOpen && <span className="ml-3">Sign Out</span>}
+              </button>
+            </div>
+          </aside>
 
-        {/* Main Content */}
-        <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
-          <div className="bg-white min-h-screen border border-gray-200 overflow-hidden">
-            {activeTab === 'stations' && <PollingStationEditor />}
-            {activeTab === 'users' && <UserManagement />}
-            {activeTab === 'survey' && <SurveyEditor />}
-            {activeTab === 'widgets' && <WidgetSettings />}
-            {activeTab === 'candidates' && <CandidateEditor />}
-            {activeTab === 'meta' && <AssemblyMetaEditor />}
-            {activeTab === 'retrobooths' && <RetroBoothsEditor />}
-            {activeTab === 'mlas' && <MLAEditor />}
-            {activeTab === 'elections' && <ElectionDataEditor />}
-            {activeTab === 'politicalhistory' && <PoliticalHistoryEditor />}
-            {activeTab === 'assemblyoverview' && <AssemblyOverviewEditor />}
-          </div>
-        </main>
-      </div>
+          {/* Main Content */}
+          <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
+            <div className="bg-white min-h-screen border border-gray-200 overflow-hidden">
+              <ErrorBoundary componentName="Active Tab Component">
+                {activeTab === 'stations' && <PollingStationEditor />}
+                {activeTab === 'users' && <UserManagement />}
+                {activeTab === 'survey' && <SurveyEditor />}
+                {activeTab === 'widgets' && <WidgetSettings />}
+                {activeTab === 'candidates' && <CandidateEditor />}
+                {activeTab === 'meta' && <AssemblyMetaEditor />}
+                {activeTab === 'retrobooths' && <RetroBoothsEditor />}
+                {activeTab === 'mlas' && <MLAEditor />}
+                {activeTab === 'elections' && <ElectionDataEditor />}
+                {activeTab === 'politicalhistory' && <PoliticalHistoryEditor />}
+                {activeTab === 'assemblyoverview' && <AssemblyOverviewEditor />}
+              </ErrorBoundary>
+            </div>
+          </main>
+        </div>
+      </ErrorBoundary>
     </WidgetConfigProvider>
   );
 }

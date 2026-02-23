@@ -151,6 +151,11 @@ export interface Candidate {
     advantages?: string;
     opportunities?: string;
     threats?: string;
+    strengthsColor?: string;
+    weaknessesColor?: string;
+    advantagesColor?: string;
+    opportunitiesColor?: string;
+    threatsColor?: string;
   };
 }
 

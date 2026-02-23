@@ -328,8 +328,8 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
       {/* MLA / Winner Section */}
       {currentMLA ? (
         <div className={`bg-gradient-to-r ${getPartyColor(currentMLA.party)} p-6 rounded-lg shadow-lg text-white`}>
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
               {currentMLA.image ? (
                 <img src={currentMLA.image} alt={currentMLA.name} className="w-full h-full object-cover" />
               ) : (
@@ -338,12 +338,12 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
                 </svg>
               )}
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="text-sm opacity-80 uppercase tracking-wide">
                 {selectedYear === '2021' ? 'Current MLA' : 'Winner'} ({selectedYear} Election)
               </div>
-              <div className="text-2xl font-bold">{currentMLA.name}</div>
-              <div className="text-lg opacity-90">
+              <div className="text-2xl font-bold break-words">{currentMLA.name}</div>
+              <div className="text-base opacity-90 break-words">
                 {currentMLA.party}
                 {currentMLA.voteShare && ` • ${currentMLA.voteShare}% Vote Share`}
                 {currentMLA.votes && ` • ${currentMLA.votes.toLocaleString()} Votes`}
@@ -354,7 +354,7 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
                 </div>
               )}
             </div>
-            <div className="text-right">
+            <div className="text-right flex-shrink-0">
               <div className="text-4xl font-bold">#{1}</div>
               <div className="text-sm opacity-80">Winner</div>
             </div>
@@ -363,25 +363,25 @@ function AssemblyOverview({ selectedAssembly }: { selectedAssembly: string }) {
       ) : (stats?.partyData && stats.partyData.length > 0 && stats.partyData[0]) ? (
         // Fallback to calculated data if no MLA record exists
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 rounded-lg shadow-lg text-white">
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="text-sm opacity-80 uppercase tracking-wide">
                 Leading Party ({selectedYear} - No MLA Data)
               </div>
-              <div className="text-2xl font-bold">{stats.partyData[0].party}</div>
-              <div className="text-lg opacity-90">
+              <div className="text-2xl font-bold break-words">{stats.partyData[0].party}</div>
+              <div className="text-base opacity-90 break-words">
                 {stats.partyData[0].percentage}% Vote Share • {stats.partyData[0].rawVotes.toLocaleString()} Votes
               </div>
               <div className="text-xs opacity-60 mt-1">
                 ⚠️ Add MLA data in Admin Dashboard for accurate display
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-right flex-shrink-0">
               <div className="text-4xl font-bold">#{1}</div>
               <div className="text-sm opacity-80">Rank</div>
             </div>

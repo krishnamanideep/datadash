@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Star, Zap, Award, Info, TrendingUp, FileText } from 'lucide-react';
 import { db } from '@/lib/firebase/client';
 import { doc, getDoc } from 'firebase/firestore';
+import { getAssemblyName } from '@/data/assemblies';
 
 const COLORS = ['#FF6B35', '#E63946', '#06A77D', '#FFC300', '#0077B6'];
 
@@ -68,8 +69,8 @@ export default function Survey({ selectedAssembly, previewData }: { selectedAsse
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold text-gray-800">Assembly {selectedAssembly} - Survey Analysis</h2>
+      <div className="flex justify-between items-center flex-wrap gap-3">
+        <h2 className="text-3xl font-bold text-gray-800">{getAssemblyName(selectedAssembly)} - Survey Analysis</h2>
         <div className="text-right">
           <div className="text-sm text-gray-500">Sample Size</div>
           <div className="text-2xl font-bold text-blue-600">{surveyData.totalRespondents}</div>
@@ -90,13 +91,14 @@ export default function Survey({ selectedAssembly, previewData }: { selectedAsse
                   nameKey="party"
                   cx="50%"
                   cy="50%"
-                  outerRadius={100}
+                  outerRadius={90}
                 >
                   {surveyData.votingIntention?.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip formatter={(value: any) => [`${value}%`, 'Vote Share']} />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -142,24 +144,24 @@ export default function Survey({ selectedAssembly, previewData }: { selectedAsse
               <div key={idx}>
                 <div className="mb-2 font-medium text-gray-700">{leader.leader}</div>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden flex">
+                  <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden flex min-w-0">
                     <div
-                      className="bg-green-500 flex items-center justify-center text-xs text-white font-medium"
-                      style={{ width: `${leader.approval}%` }}
+                      className="bg-green-500 flex items-center justify-center text-xs text-white font-medium overflow-hidden"
+                      style={{ width: `${leader.approval}%`, minWidth: leader.approval > 15 ? undefined : 0 }}
                     >
-                      {leader.approval}% Approve
+                      {leader.approval > 15 ? `${leader.approval}% Approve` : ''}
                     </div>
                     <div
-                      className="bg-gray-400 flex items-center justify-center text-xs text-white font-medium"
+                      className="bg-gray-400 flex items-center justify-center text-xs text-white font-medium overflow-hidden"
                       style={{ width: `${leader.neutral}%` }}
                     >
                       {leader.neutral > 8 && `${leader.neutral}%`}
                     </div>
                     <div
-                      className="bg-red-500 flex items-center justify-center text-xs text-white font-medium"
-                      style={{ width: `${leader.disapproval}%` }}
+                      className="bg-red-500 flex items-center justify-center text-xs text-white font-medium overflow-hidden"
+                      style={{ width: `${leader.disapproval}%`, minWidth: leader.disapproval > 15 ? undefined : 0 }}
                     >
-                      {leader.disapproval}% Disapprove
+                      {leader.disapproval > 15 ? `${leader.disapproval}% Disapprove` : ''}
                     </div>
                   </div>
                 </div>

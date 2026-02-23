@@ -34,7 +34,7 @@ export default function Navigation({ currentPage, onPageChange, allowedPages, us
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden md:flex items-center flex-wrap gap-1">
             {visiblePages.map((page) => (
               <button
                 key={page.id}
@@ -57,7 +57,7 @@ export default function Navigation({ currentPage, onPageChange, allowedPages, us
                   </div>
                   <div className="text-left">
                     <div className="text-sm font-medium text-gray-900">{user.displayName || 'User'}</div>
-                    <div className="text-xs text-gray-500">{user.role?.replace('_', ' ').toUpperCase()}</div>
+                    <div className="text-xs text-gray-500">{user.role?.replaceAll('_', ' ').toUpperCase()}</div>
                   </div>
                 </div>
                 {onLogout && (
