@@ -85,6 +85,10 @@ export default function AssemblyMetaEditor() {
             const fetched = docSnap.exists() ? docSnap.data() : null;
 
             if (fetched && Object.keys(fetched).length > 0) {
+                // Ensure default toggle value
+                if (typeof fetched.showComparativeAnalysis === 'undefined') {
+                    fetched.showComparativeAnalysis = true;
+                }
                 // Ensure headers exist
                 if (!fetched.headers) {
                     fetched.headers = {
@@ -106,6 +110,7 @@ export default function AssemblyMetaEditor() {
                         factorsTitle: 'Key Deciding Factors',
                         outlookTitle: 'Electoral Outlook'
                     },
+                    showComparativeAnalysis: true,
                     scenarios: [
                         { title: 'Coalition Dynamics', icon: 'users', content: '', status: 'Active', color: 'blue' },
                         { title: 'Key Issues', icon: 'alert', content: '', status: 'Critical', color: 'red' },
@@ -645,8 +650,31 @@ export default function AssemblyMetaEditor() {
                                 )}
                             </div>
 
-                            {/* Additional Settings Can Go Here */}
-                            <div className="bg-blue-50 border-2 border-blue-100 rounded-xl p-6">
+                            {/* Additional Settings */}
+                            <div className="bg-white border-2 border-gray-200 rounded-xl p-6 space-y-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Settings size={20} className="text-gray-700" />
+                                    <h4 className="font-bold text-gray-800">Panel Settings</h4>
+                                </div>
+                                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div>
+                                        <div className="font-semibold text-gray-800">Show Comparative Analysis</div>
+                                        <div className="text-sm text-gray-500">Enable or disable the comparative analysis table in the candidate panel for this assembly.</div>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={data.showComparativeAnalysis !== false}
+                                            onChange={(e) => setData({ ...data, showComparativeAnalysis: e.target.checked })}
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* Settings Auto-Save Help */}
+                            <div className="bg-blue-50 border-2 border-blue-100 rounded-xl p-6 mt-6">
                                 <div className="flex items-start gap-3">
                                     <Info size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
                                     <div>

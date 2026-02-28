@@ -4,7 +4,7 @@ import { Users, TrendingUp, MapPin, Award, Shield, Target, AlertTriangle, Credit
 import { useState, useEffect } from 'react';
 import { Candidate } from '@/types/data';
 import { db } from '@/lib/firebase/client';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { ASSEMBLIES } from '@/data/assemblies';
 
 export default function CandidatePanel({ selectedAssembly, previewData }: { selectedAssembly: string, previewData?: Candidate[] }) {
@@ -12,6 +12,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
   const [loading, setLoading] = useState(true);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string | null>(null);
   const [photoLightbox, setPhotoLightbox] = useState<string | null>(null);
+  const [showComparativeAnalysis, setShowComparativeAnalysis] = useState(true);
 
   const getAssemblyName = (id: string) => {
     return ASSEMBLIES.find(a => a.id === id)?.name || `Assembly ${id}`;
@@ -27,10 +28,31 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
 
     const fetchCandidates = async () => {
       try {
+        // Fetch candidates
         const q = query(collection(db, 'candidates'), where('assemblyId', '==', selectedAssembly));
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Candidate));
         setCandidates(data);
+
+        // Fetch assembly settings for comparative analysis toggle
+        try {
+          const metaDocRef = doc(db, 'assemblyMeta', selectedAssembly);
+          const metaDocSnap = await getDoc(metaDocRef);
+          if (metaDocSnap.exists()) {
+            const metaData = metaDocSnap.data();
+            if (typeof metaData.showComparativeAnalysis !== 'undefined') {
+              setShowComparativeAnalysis(metaData.showComparativeAnalysis);
+            } else {
+              setShowComparativeAnalysis(true);
+            }
+          } else {
+            setShowComparativeAnalysis(true);
+          }
+        } catch (metaErr) {
+          console.error("Error fetching assembly meta:", metaErr);
+          setShowComparativeAnalysis(true); // default to true on error
+        }
+
         setLoading(false);
       } catch (err) {
         console.error("Error fetching candidates from Firestore:", err);
@@ -334,7 +356,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
 
       {/* Comparative Analysis */}
       {
-        candidates.length > 1 && (
+        showComparativeAnalysis && candidates.length > 1 && (
           <div className="bg-white p-6 rounded-xl shadow-lg mt-6 border border-gray-100">
             <h3 className="text-xl font-semibold mb-4">Comparative Analysis</h3>
             <div className="overflow-x-auto">
