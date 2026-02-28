@@ -911,22 +911,21 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
       {/* Weak Booths Section */}
       {pageConfig.showWeakBooths && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {Object.keys(computedWeakBooths).map((party) => (
-            <div key={party} className="bg-white p-6 rounded-lg shadow border-t-4" style={{ borderTopColor: getPartyColor(party) }}>
-              <h4 className="text-lg font-bold mb-4" style={{ color: getPartyColor(party) }}>{party === 'NRC' ? 'NR Congress' : party} - Weak Booths</h4>
-              <div className="space-y-4">
-                {computedWeakBooths[party].map((booth: any, idx: number) => (
-                  <div key={idx} className="bg-gray-50 p-3 rounded border border-gray-100">
-                    <p className="font-bold text-gray-800 uppercase text-sm">{booth.locality}</p>
-                    <p className="text-xs text-gray-500">Score: {booth.score.toFixed(1)}%</p>
-                  </div>
-                ))}
-                {computedWeakBooths[party].length === 0 && (
-                  <p className="text-sm text-gray-400 italic">No low performance data for this year.</p>
-                )}
+          {Object.keys(computedWeakBooths)
+            .filter((party) => computedWeakBooths[party].length > 0)
+            .map((party) => (
+              <div key={party} className="bg-white p-6 rounded-lg shadow border-t-4" style={{ borderTopColor: getPartyColor(party) }}>
+                <h4 className="text-lg font-bold mb-4" style={{ color: getPartyColor(party) }}>{party === 'NRC' ? 'NR Congress' : party} - Weak Booths</h4>
+                <div className="space-y-4">
+                  {computedWeakBooths[party].map((booth: any, idx: number) => (
+                    <div key={idx} className="bg-gray-50 p-3 rounded border border-gray-100">
+                      <p className="font-bold text-gray-800 uppercase text-sm">{booth.locality}</p>
+                      <p className="text-xs text-gray-500">Score: {booth.score.toFixed(1)}%</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       )}
 
