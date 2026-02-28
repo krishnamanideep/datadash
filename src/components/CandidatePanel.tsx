@@ -7,7 +7,7 @@ import { db } from '@/lib/firebase/client';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { ASSEMBLIES } from '@/data/assemblies';
 
-export default function CandidatePanel({ selectedAssembly, previewData }: { selectedAssembly: string, previewData?: Candidate[] }) {
+export default function CandidatePanel({ selectedAssembly, previewData, previewShowComparativeAnalysis }: { selectedAssembly: string, previewData?: Candidate[], previewShowComparativeAnalysis?: boolean }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string | null>(null);
@@ -356,7 +356,7 @@ export default function CandidatePanel({ selectedAssembly, previewData }: { sele
 
       {/* Comparative Analysis */}
       {
-        showComparativeAnalysis && candidates.length > 1 && (
+        (typeof previewShowComparativeAnalysis !== 'undefined' ? previewShowComparativeAnalysis : showComparativeAnalysis) && candidates.length > 1 && (
           <div className="bg-white p-6 rounded-xl shadow-lg mt-6 border border-gray-100">
             <h3 className="text-xl font-semibold mb-4">Comparative Analysis</h3>
             <div className="overflow-x-auto">

@@ -7,7 +7,7 @@ import { Candidate, CandidateCard } from '@/types/data';
 import { ASSEMBLIES } from '@/data/assemblies';
 import CandidatePanel from '../CandidatePanel';
 import { db, storage } from '@/lib/firebase/client';
-import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import RichTextEditor from './RichTextEditor';
 
@@ -46,10 +46,44 @@ export default function CandidateEditor() {
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [newCard, setNewCard] = useState<Partial<CandidateCard>>({ title: '', content: '', type: 'info' });
+    const [showComparativeAnalysis, setShowComparativeAnalysis] = useState(true);
+    const [savingMeta, setSavingMeta] = useState(false);
 
     useEffect(() => {
-        if (assemblyId) fetchCandidates();
+        if (assemblyId) {
+            fetchCandidates();
+            fetchAssemblyMeta();
+        }
     }, [assemblyId]);
+
+    const fetchAssemblyMeta = async () => {
+        try {
+            const docRef = doc(db, 'assemblyMeta', assemblyId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists() && typeof docSnap.data().showComparativeAnalysis !== 'undefined') {
+                setShowComparativeAnalysis(docSnap.data().showComparativeAnalysis);
+            } else {
+                setShowComparativeAnalysis(true);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const toggleComparativeAnalysis = async () => {
+        const newValue = !showComparativeAnalysis;
+        setShowComparativeAnalysis(newValue);
+        setSavingMeta(true);
+        try {
+            const docRef = doc(db, 'assemblyMeta', assemblyId);
+            await setDoc(docRef, { showComparativeAnalysis: newValue }, { merge: true });
+        } catch (error) {
+            console.error(error);
+            setShowComparativeAnalysis(!newValue); // revert on error
+            alert('Failed to update settings');
+        }
+        setSavingMeta(false);
+    };
 
     const fetchCandidates = async () => {
         try {
@@ -221,6 +255,24 @@ export default function CandidateEditor() {
                             <option key={a.id} value={a.id}>{a.id}. {a.name}</option>
                         ))}
                     </select>
+                </div>
+
+                {/* Panel Settings */}
+                <div className="mb-6 p-4 bg-white rounded-lg border shadow-sm flex items-center justify-between">
+                    <div>
+                        <div className="font-semibold text-gray-800">Show Comparative Analysis</div>
+                        <div className="text-sm text-gray-500">Enable or disable the comparative analysis table in the candidate panel for this assembly.</div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={showComparativeAnalysis}
+                            onChange={toggleComparativeAnalysis}
+                            disabled={savingMeta}
+                        />
+                        <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${showComparativeAnalysis ? 'peer-checked:bg-blue-600' : ''}`}></div>
+                    </label>
                 </div>
 
                 {editingId ? (
@@ -529,7 +581,7 @@ export default function CandidateEditor() {
                     {editingId && <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded animate-pulse">Editing Now...</span>}
                 </div>
                 <div className="transform scale-90 origin-top">
-                    <CandidatePanel selectedAssembly={assemblyId} previewData={previewCandidates} />
+                    <CandidatePanel selectedAssembly={assemblyId} previewData={previewCandidates} previewShowComparativeAnalysis={showComparativeAnalysis} />
                 </div>
             </div>
         </div>
