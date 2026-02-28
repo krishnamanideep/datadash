@@ -8,11 +8,12 @@ import { getAssemblyName } from '@/data/assemblies';
 const COLORS = ['#FF6B35', '#E63946', '#06A77D', '#FFC300', '#0077B6'];
 
 export default function Survey({ selectedAssembly, previewData }: { selectedAssembly: string, previewData?: any }) {
-  const [surveyData, setSurveyData] = useState<any>(null);
+  const [docData, setDocData] = useState<any>(null);
+  const [activeSurveyIndex, setActiveSurveyIndex] = useState(0);
 
   useEffect(() => {
     if (previewData) {
-      setSurveyData(previewData);
+      setDocData(previewData);
       return;
     }
 
@@ -21,7 +22,9 @@ export default function Survey({ selectedAssembly, previewData }: { selectedAsse
         const docRef = doc(db, 'surveyData', selectedAssembly);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setSurveyData(docSnap.data());
+          setDocData(docSnap.data());
+        } else {
+          setDocData(null);
         }
       } catch (err) {
         console.error("Failed to load survey data", err);
@@ -29,6 +32,11 @@ export default function Survey({ selectedAssembly, previewData }: { selectedAsse
     };
     loadData();
   }, [selectedAssembly, previewData]);
+
+  // reset active index when assembly changes
+  useEffect(() => {
+    setActiveSurveyIndex(0);
+  }, [selectedAssembly]);
 
   const getCardIcon = (iconName: string) => {
     switch (iconName) {
@@ -54,9 +62,25 @@ export default function Survey({ selectedAssembly, previewData }: { selectedAsse
     }
   };
 
-  if (!surveyData) {
+  if (!docData) {
     return <div className="p-8 text-center">Loading survey data...</div>;
   }
+
+  // Handle both legacy (single object) and new (surveys array) structures
+  let surveys = [];
+  if (docData.surveys && Array.isArray(docData.surveys)) {
+    surveys = docData.surveys;
+  } else if (Object.keys(docData).length > 0) {
+    surveys = [docData];
+  }
+
+  if (surveys.length === 0) {
+    return <div className="p-8 text-center text-gray-500">No survey data available for this assembly.</div>;
+  }
+
+  // Ensure active index is within bounds (in case data changes drastically)
+  const safeIndex = (activeSurveyIndex >= 0 && activeSurveyIndex < surveys.length) ? activeSurveyIndex : 0;
+  const surveyData = surveys[safeIndex];
 
   const {
     showVotingIntention = true,
@@ -73,10 +97,28 @@ export default function Survey({ selectedAssembly, previewData }: { selectedAsse
         <h2 className="text-3xl font-bold text-gray-800">{getAssemblyName(selectedAssembly)} - Survey Analysis</h2>
         <div className="text-right">
           <div className="text-sm text-gray-500">Sample Size</div>
-          <div className="text-2xl font-bold text-blue-600">{surveyData.totalRespondents}</div>
-          <div className="text-xs text-gray-500">as of {surveyData.sampleDate}</div>
+          <div className="text-2xl font-bold text-blue-600">{surveyData.totalRespondents || 0}</div>
+          <div className="text-xs text-gray-500">as of {surveyData.sampleDate || 'N/A'}</div>
         </div>
       </div>
+
+      {/* Survey Tabs */}
+      {surveys.length > 1 && (
+        <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-1 mb-6">
+          {surveys.map((s: any, idx: number) => (
+            <button
+              key={idx}
+              onClick={() => setActiveSurveyIndex(idx)}
+              className={`px-4 py-2 text-sm font-semibold rounded-t-lg transition-colors border-b-2 ${safeIndex === idx
+                  ? 'bg-blue-50 text-blue-700 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-transparent'
+                }`}
+            >
+              {s.title || `Survey ${idx + 1}`}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Voting Intention */}
       {showVotingIntention && (

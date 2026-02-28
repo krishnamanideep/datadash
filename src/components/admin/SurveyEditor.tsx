@@ -27,7 +27,8 @@ const COLORS = [
 
 export default function SurveyEditor() {
     const { user } = useAuth();
-    const [data, setData] = useState<any>(null);
+    const [surveys, setSurveys] = useState<any[]>([]);
+    const [activeSurveyIndex, setActiveSurveyIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [saved, setSaved] = useState(false);
     const [selectedAssembly, setSelectedAssembly] = useState('');
@@ -60,7 +61,8 @@ export default function SurveyEditor() {
                 const docSnap = await getDoc(docRef);
                 const fetched = docSnap.exists() ? docSnap.data() : null;
 
-                const defaultData = {
+                const defaultSurvey = {
+                    title: 'Initial Survey',
                     totalRespondents: 0,
                     sampleDate: new Date().toISOString().split('T')[0],
                     votingIntention: [],
@@ -76,7 +78,19 @@ export default function SurveyEditor() {
                     showKeyFindings: true,
                     customCards: []
                 };
-                setData(fetched ? { ...defaultData, ...fetched } : defaultData);
+
+                let loadedSurveys = [];
+                if (fetched && fetched.surveys && Array.isArray(fetched.surveys)) {
+                    loadedSurveys = fetched.surveys;
+                } else if (fetched && Object.keys(fetched).length > 0) {
+                    // Migrate legacy single survey
+                    loadedSurveys = [{ ...defaultSurvey, ...fetched }];
+                } else {
+                    loadedSurveys = [defaultSurvey];
+                }
+
+                setSurveys(loadedSurveys);
+                setActiveSurveyIndex(0);
             } catch (e) {
                 console.error("Error loading survey data:", e);
             }
@@ -87,7 +101,7 @@ export default function SurveyEditor() {
 
     const handleSave = async () => {
         try {
-            await setDoc(doc(db, 'surveyData', selectedAssembly), data);
+            await setDoc(doc(db, 'surveyData', selectedAssembly), { surveys });
             setSaved(true);
             setTimeout(() => setSaved(false), 2000);
         } catch (e) {
@@ -97,26 +111,39 @@ export default function SurveyEditor() {
     };
 
     const updateField = (field: string, value: any) => {
-        setData({ ...data, [field]: value });
+        const newSurveys = [...surveys];
+        newSurveys[activeSurveyIndex] = { ...newSurveys[activeSurveyIndex], [field]: value };
+        setSurveys(newSurveys);
     };
 
     const updateArrayItem = (arrayName: string, index: number, field: string, value: any) => {
-        const newArray = [...(data[arrayName] || [])];
+        const newSurveys = [...surveys];
+        const currentSurvey = newSurveys[activeSurveyIndex];
+        const newArray = [...(currentSurvey[arrayName] || [])];
         newArray[index] = { ...newArray[index], [field]: value };
-        setData({ ...data, [arrayName]: newArray });
+        newSurveys[activeSurveyIndex] = { ...currentSurvey, [arrayName]: newArray };
+        setSurveys(newSurveys);
     };
 
     const addArrayItem = (arrayName: string, template: any) => {
-        setData({ ...data, [arrayName]: [...(data[arrayName] || []), template] });
+        const newSurveys = [...surveys];
+        const currentSurvey = newSurveys[activeSurveyIndex];
+        newSurveys[activeSurveyIndex] = { ...currentSurvey, [arrayName]: [...(currentSurvey[arrayName] || []), template] };
+        setSurveys(newSurveys);
     };
 
     const removeArrayItem = (arrayName: string, index: number) => {
-        const newArray = [...(data[arrayName] || [])];
+        const newSurveys = [...surveys];
+        const currentSurvey = newSurveys[activeSurveyIndex];
+        const newArray = [...(currentSurvey[arrayName] || [])];
         newArray.splice(index, 1);
-        setData({ ...data, [arrayName]: newArray });
+        newSurveys[activeSurveyIndex] = { ...currentSurvey, [arrayName]: newArray };
+        setSurveys(newSurveys);
     };
 
-    if (loading || !data) return <div>Loading Editor...</div>;
+    if (loading || surveys.length === 0) return <div>Loading Editor...</div>;
+
+    const data = surveys[activeSurveyIndex] || surveys[0];
 
     return (
         <div className="flex h-screen overflow-hidden bg-gray-100">
@@ -143,6 +170,63 @@ export default function SurveyEditor() {
                             <Save size={18} /> {saved ? 'Saved!' : 'Save Changes'}
                         </button>
                     </div>
+                </div>
+
+                {/* Survey Selector */}
+                <div className="flex items-center flex-wrap gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <span className="font-semibold text-gray-700">Active Survey:</span>
+                    <select
+                        value={activeSurveyIndex}
+                        onChange={(e) => setActiveSurveyIndex(Number(e.target.value))}
+                        className="border border-gray-300 p-2 rounded-lg text-sm bg-white min-w-[150px] shadow-sm font-medium"
+                    >
+                        {surveys.map((s, idx) => (
+                            <option key={idx} value={idx}>{s.title || `Survey ${idx + 1}`}</option>
+                        ))}
+                    </select>
+
+                    <button
+                        onClick={() => {
+                            const newSurvey = {
+                                title: `Survey ${surveys.length + 1}`,
+                                totalRespondents: 0,
+                                sampleDate: new Date().toISOString().split('T')[0],
+                                votingIntention: [],
+                                issuesPriority: [],
+                                leaderApproval: [],
+                                surveyInsights: [],
+                                ageWiseVoting: [],
+                                genderWiseVoting: [],
+                                showVotingIntention: true,
+                                showIssues: true,
+                                showLeaderApproval: true,
+                                showDemographics: true,
+                                showKeyFindings: true,
+                                customCards: []
+                            };
+                            setSurveys([...surveys, newSurvey]);
+                            setActiveSurveyIndex(surveys.length);
+                        }}
+                        className="text-blue-700 bg-blue-100 border border-blue-200 hover:bg-blue-200 px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 font-semibold transition-colors"
+                    >
+                        <Plus size={16} /> New Survey
+                    </button>
+
+                    {surveys.length > 1 && (
+                        <button
+                            onClick={() => {
+                                if (confirm('Are you sure you want to delete this survey completely?')) {
+                                    const newSurveys = [...surveys];
+                                    newSurveys.splice(activeSurveyIndex, 1);
+                                    setSurveys(newSurveys);
+                                    setActiveSurveyIndex(Math.max(0, activeSurveyIndex - 1));
+                                }
+                            }}
+                            className="text-red-700 bg-red-100 border border-red-200 hover:bg-red-200 px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 font-semibold transition-colors ml-auto shadow-sm"
+                        >
+                            <Trash2 size={16} /> Delete Survey
+                        </button>
+                    )}
                 </div>
 
                 {/* Tabs */}
@@ -196,6 +280,16 @@ export default function SurveyEditor() {
                             <section className="space-y-4 border p-4 rounded bg-gray-50">
                                 <h3 className="font-semibold text-gray-700 border-b pb-2">Survey Metadata</h3>
                                 <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase">Survey Title</label>
+                                        <input
+                                            type="text"
+                                            className="w-full border p-2 rounded"
+                                            value={data.title || ''}
+                                            onChange={e => updateField('title', e.target.value)}
+                                            placeholder="e.g. October Pre-Poll"
+                                        />
+                                    </div>
                                     <div>
                                         <label className="block text-xs font-bold text-gray-500 uppercase">Total Respondents</label>
                                         <input
@@ -430,10 +524,10 @@ export default function SurveyEditor() {
                     <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">Changes reflected instantly</span>
                 </div>
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden min-h-[500px] transform scale-90 origin-top">
-                    <Survey selectedAssembly={selectedAssembly} previewData={data} />
+                    <Survey selectedAssembly={selectedAssembly} previewData={{ surveys }} />
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
 
