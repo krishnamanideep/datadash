@@ -75,6 +75,7 @@ interface PageConfig {
   showWeakBooths: boolean;
   showIndependentHotspots: boolean;
   showCustomCards: boolean;
+  showRetroBooths: boolean;
   heatMapTitle: string;
   heatMapDescription: string;
 }
@@ -85,6 +86,7 @@ const defaultConfig: PageConfig = {
   showWeakBooths: true,
   showIndependentHotspots: true,
   showCustomCards: true,
+  showRetroBooths: true,
   heatMapTitle: 'BJP vs DMK Vote Share Analysis (2021)',
   heatMapDescription: 'Visualizing booth-wise performance distribution. Each point represents a polling booth.'
 };
@@ -874,39 +876,41 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
       )}
 
       {/* Retro Booths */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-xl font-semibold mb-4">Retro Booths ({retroBooths.length} booths)</h3>
-        <p className="text-gray-600 mb-4">Booths with consistent strong performance for a party</p>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Locality</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">BJP 2021</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">DMK 2021</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {retroBooths.slice(0, 10).map((booth, idx) => (
-                <tr key={idx}>
-                  <td className="px-4 py-3 text-sm">{booth.locality}</td>
-                  <td className="px-4 py-3 text-sm">{((booth.election2021?.candidates['BJP'] || 0) * 100).toFixed(1)}%</td>
-                  <td className="px-4 py-3 text-sm">{((booth.election2021?.candidates['DMK'] || 0) * 100).toFixed(1)}%</td>
-                  <td className="px-4 py-3 text-sm">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${(booth.category || 'C') === 'A' ? 'bg-green-100 text-green-800' :
-                      (booth.category || 'C') === 'B' ? 'bg-blue-100 text-blue-800' :
-                        'bg-orange-100 text-orange-800'
-                      }`}>
-                      {booth.category || 'C'}
-                    </span>
-                  </td>
+      {pageConfig.showRetroBooths && (
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-xl font-semibold mb-4">Retro Booths ({retroBooths.length} booths)</h3>
+          <p className="text-gray-600 mb-4">Booths with consistent strong performance for a party</p>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Locality</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">BJP 2021</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">DMK 2021</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {retroBooths.slice(0, 10).map((booth, idx) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-3 text-sm">{booth.locality}</td>
+                    <td className="px-4 py-3 text-sm">{((booth.election2021?.candidates['BJP'] || 0) * 100).toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-sm">{((booth.election2021?.candidates['DMK'] || 0) * 100).toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-sm">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${(booth.category || 'C') === 'A' ? 'bg-green-100 text-green-800' :
+                        (booth.category || 'C') === 'B' ? 'bg-blue-100 text-blue-800' :
+                          'bg-orange-100 text-orange-800'
+                        }`}>
+                        {booth.category || 'C'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Weak Booths Section */}
       {pageConfig.showWeakBooths && (

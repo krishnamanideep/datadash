@@ -65,6 +65,7 @@ interface PageConfig {
     showWeakBooths: boolean;
     showIndependentHotspots: boolean;
     showCustomCards: boolean;
+    showRetroBooths: boolean;
     heatMapTitle: string;
     heatMapDescription: string;
 }
@@ -104,6 +105,7 @@ export default function RetroBoothsEditor() {
         showWeakBooths: true,
         showIndependentHotspots: true,
         showCustomCards: true,
+        showRetroBooths: true,
         heatMapTitle: 'BJP vs DMK Vote Share Analysis (2021)',
         heatMapDescription: 'Visualizing booth-wise performance distribution.'
     });
@@ -144,6 +146,7 @@ export default function RetroBoothsEditor() {
                     showWeakBooths: data.showWeakBooths ?? true,
                     showIndependentHotspots: data.showIndependentHotspots ?? true,
                     showCustomCards: data.showCustomCards ?? true,
+                    showRetroBooths: data.showRetroBooths ?? true,
                     heatMapTitle: data.heatMapTitle || 'BJP vs DMK Vote Share Analysis (2021)',
                     heatMapDescription: data.heatMapDescription || 'Visualizing booth-wise performance distribution.'
                 });
@@ -352,6 +355,7 @@ export default function RetroBoothsEditor() {
                                     { key: 'showHeatMap', label: 'Show Heat Map Chart' },
                                     { key: 'showWeakBooths', label: 'Show Weak Booths Analysis' },
                                     { key: 'showIndependentHotspots', label: 'Show Independent Hotspots' },
+                                    { key: 'showRetroBooths', label: 'Show Retro Booths' },
                                     { key: 'showCustomCards', label: 'Show Custom Information Cards' },
                                 ].map(item => (
                                     <label key={item.key} className="flex items-center gap-3 p-3 border rounded hover:bg-gray-50 cursor-pointer">
