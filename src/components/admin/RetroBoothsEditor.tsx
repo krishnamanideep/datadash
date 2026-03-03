@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Plus, Edit2, Trash2, Save, Settings, FileText, AlertTriangle, MapPin, Eye, RefreshCw, Star, Zap, Award, Info, TrendingUp, Map, Users, Target } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, Settings, FileText, AlertTriangle, MapPin, Eye, RefreshCw, Star, Zap, Award, Info, TrendingUp, Map, Users, Target, Globe } from 'lucide-react';
 import RetroBoothsAnalysis from '../RetroBoothsAnalysis';
 import { ASSEMBLIES } from '@/data/assemblies';
 import { db } from '@/lib/firebase/client';
@@ -167,6 +167,27 @@ export default function RetroBoothsEditor() {
         } catch (e) {
             console.error(e);
             alert('Failed to save configuration');
+        }
+        setSaving(false);
+    };
+
+    const applyToAllAssemblies = async () => {
+        if (!confirm('Are you sure you want to apply these visibility and chart settings to ALL assemblies? This will overwrite their custom Page Settings.')) return;
+        setSaving(true);
+        try {
+            const promises = accessibleAssemblies.map(assembly =>
+                setDoc(doc(db, 'pageConfig', `retrobooths_${assembly.id}`), {
+                    ...config,
+                    assemblyId: assembly.id,
+                    pageType: 'retrobooths'
+                })
+            );
+            await Promise.all(promises);
+            alert('Configuration applied to all assemblies!');
+            refreshPreview();
+        } catch (e) {
+            console.error(e);
+            alert('Failed to apply configuration to all assemblies');
         }
         setSaving(false);
     };
@@ -392,13 +413,22 @@ export default function RetroBoothsEditor() {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={saveConfig}
-                                disabled={saving}
-                                className="bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 disabled:opacity-50"
-                            >
-                                <Save size={18} /> {saving ? 'Saving...' : 'Save Configuration'}
-                            </button>
+                            <div className="flex gap-4 mt-6">
+                                <button
+                                    onClick={saveConfig}
+                                    disabled={saving}
+                                    className="bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                    <Save size={18} /> {saving ? 'Saving...' : 'Save Configuration'}
+                                </button>
+                                <button
+                                    onClick={applyToAllAssemblies}
+                                    disabled={saving}
+                                    className="bg-purple-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 disabled:opacity-50"
+                                >
+                                    <Globe size={18} /> {saving ? 'Applying...' : 'Apply to All Assemblies'}
+                                </button>
+                            </div>
                         </div>
                     )}
 

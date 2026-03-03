@@ -10,7 +10,7 @@ import { PollingStation, Candidate } from '@/types/data';
 import { ASSEMBLIES } from '@/data/assemblies';
 import { ASSEMBLY_COORDINATES, getRegionCenter } from '@/data/assemblyCoordinates';
 import { db } from '@/lib/firebase/client';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import rawPollingData from '@/data/Form20_Localities_Pct.json';
 
 // Dynamically import Leaflet components (client-side only)
@@ -198,9 +198,10 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
         setAllAssembliesData(allData);
 
         // 2. Firestore Fetches for Dynamic Data
-        const [candidatesSnap, cardsSnap] = await Promise.all([
+        const [candidatesSnap, cardsSnap, pageConfigSnap] = await Promise.all([
           getDocs(query(collection(db, 'candidates'), where('assemblyId', '==', selectedAssembly))),
-          getDocs(query(collection(db, 'customCards'), where('assemblyId', '==', selectedAssembly)))
+          getDocs(query(collection(db, 'customCards'), where('assemblyId', '==', selectedAssembly))),
+          getDoc(doc(db, 'pageConfig', `retrobooths_${selectedAssembly}`))
         ]);
 
         const candidatesList = candidatesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Candidate));
@@ -208,6 +209,12 @@ export default function RetroBoothsAnalysis({ selectedAssembly }: { selectedAsse
 
         setCandidates(candidatesList);
         setCustomCards(cardsList.filter(c => c.section === 'retro').sort((a, b) => (a.order || 0) - (b.order || 0)));
+
+        if (pageConfigSnap.exists()) {
+          setPageConfig({ ...defaultConfig, ...pageConfigSnap.data() as Partial<PageConfig> });
+        } else {
+          setPageConfig(defaultConfig);
+        }
 
         setLoading(false);
 
